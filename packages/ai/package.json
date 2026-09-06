@@ -43,11 +43,11 @@
   "description": "Thin adapters from AI SDK stream types to ReadableStream<string> for aihu $stream collections.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/ai"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/ai#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/ai#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

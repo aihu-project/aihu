@@ -34,11 +34,11 @@
   "description": "Reactive data loaders and resource primitives for aihu.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/plugin-data"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/plugin-data#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/plugin-data#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

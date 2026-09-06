@@ -192,7 +192,7 @@ console.warn('  workspace grammar (stale-release presets fail with C306 — see 
 
 const url =
   process.env.AIHU_WASM_BUNDLE_URL ??
-  'https://github.com/fellwork/aihu/releases/latest/download/aihu-compile-wasm.tar.gz'
+  'https://github.com/aihu-project/aihu/releases/latest/download/aihu-compile-wasm.tar.gz'
 
 console.log(`[build-wasm-bundle] fetch source: ${url}`)
 

@@ -179,7 +179,7 @@ import { aihuCompiler } from '@aihu/compiler';
 
 export default defineConfig({ plugins: [aihuCompiler()] });`,
     extra:
-      '⚠ **Native binary required.** This package downloads a pre-built `aihu-compile` binary at install time via `js/postinstall.ts` (see [WASM.md](https://github.com/fellwork/aihu/blob/main/packages/compiler/WASM.md)). Binaries are published per-platform from the `release.yml` workflow on every `v*` tag. SHA256-verified per arch-4 §4.3.',
+      '⚠ **Native binary required.** This package downloads a pre-built `aihu-compile` binary at install time via `js/postinstall.ts` (see [WASM.md](https://github.com/aihu-project/aihu/blob/main/packages/compiler/WASM.md)). Binaries are published per-platform from the `release.yml` workflow on every `v*` tag. SHA256-verified per arch-4 §4.3.',
   },
   {
     name: 'cli',
@@ -214,7 +214,7 @@ function template(s: Spec): string {
 
 > ${s.purpose}
 ${extraBlock}
-Part of the [aihu](https://github.com/fellwork/aihu) framework — agentic discovery and interaction, for human purpose.
+Part of the [aihu](https://github.com/aihu-project/aihu) framework — agentic discovery and interaction, for human purpose.
 
 ## Install
 
@@ -232,11 +232,11 @@ ${s.usage}
 
 ## Status
 
-Early access (\`0.1.x\`). API may evolve before v1.1 GA. See the [v1.1 roadmap](https://github.com/fellwork/aihu/tree/main/docs/roadmap) for stability commitments.
+Early access (\`0.1.x\`). API may evolve before v1.1 GA. See the [v1.1 roadmap](https://github.com/aihu-project/aihu/tree/main/docs/roadmap) for stability commitments.
 
 ## License
 
-MIT — see [LICENSE](https://github.com/fellwork/aihu/blob/main/LICENSE).
+MIT — see [LICENSE](https://github.com/aihu-project/aihu/blob/main/LICENSE).
 `
 }
 

@@ -32,11 +32,11 @@
   "description": "aihu styled-recipe registry — copy-paste .aihu recipes distributed as source via `aihu add` (no runtime bundle).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/ui"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/ui#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/ui#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

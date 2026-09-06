@@ -136,7 +136,7 @@ CSS Grid 3-col desktop / 1-col mobile. Tag chips for filtering (signals/agent/a2
 3. **"Open in Playground"** — StackBlitz link (custom playground deferred to M4)
 4. **Agent tools panel** — renders `AgentMetadata`, protocol status (`/.well-known/agent.json` + `/.well-known/acp-agent` reachable from live URL); collapsed for examples without `@agent` blocks
 
-### "Edit on GitHub" → `github.com/fellwork/aihu/edit/main/examples/{slug}/{primaryFile}` (opens GitHub web editor)
+### "Edit on GitHub" → `github.com/aihu-project/aihu/edit/main/examples/{slug}/{primaryFile}` (opens GitHub web editor)
 
 ## 6. Test + Maintenance Contract
 

@@ -3,7 +3,7 @@ name: aihu
 description: Official aihu authoring skill. TRIGGER when creating or editing any .aihu single-file component, or when writing components in a project that uses the aihu framework (@aihu/* packages). .aihu SFC syntax is novel — code written from prior knowledge will not compile.
 metadata:
   version: 0.1.0
-  source: https://github.com/fellwork/aihu
+  source: https://github.com/aihu-project/aihu
 ---
 
 # aihu

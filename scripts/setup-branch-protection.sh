@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of branch protection rules for fellwork/aihu main branch.
+# One-time setup of branch protection rules for aihu-project/aihu main branch.
 # Requires gh CLI authenticated as a repo admin.
 #
 # Usage: bash scripts/setup-branch-protection.sh
@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-REPO="fellwork/aihu"
+REPO="aihu-project/aihu"
 BRANCH="main"
 
 echo "Configuring branch protection for $REPO@$BRANCH..."

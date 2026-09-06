@@ -7,8 +7,8 @@
     "name": "aihu"
   },
   "defaultEnabled": true,
-  "homepage": "https://github.com/fellwork/aihu",
-  "repository": "https://github.com/fellwork/aihu",
+  "homepage": "https://github.com/aihu-project/aihu",
+  "repository": "https://github.com/aihu-project/aihu",
   "license": "MIT",
   "keywords": ["aihu", "sfc", "web-components", "signals", "compiler"]
 }

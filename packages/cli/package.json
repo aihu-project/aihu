@@ -40,11 +40,11 @@
   "description": "Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/cli#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/cli#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

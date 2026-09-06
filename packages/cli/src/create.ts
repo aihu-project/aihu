@@ -776,7 +776,7 @@ async function scaffoldAndReport(
   process.stdout.write(`    ${cyan(installCmd[pm])}\n`)
   process.stdout.write(`    ${cyan(devCmd[pm])}\n`)
   process.stdout.write('\n')
-  process.stdout.write(`  ${dim('Docs:')} https://github.com/fellwork/aihu\n\n`)
+  process.stdout.write(`  ${dim('Docs:')} https://github.com/aihu-project/aihu\n\n`)
 }
 
 /** True when this module is the process entry point (the `create-aihu` bin),

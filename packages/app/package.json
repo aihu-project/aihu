@@ -49,11 +49,11 @@
   "description": "Top-level app integration — wires runtime, router, and adapters into a Vite app.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/app"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/app#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/app#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

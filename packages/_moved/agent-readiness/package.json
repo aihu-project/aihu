@@ -25,11 +25,11 @@
   "deprecated": "Moved to @aihu-plugin/agent-readiness — install that instead.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/_moved/agent-readiness"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/plugin-agent-readiness#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/plugin-agent-readiness#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

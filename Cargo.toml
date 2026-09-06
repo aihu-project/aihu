@@ -20,7 +20,7 @@ exclude = [
 [workspace.package]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/fellwork/aihu"
+repository = "https://github.com/aihu-project/aihu"
 
 # W2 (advanced-js-template-expressions): size-optimized release profile so the
 # aihu-compiler cdylib + oxc_parser fit the <500 KB-gzip wasm budget

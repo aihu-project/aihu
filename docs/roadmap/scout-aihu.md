@@ -1,6 +1,6 @@
 # Scout Report: Aihu v1.1+ Roadmap Survey
 
-**Date:** 2026-05-05 · **Repo:** `c:/git/fellwork/aihu` · v1.0 shipped 2026-05-03
+**Date:** 2026-05-05 · **Repo:** `c:/git/aihu-project/aihu` · v1.0 shipped 2026-05-03
 
 ---
 

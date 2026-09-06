@@ -31,11 +31,11 @@
   "description": "Cloudflare Workers/Pages deployment adapter for @aihu/app.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/adapter-cloudflare"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/adapter-cloudflare#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/adapter-cloudflare#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

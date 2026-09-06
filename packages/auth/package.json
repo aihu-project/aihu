@@ -45,11 +45,11 @@
   "description": "JWT scope checks, ScopeSignal, and server middleware for aihu auth.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/auth"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/auth#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/auth#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

@@ -704,7 +704,7 @@ If a future template version does offer `@aihu/auth`, the runtime stub MUST thro
 // packages/templates/<name>/template/src/auth/aihu-auth-stub.ts.tmpl (future)
 throw new Error(
   '@aihu/auth is not yet ratified (RFC #56). ' +
-  'See https://github.com/fellwork/aihu/discussions/56 for status. ' +
+  'See https://github.com/aihu-project/aihu/discussions/56 for status. ' +
   'Use the better-auth template instead.'
 )
 ```

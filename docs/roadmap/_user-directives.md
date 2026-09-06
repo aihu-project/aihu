@@ -50,7 +50,7 @@ These are explicit user instructions that supersede architect autonomy where the
 
 ### Decision answers (SUMMARY.md §9)
 
-1. **GitHub org for plugins** — stay under `fellwork/aihu` **until we open the project for contributors**. Migration to a separate `aihujs/` or similar org is deferred until a community contribution influx warrants it.
+1. **GitHub org for plugins** — core framework and first-party packages live in `aihu-project/aihu`. Split a plugin into a sibling repository under `aihu-project` when it needs an independent release cadence, maintainer boundary, or security boundary. The aihu.dev registry is the shared discovery layer across monorepo and sibling-repo packages.
 2. **Volar approach** — APPROVED — `@volar/language-server` (higher-abstraction package) for M2; refactor to `@volar/language-core` direct only if conflicts arise.
 3. **Versioning UX** — APPROVED — `aihu.dev/v1/` path prefix (not subdomain). Confirmed for arch-1 §3.6.
 4. **`examples/docs-site/` → `apps/docs/`** — APPROVED — M1 standalone PR before website content work begins.

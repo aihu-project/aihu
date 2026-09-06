@@ -32,7 +32,7 @@
  * USAGE
  *   bun scripts/ci-receipt.ts <pr-number|full-sha> [options]
  *
- *     --repo <owner/name>  default fellwork/aihu
+ *     --repo <owner/name>  default aihu-project/aihu
  *     --at <iso-8601>      evaluate as of an instant: ignore check-runs that had
  *                          not COMPLETED by then. Reconstructs what the tool
  *                          would have said at the moment a stale receipt posted.
@@ -50,7 +50,7 @@
 
 const CHECK = 'check'
 const CI_OK = 'ci-ok'
-const DEFAULT_REPO = 'fellwork/aihu'
+const DEFAULT_REPO = 'aihu-project/aihu'
 
 interface CheckRun {
   readonly name: string

@@ -1,6 +1,6 @@
 # CodeQL configuration, merged into the config GitHub's DEFAULT SETUP
 # generates. There is no advanced-setup workflow in this repo — code scanning
-# is configured at repos/fellwork/aihu/code-scanning/default-setup
+# is configured at repos/aihu-project/aihu/code-scanning/default-setup
 # (languages: actions, javascript-typescript, python, rust).
 #
 # THIS FILE IS INERT ON ITS OWN. Default setup only reads it when the
@@ -8,7 +8,7 @@
 # property is unset, code scanning silently keeps analyzing everything and
 # nothing here applies — no warning, no failed check. Verify with:
 #
-#   gh api repos/fellwork/aihu/properties/values
+#   gh api repos/aihu-project/aihu/properties/values
 #
 # Why: `repos/` holds vendored third-party source kept as read-only agent
 # reference (see AGENTS.md "Vendored Repositories"). It is never built, never
