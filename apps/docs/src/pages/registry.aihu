@@ -4,7 +4,7 @@
   layout: "docs",
   head: {
     title: "Registry — aihu",
-    description: "Browse source-distributed aihu components and opt-in capability providers, with install commands and a machine-readable catalog.",
+    description: "Preview first-party aihu components and opt-in capability providers, with install commands and a machine-readable catalog.",
     canonical: "/registry"
   }
 }
@@ -22,13 +22,13 @@
 @template {
   <div class="dn-registry dn-article">
     <header class="dn-registry-head">
-      <p class="dn-sec-num"><b>RG</b> registry</p>
+      <p class="dn-sec-num"><b>RG</b> first-party preview</p>
       <h1>Own the source. Keep the network.</h1>
       <p>
-        Add a component as editable <code>.aihu</code> source, or install an
+        Add a component as editable <code>.aihu</code> source, or install a
         capability provider as a versioned package. Aihu's router and CSS engine
-        are opt-in choices too. The catalog stays open and readable
-        to people, CLIs, and agents from the same published index.
+        are opt-in choices too. This preview catalogs first-party packages used
+        to build Aihu sites; its extension contracts are still evolving.
       </p>
       <div class="dn-registry-stats">
         <span><strong>{components.length}</strong> source recipes</span>
@@ -62,7 +62,7 @@
       <div class="dn-sec-head">
         <div>
           <p class="dn-sec-num"><b>02</b> providers + extensions</p>
-          <h2>Opt into maintained capabilities</h2>
+          <h2>Opt into first-party capabilities</h2>
         </div>
         <code>bun add &lt;package&gt;</code>
       </div>

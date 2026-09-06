@@ -2,6 +2,8 @@
   "$schema": "https://aihu.dev/registry/schema-v1.json",
   "schemaVersion": 1,
   "name": "aihu",
+  "stability": "experimental",
+  "contributions": "closed",
   "homepage": "https://aihu.dev/registry",
   "repository": "https://github.com/aihu-project/aihu",
   "items": [

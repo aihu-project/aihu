@@ -8,6 +8,11 @@ The registry gives Aihu one discovery surface across source-distributed UI
 recipes and installable extensions. Humans browse it at `aihu.dev/registry`;
 tools consume `aihu.dev/registry/index.json`.
 
+The initial catalog is a public, first-party preview. It gives early users
+working examples and installable official packages while extension contracts
+are still evolving. External registry contributions remain closed until those
+provider contracts are versioned and pass compatibility tests.
+
 `@aihu/ui` remains the canonical source for shadcn-style recipes. `aihu add`
 copies those files into an application so the application owns and edits the
 result. Extensions remain versioned npm packages and display their package
@@ -18,10 +23,11 @@ install command in the same catalog.
 The base framework supplies component compilation, runtime primitives, and
 versioned capability contracts. Routing, CSS generation, SSR, persistence,
 agent transports, and similar systems are opt-in providers. Aihu's own router
-and CSS engine follow the same rule as third-party implementations: the
-registry lists the capability each package provides, and an application
-installs the provider it chooses. No default provider may be bundled
-transitively into the base runtime.
+and CSS engine are the first implementations of this rule: the registry lists
+the capability each package provides, and an application installs the provider
+it chooses. Future third-party implementations will use the same contracts once
+those contracts are stable. No default provider may be bundled transitively
+into the base runtime.
 
 The current implementation is partway there. CSS engine scaffolding defaults to
 none, but `@aihu/app` still imports and peers directly on `@aihu/router`, and
@@ -47,8 +53,9 @@ is introduced. The registry does not activate packages by itself.
 Core framework packages and first-party recipes live in `aihu-project/aihu`.
 A plugin moves to a sibling repository under `aihu-project` when it needs an
 independent release cadence, maintainer boundary, or security boundary. Moving
-code does not create a second discovery system: each repository publishes a
-validated registry contribution that aihu.dev aggregates.
+code does not create a second discovery system. During the preview, the Aihu
+build publishes the first-party catalog. Later, sibling repositories may
+publish validated contributions that aihu.dev aggregates.
 
 A package boundary by itself is not a reason to create a repository. The core
 compiler, runtime, capability contracts, CLI, UI recipes, and registry generator

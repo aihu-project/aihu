@@ -88,6 +88,8 @@ const hosted = {
   $schema: 'https://aihu.dev/registry/schema-v1.json',
   schemaVersion: 1,
   name: 'aihu',
+  stability: 'experimental',
+  contributions: 'closed',
   homepage: 'https://aihu.dev/registry',
   repository: REPOSITORY,
   items: registry.items.map((item) => ({

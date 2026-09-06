@@ -3,11 +3,22 @@
   "$id": "https://aihu.dev/registry/schema-v1.json",
   "title": "Aihu hosted registry v1",
   "type": "object",
-  "required": ["schemaVersion", "name", "homepage", "repository", "items", "extensions"],
+  "required": [
+    "schemaVersion",
+    "name",
+    "stability",
+    "contributions",
+    "homepage",
+    "repository",
+    "items",
+    "extensions"
+  ],
   "properties": {
     "$schema": { "type": "string", "format": "uri" },
     "schemaVersion": { "const": 1 },
     "name": { "type": "string", "minLength": 1 },
+    "stability": { "const": "experimental" },
+    "contributions": { "const": "closed" },
     "homepage": { "type": "string", "format": "uri" },
     "repository": { "type": "string", "format": "uri" },
     "items": {
