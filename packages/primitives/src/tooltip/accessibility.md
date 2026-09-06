@@ -17,8 +17,8 @@ CSS; pieces reflect `data-state="open"|"closed"`.
 
 ## Positioning
 
-Placement is computed by **reusing** the CSS engine's `position()` shim
-(`@aihu/css-engine/runtime/progressive`) with the trigger as anchor. The tooltip
+Placement is computed by **reusing** Arbor's dependency-free `position()` utility
+(`@aihu/arbor/progressive`) with the trigger as anchor. The tooltip
 contains no positioning math of its own and adds no `@floating-ui/dom`
 dependency — consistent with aihu's dependency-free thesis.
 

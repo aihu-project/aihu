@@ -157,6 +157,7 @@ bun add @aihu/arbor
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 | `./hydrate` | `./dist/hydrate.js` | `—` |
+| `./progressive` | `./dist/progressive.js` | `—` |
 
 <sub><i>Auto-generated against `@aihu/arbor@4.1.1`.</i></sub>
 

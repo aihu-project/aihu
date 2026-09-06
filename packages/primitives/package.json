@@ -96,8 +96,7 @@
   "sideEffects": false,
   "dependencies": {
     "@aihu/signals": "workspace:*",
-    "@aihu/arbor": "workspace:*",
-    "@aihu/css-engine": "workspace:*"
+    "@aihu/arbor": "workspace:*"
   },
   "scripts": {
     "build": "rolldown -c",

@@ -6,6 +6,7 @@
       "@aihu/signals": ["./packages/signals/src/index.ts"],
       "@aihu/signals/lifecycle": ["./packages/signals/src/lifecycle.ts"],
       "@aihu/arbor": ["./packages/arbor/src/index.ts"],
+      "@aihu/arbor/progressive": ["./packages/arbor/src/progressive.ts"],
       "@aihu/runtime": ["./packages/runtime/src/index.ts"],
       // The server-only SSR helper subpath. Without this mapping the
       // specifier resolves through package exports to runtime/dist, which

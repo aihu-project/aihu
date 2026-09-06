@@ -14,6 +14,10 @@
     "./hydrate": {
       "types": "./dist/hydrate.d.ts",
       "import": "./dist/hydrate.js"
+    },
+    "./progressive": {
+      "types": "./dist/progressive.d.ts",
+      "import": "./dist/progressive.js"
     }
   },
   "files": [

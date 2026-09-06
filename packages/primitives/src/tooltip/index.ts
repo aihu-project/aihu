@@ -6,7 +6,7 @@
  * `role="tooltip"` and is not focusable, and Escape dismisses.
  *
  * Placement REUSES the Plan 3 `position()` shim from
- * `@aihu/css-engine/runtime/progressive` — tooltip contains NO positioning math
+ * `@aihu/arbor/progressive` — tooltip contains NO positioning math
  * of its own and adds NO floating-ui dependency.
  *
  * Root attributes (reflected): `open` (boolean), `open-delay`/`close-delay`
@@ -14,7 +14,7 @@
  * Root signals: `open`, `coords` (computed position written by the shim).
  */
 
-import { type Placement, position } from '@aihu/css-engine/runtime/progressive'
+import { type Placement, position } from '@aihu/arbor/progressive'
 import { effect, type Read, signal } from '@aihu/signals'
 import { createDomContext, injectValue, provideContext } from '../dom-context.ts'
 import { HTMLElementBase } from '../html-element-base.ts'

@@ -49,6 +49,14 @@ export const EXPORTS: readonly ApiExport[] = [
       'Materialize `node` into `host` synchronously and return a `MountScope` owning the lifecycle.',
   },
   {
+    name: 'position',
+    kind: 'function',
+    signature:
+      'function position( anchor: Element, floating: HTMLElement, options: PositionOptions = {}, ): Placement',
+    summary:
+      'Position `floating` against `anchor` using fixed coordinates and return the placement that was applied after collision flipping.',
+  },
+  {
     name: 'when',
     kind: 'function',
     signature: 'function when(condition: Signal<boolean>, grow: () => Node): StructuralNode',
@@ -120,6 +128,13 @@ export const EXPORTS: readonly ApiExport[] = [
     summary: 'Public `MountScope` returned by `mount()`.',
   },
   {
+    name: 'PositionOptions',
+    kind: 'interface',
+    signature:
+      "interface PositionOptions {\n  /** Preferred side. Default `'bottom'`. */\n  placement?: Placement\n  /** Gap between anchor and floating element, in px. Default `4`. */\n  offset?: number\n  /** Flip to the opposite side when the preferred side overflows. Default `true`. */\n  flip?: boolean\n}",
+    summary: '',
+  },
+  {
     name: 'AttrMap',
     kind: 'type',
     signature:
@@ -149,6 +164,12 @@ export const EXPORTS: readonly ApiExport[] = [
     kind: 'type',
     signature: 'type Node = Branch | Leaf | StructuralNode',
     summary: 'Discriminated union of node kinds accepted by `mount()`.',
+  },
+  {
+    name: 'Placement',
+    kind: 'type',
+    signature: "type Placement = 'top' | 'bottom' | 'left' | 'right'",
+    summary: 'Where to place a floating element relative to its anchor.',
   },
   {
     name: 'Snapshot',

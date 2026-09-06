@@ -6,106 +6,16 @@
  * size-split): merging the two would blow `cn`'s 1 KB budget. This module
  * carries the heavier positioning code under its own 3 KB row.
  *
- * It is a tiny hand-written floating-ui-style positioning shim — NOT the npm
- * `@floating-ui/dom` package. aihu's thesis is dependency-free / tiny bundles,
- * so the shim is ~2 KB of vanilla DOM math, SHARED by `anchorFallback` and
- * `popoverFallback`. Only loaded when native CSS anchor positioning / the
- * Popover API is unsupported (the engine emits a
+ * Core DOM positioning lives in `@aihu/arbor/progressive`. This compatibility
+ * façade retains the CSS-provider fallback API for existing consumers while
+ * allowing headless primitives to work with no CSS provider. Only loaded when
+ * native CSS anchor positioning / the Popover API is unsupported (the engine emits a
  * `/* aihu:progressive-fallback ... *​/` marker the consumer wires to these).
  */
 
-/** Where to place the floating element relative to its anchor. */
-export type Placement = 'top' | 'bottom' | 'left' | 'right'
+import { type Placement, type PositionOptions, position } from '@aihu/arbor/progressive'
 
-export interface PositionOptions {
-  /** Preferred side. Default `'bottom'`. */
-  placement?: Placement
-  /** Gap between anchor and floating element, in px. Default `4`. */
-  offset?: number
-  /** Flip to the opposite side if it would overflow the viewport. Default `true`. */
-  flip?: boolean
-}
-
-const OPPOSITE: Record<Placement, Placement> = {
-  top: 'bottom',
-  bottom: 'top',
-  left: 'right',
-  right: 'left',
-}
-
-/** Compute `{ x, y }` for `floating` placed against `anchor` at `placement`. */
-function computeXY(
-  anchor: DOMRect,
-  floating: { width: number; height: number },
-  placement: Placement,
-  offset: number,
-): { x: number; y: number } {
-  switch (placement) {
-    case 'top':
-      return {
-        x: anchor.left + (anchor.width - floating.width) / 2,
-        y: anchor.top - floating.height - offset,
-      }
-    case 'bottom':
-      return {
-        x: anchor.left + (anchor.width - floating.width) / 2,
-        y: anchor.bottom + offset,
-      }
-    case 'left':
-      return {
-        x: anchor.left - floating.width - offset,
-        y: anchor.top + (anchor.height - floating.height) / 2,
-      }
-    case 'right':
-      return {
-        x: anchor.right + offset,
-        y: anchor.top + (anchor.height - floating.height) / 2,
-      }
-  }
-}
-
-/** True if a rect at (x, y) with size would overflow the viewport. */
-function overflows(x: number, y: number, w: number, h: number): boolean {
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  return x < 0 || y < 0 || x + w > vw || y + h > vh
-}
-
-/**
- * Position `floating` against `anchor` and apply `position: fixed; left/top`.
- * The shared core for both fallbacks. Returns the resolved placement.
- */
-export function position(
-  anchor: Element,
-  floating: HTMLElement,
-  opts: PositionOptions = {},
-): Placement {
-  const placement = opts.placement ?? 'bottom'
-  const offset = opts.offset ?? 4
-  const flip = opts.flip ?? true
-
-  const aRect = anchor.getBoundingClientRect()
-  const fRect = { width: floating.offsetWidth, height: floating.offsetHeight }
-
-  let resolved = placement
-  let { x, y } = computeXY(aRect, fRect, resolved, offset)
-
-  // Viewport-collision flip to the opposite side if the preferred one overflows.
-  if (flip && overflows(x, y, fRect.width, fRect.height)) {
-    const alt = OPPOSITE[resolved]
-    const altXY = computeXY(aRect, fRect, alt, offset)
-    if (!overflows(altXY.x, altXY.y, fRect.width, fRect.height)) {
-      resolved = alt
-      x = altXY.x
-      y = altXY.y
-    }
-  }
-
-  floating.style.position = 'fixed'
-  floating.style.left = `${Math.round(x)}px`
-  floating.style.top = `${Math.round(y)}px`
-  return resolved
-}
+export { type Placement, type PositionOptions, position }
 
 /**
  * Fallback for the `anchor:` feature: position `floating` against `anchor`

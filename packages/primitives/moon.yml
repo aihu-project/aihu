@@ -2,14 +2,12 @@
 language: typescript
 layer: library
 
-# primitives imports @aihu/signals, @aihu/arbor, and @aihu/css-engine
-# (the runtime/progressive position() shim reused by tooltip). Declare the
-# project deps so Moon's `^:build` builds those packages' dist + .d.ts BEFORE
+# primitives imports @aihu/signals and @aihu/arbor. Declare the project deps
+# so Moon's `^:build` builds those packages' dist + .d.ts BEFORE
 # primitives typecheck — same rationale as css-engine's compiler dep.
 dependsOn:
   - 'signals'
   - 'arbor'
-  - 'css-engine'
 
 tasks:
   build:

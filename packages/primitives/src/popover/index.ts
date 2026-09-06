@@ -16,7 +16,7 @@
  *     dialog's job. Use `dialog` when the surface must be modal.
  *
  * Placement REUSES the `position()` shim from
- * `@aihu/css-engine/runtime/progressive` (the same one `tooltip` uses) —
+ * `@aihu/arbor/progressive` (the same one `tooltip` uses) —
  * popover contains NO positioning math of its own and adds NO floating-ui
  * dependency.
  *
@@ -38,7 +38,7 @@
  * `checked-change` and slider's `value-change` convention.
  */
 
-import { type Placement, position } from '@aihu/css-engine/runtime/progressive'
+import { type Placement, position } from '@aihu/arbor/progressive'
 import { effect, type Read, signal } from '@aihu/signals'
 import { createDomContext, injectValue, provideContext } from '../dom-context.ts'
 import { HTMLElementBase } from '../html-element-base.ts'
@@ -373,7 +373,7 @@ export class AihuPopoverContent extends PopoverPiece {
     this.removeEventListener('keydown', this._onKeydown)
   }
 
-  /** Position against the trigger using the REUSED css-engine shim. */
+  /** Position against the trigger using the shared core DOM utility. */
   private readonly _position = (): void => {
     const anchor = this.ctx.triggerEl()
     if (!anchor) return

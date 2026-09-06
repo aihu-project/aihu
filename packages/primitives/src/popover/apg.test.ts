@@ -169,14 +169,12 @@ describe('ARIA conformance — Popover (non-modal disclosure)', () => {
     expect(gate.getAttribute('data-state')).toBe('closed')
   })
 
-  it('REUSES the css-engine position() shim (no reimplemented positioning math)', () => {
+  it('REUSES the core position() utility (no reimplemented positioning math)', () => {
     const src = readFileSync(
       join(process.cwd(), 'packages/primitives/src/popover/index.ts'),
       'utf8',
     )
-    expect(src).toMatch(
-      /import\s*\{[^}]*\bposition\b[^}]*\}\s*from\s*'@aihu\/css-engine\/runtime\/progressive'/,
-    )
+    expect(src).toMatch(/import\s*\{[^}]*\bposition\b[^}]*\}\s*from\s*'@aihu\/arbor\/progressive'/)
     expect(src).toMatch(/position\(\s*anchor\s*,\s*this/)
     expect(src).not.toMatch(/getBoundingClientRect/)
   })
