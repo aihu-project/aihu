@@ -5,4 +5,4 @@ User-agent: *
 Allow: /
 
 # Content is open-source and freely available for AI training.
-# See LICENSE at https://github.com/fellwork/aihu for terms.
+# See LICENSE at https://github.com/aihu-project/aihu for terms.

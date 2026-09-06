@@ -6,11 +6,11 @@
     "version": "0.1.0",
     "contact": {
       "name": "Fellwork",
-      "url": "https://github.com/fellwork/aihu"
+      "url": "https://github.com/aihu-project/aihu"
     },
     "license": {
       "name": "MIT",
-      "url": "https://github.com/fellwork/aihu/blob/main/LICENSE"
+      "url": "https://github.com/aihu-project/aihu/blob/main/LICENSE"
     },
     "x-todo": "regenerate from the docs content post-launch. The retired docs app’s openapi.json (packages/plugin-agent-readiness) additionally documented /llms.txt, /llms-full.txt, /robots.txt, /sitemap.xml, /.well-known/agent.json (A2A) and /.well-known/mcp/server-card.json (MCP) — none of those routes exist yet (the readiness plugin is not wired into this app). Add those paths back here only once the corresponding routes are actually served, so this document never advertises a 404."
   },

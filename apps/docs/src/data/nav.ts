@@ -64,6 +64,13 @@ export const NAV: readonly NavSection[] = [
   // in-browser WASM playground (ported from apps/docs) compiles the same
   // corpus live at /playground.
   {
+    title: 'Registry',
+    links: [
+      { label: 'Components & extensions', href: '/registry', ready: true },
+      { label: 'Machine-readable index', href: '/registry/index.json', ready: true },
+    ],
+  },
+  {
     title: 'Examples',
     links: [
       { label: 'Gallery', href: '/examples', ready: true },

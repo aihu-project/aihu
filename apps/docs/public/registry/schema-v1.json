@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aihu.dev/registry/schema-v1.json",
+  "title": "Aihu hosted registry v1",
+  "type": "object",
+  "required": ["schemaVersion", "name", "homepage", "repository", "items", "extensions"],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "schemaVersion": { "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "homepage": { "type": "string", "format": "uri" },
+    "repository": { "type": "string", "format": "uri" },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "extensions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/extension" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "file": {
+      "type": "object",
+      "required": ["path", "source", "type"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^registry/" },
+        "source": { "type": "string" },
+        "type": { "enum": ["component", "style", "lib", "block"] }
+      },
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "required": ["name", "type", "files"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "type": { "enum": ["ui", "block", "style", "theme", "lib"] },
+        "description": { "type": "string" },
+        "files": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/file" } },
+        "dependencies": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "registryDependencies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "variants": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true
+          }
+        },
+        "meta": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "extension": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "description",
+        "command",
+        "npm",
+        "kind",
+        "provides",
+        "installation"
+      ],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "command": { "type": "string" },
+        "npm": { "type": "string", "format": "uri" },
+        "kind": { "enum": ["provider", "plugin"] },
+        "provides": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "installation": { "const": "opt-in" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
