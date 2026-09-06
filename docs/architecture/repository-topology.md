@@ -18,7 +18,7 @@ releases, which is slower and harder to recover.
 | Repository | Initial package scope | Checks owned by the repository |
 | --- | --- | --- |
 | `aihu` | Runtime contracts, DOM composition, signals, context, arbor, app integration | Unit tests, type checks, provider conformance harness |
-| `aihu-compiler` | Compiler, native compiler packages | Compiler fixtures and native platform matrix |
+| [`aihu-compiler`](https://github.com/aihu-project/aihu-compiler) | Compiler, native compiler packages | Compiler fixtures and native platform matrix |
 | `aihu-css` | Official CSS provider and native packages | CSS fixtures, Vite provider conformance, native platform matrix |
 | `aihu-router` | Official router provider | Routing fixtures, runtime provider conformance |
 | `aihu-server` | Server runtime, adapters, native packages | Server tests, adapter tests, native platform matrix |
@@ -51,6 +51,15 @@ replace that branch with a DOM composition adapter plus a CSS-provider adapter.
 The progressive `position()` utility used by primitives is also DOM behavior;
 it should move to a core DOM utility rather than remain an implicit
 `@aihu/primitives` dependency on `@aihu/css-engine`.
+
+## Extraction status
+
+`aihu-project/aihu-compiler` now contains a standalone compiler source tree,
+its required fixtures, and compiler-only CI. It is a staged extraction: the
+monorepo remains the release source until the compiler repository has its own
+native platform release workflow and npm trusted-publisher configuration.
+Keeping publishing in one place during this step prevents an incomplete
+platform package release from changing what existing consumers install.
 
 ## Extraction gates
 
