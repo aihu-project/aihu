@@ -17,7 +17,7 @@ releases, which is slower and harder to recover.
 
 | Repository | Initial package scope | Checks owned by the repository |
 | --- | --- | --- |
-| `aihu` | Runtime contracts, signals, context, arbor, app integration | Unit tests, type checks, provider conformance harness |
+| `aihu` | Runtime contracts, DOM composition, signals, context, arbor, app integration | Unit tests, type checks, provider conformance harness |
 | `aihu-compiler` | Compiler, native compiler packages | Compiler fixtures and native platform matrix |
 | `aihu-css` | Official CSS provider and native packages | CSS fixtures, Vite provider conformance, native platform matrix |
 | `aihu-router` | Official router provider | Routing fixtures, runtime provider conformance |
@@ -29,6 +29,28 @@ releases, which is slower and harder to recover.
 Agent protocols may remain together initially because `agent-service`, A2A,
 ACP, and agent-server share a release graph. They can move to `aihu-agents` when
 their interfaces stop changing with the server runtime.
+
+## DOM composition is independent of styling
+
+Functional DOM switching is a framework capability, not a feature of the
+official CSS engine. The runtime owns the `shadow` and `light` component modes,
+the mount target, slot projection, hydration, event surfaces, and the component
+scope identifier. This keeps a component's DOM behavior stable when an
+application replaces or declines the official CSS provider.
+
+The public DOM-composition contract should expose the resolved component mode
+and a neutral style target. A CSS provider may compile styles for that target
+(for example a component sheet, a document sheet, scoped CSS, or server CSS),
+but it must not select the DOM mode or alter slot and hydration behavior. The
+compiler should produce mode and target metadata once, then pass it separately
+to the runtime and to the configured style adapter.
+
+This corrects a current coupling: the compiler uses `shadowMode` both to inject
+runtime options and to select the CSS-engine folding path. The migration must
+replace that branch with a DOM composition adapter plus a CSS-provider adapter.
+The progressive `position()` utility used by primitives is also DOM behavior;
+it should move to a core DOM utility rather than remain an implicit
+`@aihu/primitives` dependency on `@aihu/css-engine`.
 
 ## Extraction gates
 
@@ -47,11 +69,14 @@ Current blockers are concrete:
 
 - `@aihu/app` imports and peers directly on `@aihu/router`.
 - `@aihu/use` peers directly on `@aihu/router`.
-- `@aihu/primitives` depends directly on `@aihu/css-engine`.
+- `@aihu/primitives` depends directly on `@aihu/css-engine` for progressive
+  positioning.
 - `@aihu/router` depends directly on `@aihu/server`.
+- The compiler uses `shadowMode` to select both runtime DOM behavior and the
+  official CSS engine's style-emission path.
 
-These edges should be replaced with routing, styling, and server capability
-contracts before those providers move.
+These edges should be replaced with routing, DOM-composition, styling, and
+server capability contracts before those providers move.
 
 ## CI model
 
@@ -71,14 +96,18 @@ metadata from first-party repositories without rebuilding their packages.
 ## Migration order
 
 1. Publish routing, styling, and server capability contracts with conformance
-   fixtures inside `aihu`.
-2. Remove the four concrete dependency edges listed above.
-3. Extract `aihu-compiler`, `aihu-css`, and `aihu-server` to eliminate the
+   fixtures inside `aihu`. Establish the DOM-composition contract first and
+   move progressive positioning out of the CSS engine.
+2. Split compiler DOM metadata from CSS-provider style emission, then remove
+   the concrete dependency edges listed above.
+3. Add conformance fixtures that run each DOM mode with the official CSS
+   provider, an alternate provider, and no CSS provider. They must separately
+   cover slot projection, hydration, SSR output, and the chosen style target.
+4. Extract `aihu-compiler`, `aihu-css`, and `aihu-server` to eliminate the
    largest native build matrices from routine framework checks.
-4. Extract `aihu-router`, `aihu-tooling`, and `aihu-ui` once their contract and
+5. Extract `aihu-router`, `aihu-tooling`, and `aihu-ui` once their contract and
    release inputs are stable.
-5. Move mature plugins individually as their ownership or release cadence
+6. Move mature plugins individually as their ownership or release cadence
    diverges.
-6. Open third-party registry contributions only after at least one alternative
+7. Open third-party registry contributions only after at least one alternative
    provider passes the same conformance suite as the official provider.
-
