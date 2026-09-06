@@ -122,7 +122,7 @@ function _deepQuerySelector<T extends Element = HTMLElement>(
  * toggling needs no subscription.
  *
  * This is a THIN REACTIVE ADAPTER, not a focus-trap implementation
- * (FEL-397 / fellwork/aihu#537). Everything about actually trapping focus —
+ * (FEL-397 / aihu-project/aihu#537). Everything about actually trapping focus —
  * composed-tree tabbable enumeration and ordering, the Tab/Shift+Tab edge
  * wrap, the escape guard, initial focus, focus restore — lives in the single
  * shared implementation at `@aihu/primitives/focus-trap`. All this function

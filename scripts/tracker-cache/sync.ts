@@ -16,7 +16,7 @@ import { execFileSync } from 'node:child_process'
 import { CACHE_DIR, DB_PATH, nowIso, openDb } from './db.ts'
 import { fetchLinearIssues, hasLinearToken } from './linear.ts'
 
-const REPO = 'fellwork/aihu'
+const REPO = 'aihu-project/aihu'
 
 function gh(args: string[]): unknown {
   const out = execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })

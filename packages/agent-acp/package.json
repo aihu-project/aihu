@@ -28,11 +28,11 @@
   "deprecated": "The ACP protocol merged into A2A under the Linux Foundation (Aug 2025). Use @aihu/agent-a2a instead.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/agent-acp"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/agent-acp#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/agent-acp#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   },

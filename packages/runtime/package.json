@@ -38,11 +38,11 @@
   "description": "Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/runtime"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/runtime#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/runtime#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

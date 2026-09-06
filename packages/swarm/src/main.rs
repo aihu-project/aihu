@@ -268,7 +268,7 @@ const ROLES: &[&str] = &[
 // Accountability sync targets (docs/typed-bus-payloads.md). Same team/repo
 // scope `~/.agent-swarm/skills/swarm/swarm.ts` already uses for this project.
 const LINEAR_TEAM_KEY: &str = "FEL";
-const GITHUB_REPO: &str = "fellwork/aihu";
+const GITHUB_REPO: &str = "aihu-project/aihu";
 /// Convention for "opted into the swarm backlog", not yet in use anywhere in
 /// this repo as of this writing (checked via `gh label list`) — until an
 /// orchestrator/architect creates and applies it, `sync --pull`'s GitHub
@@ -539,9 +539,9 @@ fn open_db() -> rusqlite::Result<Connection> {
     // R2 (C-SWARM-RECON-AUTHORITY): `github_pr` is a bare integer, but the swarm
     // runs contracts in more than one repo. Resolving a bare number against a
     // hardcoded GITHUB_REPO mints a FALSE receipt — `agent-swarm#1` is OPEN
-    // while `fellwork/aihu#1` is MERGED, so a cross-repo link would verify
+    // while `aihu-project/aihu#1` is MERGED, so a cross-repo link would verify
     // against the wrong PR. The link must carry its repo. Backfill the
-    // KNOWN-correct existing links to fellwork/aihu EXPLICITLY: an explicit
+    // KNOWN-correct existing links to aihu-project/aihu EXPLICITLY: an explicit
     // backfill of known rows is not the same as an implicit fallback for
     // unknown ones — a future link with no repo is REFUSED for auto-verify
     // (see `resolve_pr`), never defaulted, because defaulting IS the collision.
@@ -1758,7 +1758,7 @@ fn gh_issue_view(number: i64, fields: &str) -> Result<Value, String> {
 fn gh_pr_view(repo: &str, number: i64) -> Result<Value, String> {
     let n = number.to_string();
     // `repo` is the LINK's own repo (from `resolve_pr`), never a hardcoded
-    // default — R2, C-SWARM-RECON-AUTHORITY. Resolving #1 against `fellwork/aihu`
+    // default — R2, C-SWARM-RECON-AUTHORITY. Resolving #1 against `aihu-project/aihu`
     // when the work is `agent-swarm#1` is exactly the false-receipt collision.
     let out = gh_run(&[
         "pr",
@@ -2677,7 +2677,7 @@ fn resolve_pr(
         };
     }
     // Fallbacks resolve the swarm's OWN verdict-message PR references, which are
-    // fellwork/aihu by construction — a KNOWN repo, not an unknown default.
+    // aihu-project/aihu by construction — a KNOWN repo, not an unknown default.
     let from_column: Option<i64> = conn
         .query_row(
             "SELECT pr FROM msg WHERE contract = ?1 AND kind = 'verdict' AND pr IS NOT NULL \
@@ -3174,7 +3174,7 @@ mod tests {
     #[test]
     fn parse_pr_ref_matches_full_github_pull_url() {
         assert_eq!(
-            parse_pr_ref("merged as https://github.com/fellwork/aihu/pull/641 today"),
+            parse_pr_ref("merged as https://github.com/aihu-project/aihu/pull/641 today"),
             Some(641)
         );
     }
@@ -3212,7 +3212,7 @@ mod tests {
         // Also rejects the URL-shaped equivalent: an /issue/ path is not a
         // /pull/ path, even under github.com/.
         assert_eq!(
-            parse_pr_ref("https://github.com/fellwork/aihu/issue/641"),
+            parse_pr_ref("https://github.com/aihu-project/aihu/issue/641"),
             None
         );
     }
@@ -3366,7 +3366,7 @@ mod tests {
     fn resolve_pr_refuses_github_pr_with_unknown_repo() {
         // MUST-FAIL 2: a bare `github_pr` with no `github_repo` is REFUSED, never
         // resolved against the hardcoded GITHUB_REPO — that default IS the
-        // agent-swarm#1-vs-fellwork/aihu#1 collision.
+        // agent-swarm#1-vs-aihu-project/aihu#1 collision.
         let conn = recon_conn();
         conn.execute(
             "INSERT INTO contract(id, github_pr, github_repo) VALUES ('C-X', 1, NULL)",
@@ -3384,7 +3384,7 @@ mod tests {
     #[test]
     fn resolve_pr_uses_the_links_own_repo_when_present() {
         // The dual of the above: an explicit cross-repo link resolves in ITS
-        // repo, so `gh pr view` runs against agent-swarm, not fellwork/aihu.
+        // repo, so `gh pr view` runs against agent-swarm, not aihu-project/aihu.
         let conn = recon_conn();
         conn.execute(
             "INSERT INTO contract VALUES ('C-X', 1, 'srmcguirt/agent-swarm')",

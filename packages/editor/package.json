@@ -37,11 +37,11 @@
   "description": "Hand-rolled, dependency-free, GX-governed rich-text editor — JSON doc model, invertible transactions, markdown (web-v1 dialect) round-trip, contenteditable view with IME-safe read-back, agent read/suggest/write surface.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/editor"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/editor#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/editor#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

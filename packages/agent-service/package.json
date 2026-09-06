@@ -29,11 +29,11 @@
   "description": "Service-side agent runtime (server-hosted agent endpoints).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/agent-service"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/agent-service#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/agent-service#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

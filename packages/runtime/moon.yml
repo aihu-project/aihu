@@ -10,7 +10,7 @@ dependsOn:
 # DELIBERATELY NOT a dependsOn edge: 'primitives'.
 #
 # src/a11y.ts imports @aihu/primitives/focus-trap (the single shared focus-trap
-# implementation — FEL-397 / fellwork/aihu#537), but the edge cannot exist:
+# implementation — FEL-397 / aihu-project/aihu#537), but the edge cannot exist:
 # primitives -> css-engine -> compiler -> runtime, so runtime -> primitives
 # closes a real Moon cycle (`moon run runtime:typecheck` fails with
 # task_graph::would_cycle). `scripts/check-moon-graph.ts` detects this itself

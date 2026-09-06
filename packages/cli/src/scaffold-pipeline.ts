@@ -701,7 +701,7 @@ export function printNextSteps(input: PrintNextStepsInput): void {
     `    cd ${input.options.appName}`,
     `    ${input.options.pm} run dev`,
     '',
-    '  Docs: https://github.com/fellwork/aihu',
+    '  Docs: https://github.com/aihu-project/aihu',
     '',
   ]
   write(lines.join('\n'))

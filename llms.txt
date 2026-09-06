@@ -31,15 +31,17 @@
 
 - [MCP Server Card](https://aihu.dev/.well-known/mcp/server-card.json): Machine-readable MCP server card (SEP-1649)
 - [llms-full.txt](https://aihu.dev/llms-full.txt): Extended documentation for AI agents
-- [llms-cookbook.txt](https://github.com/fellwork/aihu/blob/main/llms-cookbook.txt): Compiler-verified cookbook recipes — the fluency corpus for writing idiomatic .aihu components (generated from cookbook/)
+- [llms-cookbook.txt](https://github.com/aihu-project/aihu/blob/main/llms-cookbook.txt): Compiler-verified cookbook recipes — the fluency corpus for writing idiomatic .aihu components (generated from cookbook/)
 
 ## Source
 
-- [GitHub Repository](https://github.com/fellwork/aihu): Source code, examples, and specs
+- [GitHub Repository](https://github.com/aihu-project/aihu): Source code, examples, and specs
+- [Component and Extension Registry](https://aihu.dev/registry): Source-distributed UI recipes and first-party extension packages
+- [Registry JSON](https://aihu.dev/registry/index.json): Machine-readable catalog with inlined recipe source
 - [npm: @aihu/signals](https://www.npmjs.com/package/@aihu/signals): Reactive primitive package
 - [npm: @aihu/cli](https://www.npmjs.com/package/@aihu/cli): CLI scaffold tool
 
 ## Optional
 
-- [Contributing](https://github.com/fellwork/aihu/blob/main/CONTRIBUTING.md): How to contribute to aihu
-- [Changelog](https://github.com/fellwork/aihu/blob/main/packages/signals/CHANGELOG.md): @aihu/signals changelog
+- [Contributing](https://github.com/aihu-project/aihu/blob/main/CONTRIBUTING.md): How to contribute to aihu
+- [Changelog](https://github.com/aihu-project/aihu/blob/main/packages/signals/CHANGELOG.md): @aihu/signals changelog

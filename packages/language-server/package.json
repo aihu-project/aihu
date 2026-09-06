@@ -50,11 +50,11 @@
   "description": "Cross-editor Language Server (aihu-language-server) for .aihu Single File Components — diagnostics, hover, completion, and quick-fix code actions.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/language-server"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/language-server#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/language-server#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   },

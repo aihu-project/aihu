@@ -63,6 +63,7 @@ name: Release aihu-compile binaries
 
 permissions:
   contents: write
+  id-token: write
 
 # Force every `cargo` invocation to resolve toolchain to 1.95 by default.
 # The dtolnay/rust-toolchain action installs the version but doesn't always
@@ -145,6 +146,9 @@ jobs:
   platforms:
     name: Build and publish platform packages
     uses: ./.github/workflows/release-platforms.yml
+    permissions:
+      contents: read
+      id-token: write
     with:
       is_release: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.canary) }}
       canary: ${{ github.event_name == 'workflow_dispatch' && inputs.canary || false }}
@@ -317,7 +321,8 @@ jobs:
   # Publish all tier A/B/C/D @aihu/* JS packages on `v*` tag.
   #
   # Mirrors the publish-native pattern: triggered only by an actual tag push,
-  # consumes NPM_TOKEN secret, runs after compiler binaries (`build`) and the
+  # authenticates to npm with the repository's trusted-publisher OIDC policy,
+  # then runs after compiler binaries (`build`) and the
   # @aihu/server-* native packages (`build-native` + `publish-native`) so that
   # by the time these JS packages reach npm their declared
   # `optionalDependencies` already resolve.
@@ -359,11 +364,14 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Node (for npm token)
+      - name: Setup Node (for npm trusted publishing)
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          # npm trusted publishing requires Node >=22.14 and npm >=11.5.1.
+          # Node 24 is the supported release line used in npm's reference flow.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - name: Setup moon toolchain
         # `bun run build` invokes `moon run :build` (root package.json) which
@@ -440,7 +448,6 @@ jobs:
 
       - name: Publish via Changesets
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # OIDC trusted-publisher allowlist (Settings → Secrets and variables
           # → Actions → Variables). Comma-separated short names:

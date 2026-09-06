@@ -53,40 +53,40 @@
 
 ## Examples
 
-- [live-counter](https://github.com/fellwork/aihu/tree/main/examples/live-counter): The smallest possible aihu component — state, event handlers, reactive text node, and agent surface
-- [temperature-converter](https://github.com/fellwork/aihu/tree/main/examples/temperature-converter): Two-way binding and computed derivations (7GUIs #2) with agent surface
-- [timer](https://github.com/fellwork/aihu/tree/main/examples/timer): Lifecycle hooks, reactive derivations, and agent surface for AI-controlled resets
-- [todo-mvc](https://github.com/fellwork/aihu/tree/main/examples/todo-mvc): Canonical TodoMVC — list reactivity, filtering, localStorage, full agent surface
-- [color-theme](https://github.com/fellwork/aihu/tree/main/examples/color-theme): $reactive in @style plus $global tokens and $media responsive breakpoints
-- [hacker-news](https://github.com/fellwork/aihu/tree/main/examples/hacker-news): HN reader hitting the live API — dark-mode tokens, @agent block, SSR route
-- [blog-loader](https://github.com/fellwork/aihu/tree/main/examples/blog-loader): Server-rendered post page demonstrating aihu's loader pattern
-- [blog-router](https://github.com/fellwork/aihu/tree/main/examples/blog-router): 3-page blog demonstrating file-based routing
-- [css-pluggability](https://github.com/fellwork/aihu/tree/main/examples/css-pluggability): Tailwind CSS integration with documented swap paths to UnoCSS and Pico CSS
-- [currency-converter](https://github.com/fellwork/aihu/tree/main/examples/currency-converter): Currency conversion with reactive signals
-- [weather-card](https://github.com/fellwork/aihu/tree/main/examples/weather-card): Weather card component with external API data
+- [live-counter](https://github.com/aihu-project/aihu/tree/main/examples/live-counter): The smallest possible aihu component — state, event handlers, reactive text node, and agent surface
+- [temperature-converter](https://github.com/aihu-project/aihu/tree/main/examples/temperature-converter): Two-way binding and computed derivations (7GUIs #2) with agent surface
+- [timer](https://github.com/aihu-project/aihu/tree/main/examples/timer): Lifecycle hooks, reactive derivations, and agent surface for AI-controlled resets
+- [todo-mvc](https://github.com/aihu-project/aihu/tree/main/examples/todo-mvc): Canonical TodoMVC — list reactivity, filtering, localStorage, full agent surface
+- [color-theme](https://github.com/aihu-project/aihu/tree/main/examples/color-theme): $reactive in @style plus $global tokens and $media responsive breakpoints
+- [hacker-news](https://github.com/aihu-project/aihu/tree/main/examples/hacker-news): HN reader hitting the live API — dark-mode tokens, @agent block, SSR route
+- [blog-loader](https://github.com/aihu-project/aihu/tree/main/examples/blog-loader): Server-rendered post page demonstrating aihu's loader pattern
+- [blog-router](https://github.com/aihu-project/aihu/tree/main/examples/blog-router): 3-page blog demonstrating file-based routing
+- [css-pluggability](https://github.com/aihu-project/aihu/tree/main/examples/css-pluggability): Tailwind CSS integration with documented swap paths to UnoCSS and Pico CSS
+- [currency-converter](https://github.com/aihu-project/aihu/tree/main/examples/currency-converter): Currency conversion with reactive signals
+- [weather-card](https://github.com/aihu-project/aihu/tree/main/examples/weather-card): Weather card component with external API data
 
 ## Architecture Specs
 
-- [Block Structure Spec](https://github.com/fellwork/aihu/blob/main/docs/superpowers/specs/2026-05-02-spec-block-structure.md): @state, @template, @style, @agent, @route block grammar (Ratified 2026-05-02)
-- [Macro Vocabulary v2 Spec](https://github.com/fellwork/aihu/blob/main/docs/superpowers/specs/2026-05-05-spec-macro-vocabulary-v2.md): Object-literal collection-form macros (RATIFIED 2026-05-05)
-- [Template Attribute Syntax Spec](https://github.com/fellwork/aihu/blob/main/docs/superpowers/specs/2026-05-02-spec-template-attribute-syntax.md): $on:event, $bind:value, $if, $each, $key directives (Ratified 2026-05-02)
-- [Live-Binding Spec](https://github.com/fellwork/aihu/blob/main/docs/superpowers/specs/2026-05-05-spec-live-binding.md): Reactive component-instance registry wiring @agent actions to live signals (APPROVED)
-- [Plugin Contract Spec](https://github.com/fellwork/aihu/blob/main/docs/superpowers/specs/2026-05-02-spec-plugin-contract.md): definePlugin contract and plugin hook surface (Ratified 2026-05-02)
+- [Block Structure Spec](https://github.com/aihu-project/aihu/blob/main/docs/superpowers/specs/2026-05-02-spec-block-structure.md): @state, @template, @style, @agent, @route block grammar (Ratified 2026-05-02)
+- [Macro Vocabulary v2 Spec](https://github.com/aihu-project/aihu/blob/main/docs/superpowers/specs/2026-05-05-spec-macro-vocabulary-v2.md): Object-literal collection-form macros (RATIFIED 2026-05-05)
+- [Template Attribute Syntax Spec](https://github.com/aihu-project/aihu/blob/main/docs/superpowers/specs/2026-05-02-spec-template-attribute-syntax.md): $on:event, $bind:value, $if, $each, $key directives (Ratified 2026-05-02)
+- [Live-Binding Spec](https://github.com/aihu-project/aihu/blob/main/docs/superpowers/specs/2026-05-05-spec-live-binding.md): Reactive component-instance registry wiring @agent actions to live signals (APPROVED)
+- [Plugin Contract Spec](https://github.com/aihu-project/aihu/blob/main/docs/superpowers/specs/2026-05-02-spec-plugin-contract.md): definePlugin contract and plugin hook surface (Ratified 2026-05-02)
 
 ## Compliance Gates
 
-- [llms.txt compliance tests](https://github.com/fellwork/aihu/blob/main/packages/agent-readiness/tests/compliance/llms-txt-spec.test.ts): 9 tests verifying llmstxt.org spec format
-- [MCP Server Card schema tests](https://github.com/fellwork/aihu/blob/main/packages/agent-readiness/tests/compliance/mcp-server-card-schema.test.ts): 14 tests verifying SEP-1649 schema
-- [robots.txt RFC 9309 tests](https://github.com/fellwork/aihu/blob/main/packages/agent-readiness/tests/compliance/robots-rfc9309.test.ts): 7 tests verifying RFC 9309 compliance
-- [isitagentready.com tests](https://github.com/fellwork/aihu/blob/main/packages/agent-readiness/tests/compliance/isitagentready.test.ts): 7 tests verifying all agent-readiness checklist items
+- [llms.txt compliance tests](https://github.com/aihu-project/aihu/blob/main/packages/agent-readiness/tests/compliance/llms-txt-spec.test.ts): 9 tests verifying llmstxt.org spec format
+- [MCP Server Card schema tests](https://github.com/aihu-project/aihu/blob/main/packages/agent-readiness/tests/compliance/mcp-server-card-schema.test.ts): 14 tests verifying SEP-1649 schema
+- [robots.txt RFC 9309 tests](https://github.com/aihu-project/aihu/blob/main/packages/agent-readiness/tests/compliance/robots-rfc9309.test.ts): 7 tests verifying RFC 9309 compliance
+- [isitagentready.com tests](https://github.com/aihu-project/aihu/blob/main/packages/agent-readiness/tests/compliance/isitagentready.test.ts): 7 tests verifying all agent-readiness checklist items
 
 ## Source
 
-- [GitHub Repository](https://github.com/fellwork/aihu): Source code, examples, and specs
-- [Roadmap](https://github.com/fellwork/aihu/blob/main/docs/roadmap/SUMMARY.md): v1.1 master plan and milestone schedule
+- [GitHub Repository](https://github.com/aihu-project/aihu): Source code, examples, and specs
+- [Roadmap](https://github.com/aihu-project/aihu/blob/main/docs/roadmap/SUMMARY.md): v1.1 master plan and milestone schedule
 
 ## More
 
-- [Contributing](https://github.com/fellwork/aihu/blob/main/CONTRIBUTING.md): How to contribute to aihu
-- [Changelog](https://github.com/fellwork/aihu/blob/main/packages/signals/CHANGELOG.md): @aihu/signals changelog
-- [CLI Reference](https://github.com/fellwork/aihu/blob/main/docs/cli.md): Full aihu CLI command reference
+- [Contributing](https://github.com/aihu-project/aihu/blob/main/CONTRIBUTING.md): How to contribute to aihu
+- [Changelog](https://github.com/aihu-project/aihu/blob/main/packages/signals/CHANGELOG.md): @aihu/signals changelog
+- [CLI Reference](https://github.com/aihu-project/aihu/blob/main/docs/cli.md): Full aihu CLI command reference

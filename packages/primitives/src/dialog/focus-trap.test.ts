@@ -2,7 +2,7 @@
  * `createFocusTrap` options — the `initialFocus` / `returnFocus` surface added
  * so `@aihu/runtime`'s `<focusTrap initialFocus=… returnFocus=…>` template
  * primitive can delegate here instead of carrying a second, divergent
- * focus-trap implementation (FEL-397 / fellwork/aihu#537).
+ * focus-trap implementation (FEL-397 / aihu-project/aihu#537).
  *
  * The default-option behavior (focus first tabbable, always restore) is
  * covered through `dialog-content` in `./apg.test.ts` / `./keyboard.test.ts`;

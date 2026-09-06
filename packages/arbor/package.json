@@ -33,11 +33,11 @@
   "description": "Reactive component tree (the rendering layer that consumes @aihu/signals).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/arbor"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/arbor#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/arbor#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

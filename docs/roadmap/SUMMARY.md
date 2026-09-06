@@ -327,7 +327,7 @@
 
 ## 9. Decision Points Needing User Input
 
-1. **GitHub org for plugin packages** — currently `fellwork/aihu`. Recommended: stay through v1.1; revisit at v2.0.
+1. **GitHub org for plugin packages** — RESOLVED 2026-09-06. Core packages stay in `aihu-project/aihu`; independently maintained plugins may move to sibling repositories under `aihu-project`, with aihu.dev as their shared registry and documentation surface.
 2. **Volar approach for LSP** (A4 OQ-DX-01) — `@volar/language-server` (faster M2) vs `@volar/language-core` direct (more control). Recommended: `@volar/language-server` for M2.
 3. **Versioning UX** (A1 §3.6) — committed to path prefix `aihu.dev/v1/`. **Confirm** before DNS work.
 4. **`examples/docs-site/` promotion timing** (A1 §3.1, A2 §8.1) — committed to M1 standalone PR. **Confirm.**

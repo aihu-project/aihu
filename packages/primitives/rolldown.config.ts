@@ -19,7 +19,7 @@ export default defineConfig({
     // The focus trap gets its OWN entry (not just `./dialog`) because
     // @aihu/runtime's `<focusTrap>` adapter consumes it — importing `./dialog`
     // there would drag the whole dialog primitive into runtime's single
-    // bundled dist for the sake of one factory. FEL-397 / fellwork/aihu#537.
+    // bundled dist for the sake of one factory. FEL-397 / aihu-project/aihu#537.
     'focus-trap': 'src/dialog/focus-trap.ts',
     tooltip: 'src/tooltip/index.ts',
     button: 'src/button/index.ts',

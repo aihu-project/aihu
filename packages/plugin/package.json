@@ -26,11 +26,11 @@
   "description": "Plugin substrate shared by @aihu/server and the meta-framework — runtime hook surface.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/plugin"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/plugin#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/plugin#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

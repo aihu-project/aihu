@@ -1136,7 +1136,7 @@ export function fullReadme(name: string): string {
   const lines = [
     `# ${name}`,
     '',
-    'Built with [aihu](https://github.com/fellwork/aihu) — Web Components that humans',
+    'Built with [aihu](https://github.com/aihu-project/aihu) — Web Components that humans',
     'use and agents drive, from one source. This app is a co-op word game in one',
     `component (\`<${TAG}>\`) with exactly two actions — and three kinds of player.`,
     '',

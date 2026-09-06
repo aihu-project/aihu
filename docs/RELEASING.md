@@ -184,7 +184,7 @@ The `release.yml` is keyed on `v*` tags regardless of source branch, so a `v0.1.
 
 ### Install Changeset Bot
 
-The Changeset Bot comments on PRs that should add a changeset but haven't. Install at <https://github.com/apps/changeset-bot> and grant access to `fellwork/aihu`.
+The Changeset Bot comments on PRs that should add a changeset but haven't. Install at <https://github.com/apps/changeset-bot> and grant access to `aihu-project/aihu`.
 
 ### Apply branch protection
 
@@ -194,15 +194,21 @@ bash scripts/setup-branch-protection.sh
 
 Requires `gh` CLI authenticated as a repo admin. Idempotent.
 
-### NPM_TOKEN secret
+### npm trusted publishing
 
-Generate a publish token at <https://www.npmjs.com/settings/{user}/tokens>:
-- Type: **Granular Access Token** scoped to `@aihu` org with `Read and write` on packages, AND with "Allow this token to bypass two-factor authentication" enabled
-- OR Classic with type **Automation** (bypasses 2FA by design)
+Every published `@aihu/*` and `@aihu-plugin/*` package authorizes GitHub Actions
+from `aihu-project/aihu`. Workspace packages publish from `release.yml`; native
+platform packages publish from the reusable `release-platforms.yml` workflow.
 
-Add the token as `NPM_TOKEN` repo secret at <https://github.com/fellwork/aihu/settings/secrets/actions>.
+The publish jobs require `id-token: write`, Node 24, and npm 11.5.1 or later.
+They intentionally carry no `NPM_TOKEN`: npm exchanges GitHub's short-lived OIDC
+identity for publish access and emits provenance automatically.
 
-Account 2FA mode must be **Authorization only** (not "Authorization and writes"), otherwise CI publishes will prompt for OTP.
+When adding a package, configure its npm trusted publisher before the first
+release. Use `release-platforms.yml` for a native package under
+`packages/{server,css-engine,compiler}/npm*`; use `release.yml` for every other
+package. Allow both direct and staged publishing so stable and canary workflows
+remain available.
 
 ## Conventional commits
 
@@ -232,6 +238,9 @@ Bump levels are still author-controlled via `bun changeset`; types here are abou
 
 **Version PR has wrong bumps.** Edit the changeset files in your feature PR before merge — once merged, they're consumed by the Version PR.
 
-**`bun changeset publish` fails with `EOTP`.** The `NPM_TOKEN` secret is on a 2FA-required account. See "NPM_TOKEN secret" above for the bypass flags.
+**`npm publish` reports authentication failure in Actions.** Confirm the package's
+trusted publisher names `aihu-project/aihu` and the workflow file that contains
+the publishing job. Reusable native jobs must name `release-platforms.yml`, not
+the calling `release.yml`.
 
 **Want to skip a release.** Don't merge the Version PR. New changesets accumulate; the Version PR updates with each landed change.

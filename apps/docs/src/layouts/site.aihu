@@ -38,8 +38,9 @@
         <nav class="dn-footer-nav" aria-label="Footer">
           <a href="/guides/getting-started">Guides</a>
           <a href="/api">API</a>
+          <a href="/registry">Registry</a>
           <a href="/examples">Examples</a>
-          <a href="https://github.com/fellwork/aihu">GitHub</a>
+          <a href="https://github.com/aihu-project/aihu">GitHub</a>
         </nav>
       </div>
     </footer>

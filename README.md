@@ -2,8 +2,8 @@
 
 > **One component. Two audiences.** The framework for the next era of AI — where every interface has two users: the person using it, and that person's AI agent.
 
-[![CI](https://github.com/fellwork/aihu/actions/workflows/plan-a.yml/badge.svg)](https://github.com/fellwork/aihu/actions/workflows/plan-a.yml)
-[![release](https://github.com/fellwork/aihu/actions/workflows/release.yml/badge.svg)](https://github.com/fellwork/aihu/actions/workflows/release.yml)
+[![CI](https://github.com/aihu-project/aihu/actions/workflows/plan-a.yml/badge.svg)](https://github.com/aihu-project/aihu/actions/workflows/plan-a.yml)
+[![release](https://github.com/aihu-project/aihu/actions/workflows/release.yml/badge.svg)](https://github.com/aihu-project/aihu/actions/workflows/release.yml)
 [![@aihu/signals on npm](https://img.shields.io/npm/v/@aihu/signals.svg?label=@aihu/signals)](https://www.npmjs.com/package/@aihu/signals)
 [![llms.txt](https://img.shields.io/badge/llms.txt-supported-blueviolet)](#compliance)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue?logo=anthropic)](#compliance)
@@ -48,10 +48,14 @@ bun run dev      # component on http://localhost:5108 · agent bridge on :5208
 npx create-aihu my-app
 
 # …or run the canonical examples portfolio in parallel
-git clone https://github.com/fellwork/aihu
+git clone https://github.com/aihu-project/aihu
 cd aihu && bun install
 bun run dev:examples
 ```
+
+Browse the source-distributed component and extension catalog at
+[aihu.dev/registry](https://aihu.dev/registry). `aihu add <name>` copies a
+recipe into your project so you own the resulting `.aihu` source.
 
 ---
 

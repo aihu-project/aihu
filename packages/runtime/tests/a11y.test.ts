@@ -218,7 +218,7 @@ describe('createFocusTrap — RFC-A5-018', () => {
   })
 
   it('finds the trap container and wires Tab-cycling when rendered inside a shadow root', async () => {
-    // Regression for fellwork/aihu#537: `wire()` used to locate its host via
+    // Regression for aihu-project/aihu#537: `wire()` used to locate its host via
     // plain `document.querySelector`, which never descends into shadow
     // roots — so a `<focusTrap>` rendered inside a shadow-DOM component
     // never got wired at all and Tab silently escaped the trap. This
@@ -280,7 +280,7 @@ describe('createFocusTrap — RFC-A5-018', () => {
   })
 
   it('does not yank focus out of a nested shadow-DOM leaf on Shift+Tab (regression for the composed-containment gap)', async () => {
-    // Regression for fellwork/aihu#537 (follow-up): the earlier fix made
+    // Regression for aihu-project/aihu#537 (follow-up): the earlier fix made
     // `wire()`'s host lookup and the active-element read shadow-aware, but
     // left the containment check shadow-blind — `host.contains(t)` walks
     // light-DOM tree order only, so a shadow-mode leaf component sitting
@@ -335,7 +335,7 @@ describe('createFocusTrap — RFC-A5-018', () => {
   })
 
   it('includes a focusable sitting inside a nested shadow root in the Tab cycle (#537)', async () => {
-    // Regression for fellwork/aihu#537: `focusables()` built its list with
+    // Regression for aihu-project/aihu#537: `focusables()` built its list with
     // plain `host.querySelectorAll`, which only ever sees light-DOM
     // descendants — a focusable living inside an OPEN shadow root nested
     // under the trap host was silently excluded from the cycle, so Tab from

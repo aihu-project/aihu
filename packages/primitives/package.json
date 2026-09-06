@@ -108,11 +108,11 @@
   "description": "aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/primitives"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/primitives#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/primitives#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   },

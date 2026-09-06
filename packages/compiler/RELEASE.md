@@ -47,7 +47,7 @@ bun install
 After a release lands:
 
 ```bash
-curl -L -O https://github.com/fellwork/aihu/releases/latest/download/aihu-compile-linux-x64
+curl -L -O https://github.com/aihu-project/aihu/releases/latest/download/aihu-compile-linux-x64
 chmod +x aihu-compile-linux-x64
 ./aihu-compile-linux-x64 --help
 ```

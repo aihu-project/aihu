@@ -4,10 +4,10 @@
   "description": "Official aihu authoring skill. Framework for building Web Components from .aihu single-file components.",
   "author": {
     "name": "aihu",
-    "url": "https://github.com/fellwork/aihu"
+    "url": "https://github.com/aihu-project/aihu"
   },
-  "homepage": "https://github.com/fellwork/aihu",
-  "repository": "https://github.com/fellwork/aihu",
+  "homepage": "https://github.com/aihu-project/aihu",
+  "repository": "https://github.com/aihu-project/aihu",
   "license": "MIT",
   "keywords": ["aihu", "sfc", "web-components", "signals", "compiler"],
   "skills": "./skills/",
@@ -18,7 +18,7 @@
     "developerName": "aihu",
     "category": "Developer Tools",
     "capabilities": ["Read"],
-    "websiteURL": "https://github.com/fellwork/aihu",
+    "websiteURL": "https://github.com/aihu-project/aihu",
     "defaultPrompt": [
       "Create an aihu counter component",
       "Add an agent-drivable action to this .aihu component"

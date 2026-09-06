@@ -6,7 +6,7 @@
  * activate, and restores focus to the previously-active element on deactivate.
  *
  * This is the SINGLE focus-trap implementation in the repo (FEL-397 /
- * fellwork/aihu#537). Two consumers share it:
+ * aihu-project/aihu#537). Two consumers share it:
  *   - `dialog-content` (`../dialog/index.ts`), via the default options.
  *   - `@aihu/runtime`'s `<focusTrap>` template surface, which imports the
  *     dedicated `@aihu/primitives/focus-trap` subpath entry and wraps this in

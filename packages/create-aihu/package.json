@@ -20,11 +20,11 @@
   "description": "Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/create-aihu"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/create-aihu#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/create-aihu#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

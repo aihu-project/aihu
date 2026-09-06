@@ -13,7 +13,7 @@
         "type": "local",
         "path": "./skills"
       },
-      "homepage": "https://github.com/fellwork/aihu",
+      "homepage": "https://github.com/aihu-project/aihu",
       "keywords": ["aihu", "sfc", "web components", "signals"],
       "domains": ["github.com"]
     }

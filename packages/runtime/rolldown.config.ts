@@ -37,7 +37,7 @@ export default defineConfig({
   //
   // '@aihu/primitives/focus-trap' is external for the same double-shipping
   // reason, plus a measured one. It is the SINGLE focus-trap implementation
-  // (FEL-397 / fellwork/aihu#537); `a11y.ts`'s `<focusTrap>` helper is now a
+  // (FEL-397 / aihu-project/aihu#537); `a11y.ts`'s `<focusTrap>` helper is now a
   // thin reactive adapter over it. Inlining it — and, transitively, the slice
   // of `composed-tree.ts` it walks — measured **+829 B gz** on runtime's row
   // (4.64 → 5.47 kB against a 4800 B limit), and an app that also uses

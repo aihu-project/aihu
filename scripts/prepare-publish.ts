@@ -93,7 +93,7 @@ function ensurePackage(dir: string): { changed: boolean; readmeMissing: boolean 
   // 5. repository
   const wantRepo = {
     type: 'git',
-    url: 'git+https://github.com/fellwork/aihu.git',
+    url: 'git+https://github.com/aihu-project/aihu.git',
     directory: `packages/${dir}`,
   }
   if (
@@ -106,14 +106,14 @@ function ensurePackage(dir: string): { changed: boolean; readmeMissing: boolean 
   }
 
   // 6. homepage
-  const wantHomepage = `https://github.com/fellwork/aihu/tree/main/packages/${dir}#readme`
+  const wantHomepage = `https://github.com/aihu-project/aihu/tree/main/packages/${dir}#readme`
   if (pkg.homepage !== wantHomepage) {
     pkg.homepage = wantHomepage
     changed = true
   }
 
   // 7. bugs
-  const wantBugs = 'https://github.com/fellwork/aihu/issues'
+  const wantBugs = 'https://github.com/aihu-project/aihu/issues'
   if (pkg.bugs !== wantBugs) {
     pkg.bugs = wantBugs
     changed = true

@@ -1,0 +1,185 @@
+@route {
+  path: "/registry",
+  name: "registry-page",
+  layout: "docs",
+  head: {
+    title: "Registry — aihu",
+    description: "Preview first-party aihu components and opt-in capability providers, with install commands and a machine-readable catalog.",
+    canonical: "/registry"
+  }
+}
+
+@state {
+  import { EXTENSIONS, UI_RECIPES } from '../data/registry.ts'
+
+  const components = UI_RECIPES.map((item) => ({
+    ...item,
+    dependencyCount: item.dependencies.length + item.registryDependencies.length,
+  }))
+  const extensions = EXTENSIONS
+}
+
+@template {
+  <div class="dn-registry dn-article">
+    <header class="dn-registry-head">
+      <p class="dn-sec-num"><b>RG</b> first-party preview</p>
+      <h1>Own the source. Keep the network.</h1>
+      <p>
+        Add a component as editable <code>.aihu</code> source, or install a
+        capability provider as a versioned package. Aihu's router and CSS engine
+        are opt-in choices too. This preview catalogs first-party packages used
+        to build Aihu sites; its extension contracts are still evolving.
+      </p>
+      <div class="dn-registry-stats">
+        <span><strong>{components.length}</strong> source recipes</span>
+        <span><strong>{extensions.length}</strong> opt-in packages</span>
+        <a href="/registry/index.json">registry JSON</a>
+      </div>
+    </header>
+
+    <section class="dn-registry-section" id="components">
+      <div class="dn-sec-head">
+        <div>
+          <p class="dn-sec-num"><b>01</b> components</p>
+          <h2>Copy, edit, and ship</h2>
+        </div>
+        <code>aihu add &lt;name&gt;</code>
+      </div>
+      <div class="dn-registry-grid">
+        <article class="dn-registry-card" each={item of components} key={item.name}>
+          <div class="dn-registry-card-top">
+            <h3>{item.name}</h3>
+            <span>{item.type}</span>
+          </div>
+          <p>{item.description}</p>
+          <code class="dn-registry-command">{item.command}</code>
+          <small if={item.dependencyCount > 0}>{item.dependencyCount} composed dependency(s)</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="dn-registry-section" id="extensions">
+      <div class="dn-sec-head">
+        <div>
+          <p class="dn-sec-num"><b>02</b> providers + extensions</p>
+          <h2>Opt into first-party capabilities</h2>
+        </div>
+        <code>bun add &lt;package&gt;</code>
+      </div>
+      <div class="dn-registry-grid dn-extension-grid">
+        <a class="dn-registry-card" each={item of extensions} key={item.name} href={item.npm}>
+          <div class="dn-registry-card-top">
+            <h3>{item.name}</h3>
+            <span>{item.kind} · {item.provides.join(', ')}</span>
+          </div>
+          <p>{item.description}</p>
+          <code class="dn-registry-command">{item.command}</code>
+        </a>
+      </div>
+    </section>
+  </div>
+}
+
+@style {
+  .dn-registry { max-width: 68rem; }
+  .dn-registry-head { margin-bottom: 3.5rem; }
+  .dn-registry-head h1 {
+    max-width: 18ch;
+    margin: 0.75rem 0 1rem;
+    font-size: var(--fs-3xl);
+    line-height: 1.06;
+    letter-spacing: var(--tracking-tighter);
+  }
+  .dn-registry-head > p:not(.dn-sec-num) {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: var(--fs-md);
+    line-height: 1.65;
+  }
+  .dn-registry-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin-top: 1.5rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .dn-registry-stats strong { color: var(--fg-strong); }
+  .dn-registry-stats a { margin-left: auto; }
+  .dn-registry-section { margin: 0 0 4rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+  .dn-registry-section .dn-sec-head {
+    align-items: end;
+    margin-bottom: 1rem;
+  }
+  .dn-registry-section .dn-sec-head h2 { margin: 0.3rem 0 0; }
+  .dn-registry-section .dn-sec-head > code {
+    color: var(--accent-strong);
+    font-size: var(--fs-xs);
+  }
+  .dn-registry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 0.8rem;
+  }
+  .dn-registry-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    color: var(--fg);
+    text-decoration: none;
+  }
+  a.dn-registry-card:hover {
+    border-color: var(--accent-line);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+  }
+  .dn-registry-card-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .dn-registry-card h3 {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    overflow-wrap: anywhere;
+  }
+  .dn-registry-card-top span,
+  .dn-registry-card small {
+    color: var(--faint);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+  .dn-registry-card p {
+    flex: 1;
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+  }
+  .dn-registry-command {
+    display: block;
+    overflow-x: auto;
+    padding: 0.55rem 0.65rem;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    color: var(--accent-strong);
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+  }
+  @media (max-width: 580px) {
+    .dn-registry-stats a { width: 100%; margin-left: 0; }
+    .dn-registry-section .dn-sec-head { align-items: start; flex-direction: column; }
+  }
+}

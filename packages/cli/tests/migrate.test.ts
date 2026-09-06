@@ -453,7 +453,7 @@ const mod2 = await import("@aihu-plugin/agent-readiness")`)
 
   it('rewrites JSDoc URL references and Markdown links', () => {
     const input = `/**
- * See https://github.com/fellwork/aihu/tree/main/packages/data#readme
+ * See https://github.com/aihu-project/aihu/tree/main/packages/data#readme
  * Migration: install \`@aihu/data\` instead of the legacy name.
  */`
     const result = migratePackageNames(input)

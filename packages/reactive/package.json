@@ -34,11 +34,11 @@
   "description": "Fine-grained Proxy-backed deep reactive trees on aihu signals — lazy per-(object,key) tracking nodes, plain-assignment writes, mutate/reconcile.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/reactive"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/reactive#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/reactive#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   }

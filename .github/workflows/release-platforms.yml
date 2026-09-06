@@ -45,10 +45,6 @@ name: Build and publish platform native packages
         description: 'Passthrough of the top-level workflow_dispatch `dry_run` input (false on any other trigger)'
         required: true
         type: boolean
-    secrets:
-      NPM_TOKEN:
-        required: true
-
 # Mirrors release.yml's own env block — see there for the full rationale.
 # Workflow-level `env:` does not cross a workflow_call boundary, so every
 # `cargo build`/`cross build` step in this file needs its own copy.
@@ -281,6 +277,9 @@ jobs:
     name: Publish @aihu/server-* platform packages
     needs: build-native
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
@@ -295,8 +294,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - name: Setup Bun (canary)
         if: inputs.canary
@@ -329,7 +329,6 @@ jobs:
 
       - name: Stage and publish each platform package (idempotent)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           CANARY: ${{ inputs.canary && '1' || '' }}
           CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
         run: |
@@ -456,6 +455,9 @@ jobs:
     name: Publish @aihu/css-engine-* platform packages
     needs: build-css-native
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
@@ -468,8 +470,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - name: Setup Bun (canary)
         if: inputs.canary
@@ -498,7 +501,6 @@ jobs:
 
       - name: Stage and publish each platform package (idempotent)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           CANARY: ${{ inputs.canary && '1' || '' }}
           CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
         run: |
@@ -569,6 +571,9 @@ jobs:
     name: Publish @aihu/compiler-* platform packages
     needs: build
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
@@ -581,8 +586,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - name: Setup Bun (canary)
         if: inputs.canary
@@ -611,7 +617,6 @@ jobs:
 
       - name: Stage and publish each platform package (idempotent, hard-fail)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           CANARY: ${{ inputs.canary && '1' || '' }}
           CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
         run: |
@@ -781,6 +786,9 @@ jobs:
     name: Publish @aihu/compiler-native-* platform packages
     needs: build-compiler-napi
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
@@ -793,8 +801,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - name: Setup Bun (canary)
         if: inputs.canary
@@ -821,7 +830,6 @@ jobs:
 
       - name: Stage and publish each platform package (idempotent)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           CANARY: ${{ inputs.canary && '1' || '' }}
           CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
         run: |

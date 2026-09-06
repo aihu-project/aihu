@@ -49,11 +49,11 @@
   "description": "Server runtime + native renderer (napi-rs) for aihu SSR.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fellwork/aihu.git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
     "directory": "packages/server"
   },
-  "homepage": "https://github.com/fellwork/aihu/tree/main/packages/server#readme",
-  "bugs": "https://github.com/fellwork/aihu/issues",
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/server#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues",
   "publishConfig": {
     "access": "public"
   },
