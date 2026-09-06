@@ -59,9 +59,11 @@ publish validated contributions that aihu.dev aggregates.
 
 A package boundary by itself is not a reason to create a repository. The core
 compiler, runtime, capability contracts, CLI, UI recipes, and registry generator
-can share coordinated releases while their contracts settle. Path ownership,
-package-level tasks, and isolated worktrees provide agent granularity inside the
-monorepo without multiplying repository automation.
+can share coordinated releases while their contracts settle. Build isolation is
+also a repository boundary: native compiler, CSS, and server matrices should not
+run for unrelated documentation or provider changes. The staged target topology
+and extraction gates are defined in
+[`repository-topology.md`](./repository-topology.md).
 
 Provider interfaces come before repository extraction. The router and CSS
 engine are early extraction candidates once the base packages depend only on
