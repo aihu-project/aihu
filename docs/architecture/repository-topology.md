@@ -2,6 +2,9 @@
 
 **Status:** Proposed migration · **Date:** 2026-09-06
 
+The ordered implementation checklist lives in
+[repository-extraction-task-list.md](./repository-extraction-task-list.md).
+
 ## Goal
 
 Repository boundaries should isolate build cost and release risk. A documentation
