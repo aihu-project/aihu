@@ -472,6 +472,7 @@ const requestedAllLocalPkgs = localPkgsRaw.length === 1 && localPkgsRaw[0] === '
  */
 const CF_TEAM_LOCAL_PKGS = [
   'adapter-cloudflare',
+  'app',
   'arbor',
   'compiler',
   'plugin-agent-readiness',
@@ -1242,6 +1243,15 @@ async function runCell(
       spec.kind === 'create'
         ? createCommand(pm, info, spec, appName)
         : appTemplateCommand(pm, info, spec, appName)
+    // A local-package cell is a release-candidate test: it must install the
+    // tarballs produced from this checkout, including their peer graph. The
+    // `aihu app` path normally installs before the harness can replace registry
+    // entries with those tarballs, which falsely tests yesterday's published
+    // peers (and makes npm reject a valid candidate). Built-in `create` rows do
+    // not auto-install, so this only changes template-package scaffolds. The
+    // normal git-init remains: it captures the unmodified scaffold as the base
+    // commit before this harness writes its candidate-only tarball overrides.
+    if (cellLocalPkgs.length > 0 && spec.kind === 'app-template') args.push('--no-install')
     run('scaffold', cmd, args, parentDir)
     if (!existsSync(projectDir)) {
       throw new StepError(
@@ -1443,6 +1453,27 @@ async function runCell(
     }
 
     run('install', pm, pmInstallArgs(pm), projectDir)
+
+    // A local-package row has candidate-only manifest overrides. Record them
+    // separately from the scaffold's own initial commit, giving Moon a valid
+    // comparison base without changing the user-facing post-install behavior.
+    if (cellLocalPkgs.length > 0 && spec.kind === 'app-template') {
+      run('install', 'git', ['add', '-A'], projectDir)
+      run(
+        'install',
+        'git',
+        [
+          '-c',
+          'user.name=aihu',
+          '-c',
+          'user.email=scaffold@aihu.dev',
+          'commit',
+          '-m',
+          'chore: inject release candidate packages',
+        ],
+        projectDir,
+      )
+    }
   })
 
   // ── 3. typecheck ──────────────────────────────────────────────────────────

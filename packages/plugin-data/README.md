@@ -62,7 +62,7 @@ bun add @aihu-plugin/data
 
 **Dependencies:**
 
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 - `@aihu/context` — `workspace:*`
 
 <sub><i>Auto-generated against `@aihu-plugin/data@2.0.5`.</i></sub>

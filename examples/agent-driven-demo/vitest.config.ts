@@ -22,11 +22,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Subpath before package: string aliases are PREFIX replacements, so the
-      // '/lifecycle' subpath must not resolve as '<index.ts>/lifecycle'.
-      '@aihu/signals/lifecycle': pkg('signals/src/lifecycle.ts'),
-      '@aihu/signals': pkg('signals/src/index.ts'),
-      '@aihu/arbor': pkg('arbor/src/index.ts'),
+      // DOM-engine packages resolve from their published dependencies. The
+      // remaining aliases keep this integration test on the consumer sources.
       '@aihu/runtime': pkg('runtime/src/index.ts'),
       '@aihu/agent': pkg('agent/src/index.ts'),
       '@aihu/agent-service': pkg('agent-service/src/index.ts'),

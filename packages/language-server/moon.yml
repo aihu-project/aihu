@@ -8,5 +8,4 @@ layer: library
 # declare it explicitly; the global `typecheck` task's `^:build` then builds it.
 dependsOn:
   - 'compiler'
-  - 'signals'
   - 'tsc'

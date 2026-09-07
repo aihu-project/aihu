@@ -10,11 +10,11 @@
   },
   "dependencies": {
     "@aihu/app": "workspace:*",
-    "@aihu/arbor": "workspace:*",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/router": "workspace:*",
     "@aihu/runtime": "workspace:*",
     "@aihu/server": "workspace:*",
-    "@aihu/signals": "workspace:*",
+    "@aihu/signals": "^0.5.1",
     "@aihu/agent": "workspace:*"
   },
   "devDependencies": {

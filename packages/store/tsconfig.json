@@ -6,7 +6,6 @@
     "baseUrl": ".",
     "paths": {
       "@aihu/store": ["./src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu/context": ["../context/src/index.ts"]
     }
   },

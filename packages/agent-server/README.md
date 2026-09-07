@@ -150,7 +150,7 @@ bun add @aihu/agent-server
 
 - `@aihu/agent` — `workspace:*`
 - `@aihu/agent-service` — `workspace:*`
-- `@aihu/arbor` — `workspace:*`
+- `@aihu/arbor` — `^4.1.2`
 - `@modelcontextprotocol/sdk` — `^1.0.0`
 - `jsdom` — `^25.0.0`
 

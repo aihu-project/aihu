@@ -294,19 +294,6 @@ jobs:
           AIHU_CONFIG_LOADER_E2E: '1'
       - run: bun run test --coverage
       - run: bun run build
-      # Counted-metric gate for @aihu/signals — exact recomputation counts per
-      # workload, pinned as equalities. A STEP in `check` rather than a new job,
-      # on purpose: `check` is already in ci-ok, so this BLOCKS, whereas the
-      # arbor counted gate sits inside `bench-arbor` and is non-blocking as an
-      # accepted consequence of D1 (bench/signals/HARNESS.md).
-      #
-      # Runs after `build` because it measures the built @aihu/signals through
-      # the bench adapters, not the source.
-      #
-      # Zero variance — these are integers, not timings. If it fails, an
-      # algorithm changed. See the script's "measured sensitivity" docblock for
-      # what it provably does and does not catch.
-      - run: bun run bench:counts-signals
       # API datasheet drift, caught on the PR that causes it.
       #
       # The sheets are DERIVED from every documentable package's export surface,
@@ -714,30 +701,6 @@ jobs:
     # branch protection (the sole required context on `main`) couldn't see
     # them. That regression broke every downstream consumer app build.
     #
-    # bench / bench-arbor are deliberately NOT included, and as of D1
-    # (RESOLVED 2026-08-08) that exclusion is a closed decision, not a
-    # pending cleanup. Their TIMING gates ship red by design; wiring a red
-    # advisory gate into the required check would block every PR. The two
-    # jobs are red for DIFFERENT reasons and neither is "noise vs baseline":
-    #   - bench (signals) exits 1 in loadFitness before it compares a single
-    #     p50 — bench/signals/fitness.json has never existed and the gate is
-    #     fail-closed on that by design.
-    #   - bench-arbor's timing STEP fails on a fiction row in the committed
-    #     2026-05-25 baseline (dead bindings, 0 DOM writes/op).
-    # An earlier version of this comment said "revisit once a fresh baseline
-    # lands." That was WRONG and is retracted: regenerating either baseline
-    # is under a standing STOP (truth doc §3.4). The fix is R1 (same-job A/B
-    # vs the merge base), tracked as `C-FEL-BENCH-R1-AB-HARNESS` — only that
-    # reopens this. Full decision + evidence, single source of truth:
-    # bench/signals/HARNESS.md § "D1 — RESOLVED 2026-08-08".
-    #
-    # KNOWN, ACCEPTED CONSEQUENCE: bench-arbor also hosts the counted-metric
-    # gate (counts.ts), which IS trustworthy and DOES fail its job — but
-    # because the whole job is outside ci-ok, that teeth-bearing gate is not
-    # a required context either. Promoting it means splitting counts.ts into
-    # its own job (it needs no 45-minute timing run); folded into the R1
-    # follow-up rather than done here, so the release does not change what
-    # blocks a merge.
     #
     # Each of check/examples/governed-examples is scheduled unconditionally
     # in the job graph (their own `if:` decides run vs. skip; none of them
@@ -908,14 +871,12 @@ jobs:
           echo "ci-ok: gate green"
 
   changes:
-    # Determine which subsystems changed in this push/PR. The bench job runs
-    # only when signals or bench code is touched (per Phase 2.5 brief).
+    # Determine which consumer subsystems changed in this push/PR.
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       code: ${{ steps.code_filter.outputs.code }}
-      bench: ${{ steps.filter.outputs.bench }}
       bench_lsp: ${{ steps.filter.outputs.bench_lsp }}
       governed: ${{ steps.filter.outputs.governed }}
     steps:
@@ -958,17 +919,8 @@ jobs:
         id: filter
         with:
           filters: |
-            # Source-scoped: docs/README regeneration (e.g. sync-readme touching
-            # packages/arbor/README.md from an unrelated PR) must NOT trigger the
-            # perf gate on a noisy runner. Watch source + manifests + the harness.
-            bench:
-              - 'packages/signals/src/**'
-              - 'packages/signals/package.json'
-              - 'bench/signals/**'
-              - 'packages/arbor/src/**'
-              - 'packages/arbor/package.json'
-              - 'bench/arbor/**'
-              - '.github/workflows/plan-a.yml'
+            # Package performance gates moved with their sources to aihu-dom.
+            # Keep the consumer workflow focused on compiler/application work.
             bench_lsp:
               - 'packages/language-server/src/**'
               - 'packages/language-server/tests/latency.bench.ts'
@@ -981,8 +933,6 @@ jobs:
             governed:
               - 'packages/compiler/**'
               - 'packages/runtime/**'
-              - 'packages/signals/**'
-              - 'packages/arbor/**'
               - 'packages/router/**'
               - 'packages/app/**'
               - 'packages/server/**'
@@ -994,194 +944,6 @@ jobs:
               - 'scripts/build-governed-examples.ts'
               - '.github/workflows/plan-a.yml'
 
-  bench:
-    # Bench-vs-SOTA regression gate (Phase 2.5, Learning #11). Runs whenever
-    # signals or the bench harness changes. Compares current p50 to the
-    # baseline RESULTS.md on `main`; fails if @aihu/signals regresses
-    # > 10 % on any workload. Override via `[bench-bump]` in the commit
-    # message — see bench/signals/HARNESS.md for the override path.
-    #
-    # ADVISORY, not blocking (2026-07-27). It is NOT in `ci-ok`'s needs, so it
-    # never gated anything — but it still painted the PR red, and it is
-    # red-by-construction: the comparison runs against a frozen baseline on
-    # shared CI runners whose timing noise is unrelated to the diff under
-    # review. A red X that cannot block, for a reason that is not your change,
-    # is worse than no signal: it teaches everyone to ignore red, which is how
-    # a REAL failure gets waved through. `continue-on-error` makes the status
-    # honest — the job still runs and its numbers stay in the log, it just
-    # stops claiming to be a verdict it was never wired to deliver. Promote it
-    # back to blocking by adding it to `ci-ok`'s needs AND its gate loop
-    # (being in `needs` alone does nothing — see the palette hole above).
-    #
-    # D1 RESOLVED 2026-08-08 — this job SHIPS RED, as a decision. The
-    # "Regression gate" step below exits 1 on every run because
-    # bench/signals/fitness.json has never existed and gate.ts is fail-closed
-    # on that by design; it never reaches a p50 comparison. Do NOT create or
-    # regenerate fitness.json to green it — measured 2026-08-08, that yields a
-    # differently-red gate (2 of 6 workloads drift past the 10 % threshold
-    # back-to-back with zero code changes). Reopens only when R1 lands:
-    # `C-FEL-BENCH-R1-AB-HARNESS`. Decision + evidence, single source of
-    # truth: bench/signals/HARNESS.md § "D1 — RESOLVED 2026-08-08".
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: [check, changes]
-    if: needs.changes.outputs.bench == 'true'
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: moonrepo/setup-toolchain@v0
-        with:
-          auto-install: true
-      - run: bun install --frozen-lockfile
-      - name: Build @aihu/signals
-        run: bun run --filter @aihu/signals build
-      - name: Capture previous RESULTS.md from main
-        run: |
-          mkdir -p /tmp/bench-prev
-          if git show origin/main:bench/signals/RESULTS.md > /tmp/bench-prev/RESULTS.md 2>/dev/null; then
-            echo "Got previous RESULTS.md from origin/main"
-          else
-            echo "No previous RESULTS.md on main — first run, skipping gate"
-            echo "FIRST_RUN=1" >> $GITHUB_ENV
-          fi
-      - name: Run bench
-        working-directory: bench/signals
-        run: bun src/runner.ts
-      - name: Detect bench-bump override
-        run: |
-          # For PR events, github.sha is the merge-commit SHA, not the PR HEAD.
-          # Check the PR HEAD SHA when available; fall back to github.sha.
-          CHECK_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          if git log -1 --pretty=%B "$CHECK_SHA" 2>/dev/null | grep -q '\[bench-bump\]'; then
-            echo "BENCH_BUMP=1 (commit message contains [bench-bump])"
-            echo "BENCH_BUMP=1" >> $GITHUB_ENV
-          fi
-      - name: Regression gate
-        if: env.FIRST_RUN != '1'
-        working-directory: bench/signals
-        run: bun src/gate.ts /tmp/bench-prev/RESULTS.md ./RESULTS.md
-      - name: Upload RESULTS.md
-        # Was default `if: success()`, so a Regression gate failure (the
-        # designed-red state described above, and the state this gate has
-        # been in since fitness.json's guard started demanding an artifact
-        # that has never existed) skipped this step too — no signals bench
-        # artifact has been produced since. The upload has no gating power
-        # of its own; it should never be held hostage by a step it doesn't
-        # depend on.
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: bench-results
-          path: bench/signals/RESULTS.md
-
-  bench-arbor:
-    # Bench-vs-SOTA regression gate for @aihu/arbor (Round N+1, Track A).
-    # Runs whenever arbor or the bench harness changes.
-    #
-    # Two gates run here (2026-07-26 ruling, #607):
-    #   1. Counted-metric gate (R8, counts.ts) — exact, machine-independent
-    #      equalities (moves/swap, writes/op). No bypass. This is the
-    #      trustworthy signal.
-    #   2. Timing gate (gate.ts) — p50 vs the checked-in RESULTS.md baseline,
-    #      GATE-tier workloads only. The committed baseline is provably
-    #      invalid (two rows recorded dead bindings), so RED is the DESIGNED
-    #      state for this step until R1 (same-job A/B vs merge base) replaces
-    #      the mechanism. Do NOT regenerate RESULTS.md to green it.
-    #      D1 RESOLVED 2026-08-08 — that red is a CLOSED decision, not an open
-    #      item. Re-verified same day on a live run: the FAIL is
-    #      `update-1-of-10k-leaves 29 -> 256 ns (795.8 %)`, the dead-binding
-    #      fiction row. Reopens only with R1 —
-    #      `C-FEL-BENCH-R1-AB-HARNESS`. Single source of truth for the
-    #      decision: bench/signals/HARNESS.md § "D1 — RESOLVED 2026-08-08".
-    #
-    # R0: the runner itself hard-fails if any timed op performs no DOM
-    # mutation — a dead binding aborts the job rather than reporting a number.
-    # Override for the timing gate only: `[bench-bump] <reason>` in the commit
-    # message (the reason is mandatory — R7).
-    #
-    # This job's actual trigger is the `if:` below (path-filtered via
-    # `changes.outputs.bench`), not workflow_dispatch — a stale comment here
-    # previously claimed otherwise. See the header comment and
-    # state-plan-a.md open items for the broader dispatch story.
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: [check, changes]
-    if: needs.changes.outputs.bench == 'true'
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: moonrepo/setup-toolchain@v0
-        with:
-          auto-install: true
-      - run: bun install --frozen-lockfile
-      - name: Build @aihu/signals and @aihu/arbor
-        run: |
-          bun run --filter @aihu/signals build
-          bun run --filter @aihu/arbor build
-      - name: Capture previous RESULTS.md from main
-        run: |
-          mkdir -p /tmp/bench-arbor-prev
-          if git show origin/main:bench/arbor/RESULTS.md > /tmp/bench-arbor-prev/RESULTS.md 2>/dev/null; then
-            echo "Got previous RESULTS.md from origin/main"
-          else
-            echo "No previous RESULTS.md on main — first run, skipping gate"
-            echo "FIRST_RUN=1" >> $GITHUB_ENV
-          fi
-      - name: Counted-metric gate (R8 — equalities, no bypass)
-        working-directory: bench/arbor
-        run: bun src/counts.ts
-      - name: Run arbor bench
-        working-directory: bench/arbor
-        env:
-          # R6: signals' __DEV__ branches fold away under production, matching
-          # what rolldown's `define` does in the shipped dist. The artifact
-          # measured is still workspace *source* (tsconfig paths) — recorded
-          # in the RESULTS.md conditions header; true dist measurement needs
-          # pack-and-install isolation (truth doc §2.2).
-          NODE_ENV: production
-        run: bun src/runner.ts
-      - name: Detect bench-bump override
-        run: |
-          # For PR events, github.sha is the merge-commit SHA, not the PR HEAD.
-          # Check the PR HEAD SHA when available; fall back to github.sha.
-          CHECK_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          BODY="$(git log -1 --pretty=%B "$CHECK_SHA" 2>/dev/null || true)"
-          if printf '%s\n' "$BODY" | grep -q '\[bench-bump\]'; then
-            echo "BENCH_BUMP=1 (commit message contains [bench-bump])"
-            echo "BENCH_BUMP=1" >> $GITHUB_ENV
-            # R7: the bypass requires a one-line justification — everything
-            # after the tag on the same line. gate.ts refuses the override
-            # when the reason is empty.
-            REASON="$(printf '%s\n' "$BODY" | grep -m1 '\[bench-bump\]' | sed 's/.*\[bench-bump\]//' | sed 's/^[-—: ]*//')"
-            echo "BENCH_BUMP_REASON=$REASON" >> $GITHUB_ENV
-            echo "BENCH_BUMP_REASON=$REASON"
-          fi
-      - name: Regression gate (timing — RED is the designed state until R1)
-        # STEP-scoped, deliberately not job-scoped (2026-07-27). This step's own
-        # comment says RED is its DESIGNED state (the committed baseline is
-        # provably invalid), so its failure carried no information about the
-        # diff under review while still painting the job — and the PR — red.
-        # The sibling "Counted-metric gate (R8)" in this same job IS the
-        # trustworthy signal and MUST keep failing the job, so silencing the
-        # whole job would have traded a false red for a real blind spot.
-        # Scoped here, the timing numbers stay in the log and the counted gate
-        # keeps its teeth. Remove this line when R1 (same-job A/B vs merge
-        # base) replaces the mechanism — that is the point of the exercise,
-        # and it is the ONLY thing that should remove it (D1, resolved
-        # 2026-08-08; tracked as `C-FEL-BENCH-R1-AB-HARNESS`). See
-        # bench/signals/HARNESS.md § "D1 — RESOLVED 2026-08-08".
-        continue-on-error: true
-        if: env.FIRST_RUN != '1'
-        working-directory: bench/arbor
-        run: bun src/gate.ts /tmp/bench-arbor-prev/RESULTS.md ./RESULTS.md
-      - name: Upload RESULTS.md
-        uses: actions/upload-artifact@v7
-        with:
-          name: bench-arbor-results
-          path: bench/arbor/RESULTS.md
 
   bench-lsp:
     # LSP hover-path latency gate. Fails if overall p95 exceeds 100ms.

@@ -39,8 +39,6 @@ jobs:
 
       - name: Build aihu runtime packages
         run: |
-          bun run --filter @aihu/signals build
-          bun run --filter @aihu/arbor build
           bun run --filter @aihu/runtime build
 
       - name: Build keyed/aihu impl

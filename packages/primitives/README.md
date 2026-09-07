@@ -107,8 +107,8 @@ bun add @aihu/primitives
 
 **Dependencies:**
 
-- `@aihu/signals` — `workspace:*`
-- `@aihu/arbor` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
+- `@aihu/arbor` — `^4.1.2`
 
 <sub><i>Auto-generated against `@aihu/primitives@0.2.3`.</i></sub>
 

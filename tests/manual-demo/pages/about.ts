@@ -1,4 +1,4 @@
-import { leaf } from '../../../packages/arbor/src/index.ts'
+import { leaf } from '@aihu/arbor'
 
 export function AboutPage() {
   return {

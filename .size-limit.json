@@ -6,31 +6,6 @@
     "gzip": true
   },
   {
-    "name": "@aihu/signals",
-    "path": "packages/signals/dist/index.js",
-    "limit": "2350 B",
-    "gzip": true
-  },
-  {
-    "name": "@aihu/signals/lifecycle",
-    "path": "packages/signals/dist/lifecycle.js",
-    "limit": "300 B",
-    "gzip": true
-  },
-  {
-    "name": "@aihu/arbor",
-    "path": "packages/arbor/dist/index.js",
-    "limit": "3350 B",
-    "gzip": true,
-    "ignore": ["@aihu/signals"]
-  },
-  {
-    "name": "@aihu/arbor/progressive",
-    "path": "packages/arbor/dist/progressive.js",
-    "limit": "1 KB",
-    "gzip": true
-  },
-  {
     "name": "@aihu/runtime",
     "path": "packages/runtime/dist/index.js",
     "limit": "5100 B",
@@ -255,20 +230,6 @@
     "limit": "2.5 KB",
     "gzip": true,
     "ignore": ["@aihu/signals", "@aihu/context"]
-  },
-  {
-    "name": "@aihu/reactive",
-    "path": "packages/reactive/dist/index.js",
-    "limit": "1900 B",
-    "gzip": true,
-    "ignore": ["@aihu/signals"]
-  },
-  {
-    "name": "@aihu/reactive/helpers",
-    "path": "packages/reactive/dist/helpers.js",
-    "limit": "700 B",
-    "gzip": true,
-    "ignore": ["@aihu/signals", "@aihu/reactive"]
   },
   {
     "name": "@aihu/use/shared",

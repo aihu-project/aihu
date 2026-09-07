@@ -16,10 +16,10 @@
     "@aihu/agent": "workspace:*",
     "@aihu/agent-server": "workspace:*",
     "@aihu/agent-service": "workspace:*",
-    "@aihu/arbor": "workspace:*",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/compiler": "workspace:*",
     "@aihu/runtime": "workspace:*",
-    "@aihu/signals": "workspace:*",
+    "@aihu/signals": "^0.5.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {

@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@aihu/compiler": "workspace:*",
-    "@aihu/signals": "workspace:*",
-    "@aihu/arbor": "workspace:*",
+    "@aihu/signals": "^0.5.1",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/runtime": "workspace:*",
     "@aihu/agent": "workspace:*",
     "@aihu/css-engine": "workspace:*",

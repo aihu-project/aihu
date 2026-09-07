@@ -3,4 +3,3 @@ language: typescript
 layer: library
 dependsOn:
   - 'compiler'
-  - 'signals'

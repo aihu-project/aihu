@@ -45,11 +45,11 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { mount } from '@aihu/arbor'
+import { hydrate } from '@aihu/arbor/hydrate'
+import { signal } from '@aihu/signals'
 import { afterAll, describe, expect, it } from 'vitest'
-import { hydrate } from '../../arbor/src/hydrate.ts'
-import { mount } from '../../arbor/src/index.ts'
 import { aihuCompilerPlugin } from '../../compiler/js/index.ts'
-import { signal } from '../../signals/src/index.ts'
 import { _setHydrate, _setMount, _setSignal } from '../src/define-component.ts'
 import type { SsrChildModule, SsrChildRenderOpts } from '../src/ssr-string.ts'
 
@@ -98,10 +98,8 @@ function resolveImports(code: string): string {
     .split('\n')
     .filter((l) => !l.includes('virtual:aihu-utility'))
     .join('\n')
-    .replaceAll('"@aihu/arbor"', `"${repoRoot}/packages/arbor/src/index.ts"`)
     .replaceAll('"@aihu/runtime/ssr"', `"${repoRoot}/packages/runtime/src/ssr-string.ts"`)
     .replaceAll('"@aihu/runtime"', `"${repoRoot}/packages/runtime/src/index.ts"`)
-    .replaceAll('"@aihu/signals"', `"${repoRoot}/packages/signals/src/index.ts"`)
 }
 
 /**

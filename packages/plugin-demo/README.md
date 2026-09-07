@@ -64,7 +64,7 @@ bun add @aihu/plugin-demo
 **Dependencies:**
 
 - `@aihu/plugin` — `workspace:*`
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 
 <sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
 

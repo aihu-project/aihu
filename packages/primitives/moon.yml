@@ -6,9 +6,6 @@ layer: library
 # so Moon's `^:build` builds those packages' dist + .d.ts BEFORE
 # primitives typecheck — same rationale as css-engine's compiler dep.
 dependsOn:
-  - 'signals'
-  - 'arbor'
-
 tasks:
   build:
     command: "bunx rolldown -c"

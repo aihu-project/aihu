@@ -19,10 +19,8 @@
       "@aihu/agent": ["../agent/src/index.ts"],
       "@aihu/server/head-lowering": ["../server/src/head-lowering.ts"],
       "@aihu/plugin": ["../plugin/src/index.ts"],
-      "@aihu/arbor": ["../arbor/src/index.ts"],
       "@aihu/runtime": ["../runtime/src/index.ts"],
       "@aihu/primitives/focus-trap": ["../primitives/src/dialog/focus-trap.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu/store": ["../store/src/index.ts"],
       // Paired with the bare mapping below: tsconfig `paths` matching is exact,
       // so "@aihu/context" never covered the "/ssr" subpath — it resolved

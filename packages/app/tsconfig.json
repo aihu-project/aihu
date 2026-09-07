@@ -28,12 +28,8 @@
       // the two halves of arbor separate declaration identities. Map the
       // subpath to source so the whole package resolves one way (and so tsc
       // agrees with vitest.config.ts, which has always aliased it to src).
-      "@aihu/arbor/hydrate": ["../arbor/src/hydrate.ts"],
-      "@aihu/arbor": ["../arbor/src/index.ts"],
       "@aihu/runtime": ["../runtime/src/index.ts"],
       "@aihu/primitives/focus-trap": ["../primitives/src/dialog/focus-trap.ts"],
-      "@aihu/signals/lifecycle": ["../signals/src/lifecycle.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu/store": ["../store/src/index.ts"],
       // Same exact-match gap as @aihu/arbor/hydrate above: src/prerender.ts
       // imports "@aihu/context/ssr", which the bare mapping below does not

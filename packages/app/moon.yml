@@ -3,14 +3,12 @@ language: typescript
 layer: library
 
 dependsOn:
-  - 'arbor'
   - 'compiler'
   - 'context'
   - 'plugin-agent-readiness'
   - 'router'
   - 'runtime'
   - 'server'
-  - 'signals'
   - 'store'
 tasks:
   check-boundary:

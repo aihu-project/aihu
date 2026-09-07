@@ -12,7 +12,7 @@
     "@aihu/magna": "workspace:*",
     "@aihu/seo": "workspace:*",
     "@aihu/server": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "devDependencies": {
     "vitest": "^3.2.6"

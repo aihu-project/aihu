@@ -32,7 +32,7 @@
   },
   "peerDependencies": {
     "@aihu/agent-service": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "peerDependenciesMeta": {
     "@aihu/agent-service": {

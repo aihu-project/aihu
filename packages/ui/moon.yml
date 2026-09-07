@@ -9,13 +9,10 @@ layer: library
 # project deps so Moon's `^:build` builds those packages' dist + .d.ts BEFORE
 # @aihu/ui typecheck — same rationale as primitives' css-engine dep.
 dependsOn:
-  - 'arbor'
   - 'compiler'
   - 'css-engine'
   - 'primitives'
   - 'runtime'
-  - 'signals'
-
 # @aihu/ui emits no dist. The published payload is the `registry/**` .aihu
 # sources plus the generated `registry.json` index.
 

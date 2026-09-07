@@ -5,6 +5,4 @@ layer: library
 dependsOn:
   - 'agent'
   - 'agent-service'
-  - 'arbor'
   - 'runtime'
-  - 'signals'

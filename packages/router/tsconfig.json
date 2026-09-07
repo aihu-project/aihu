@@ -13,7 +13,6 @@
       "@aihu/agent-service": ["../agent-service/src/index.ts"],
       "@aihu/agent": ["../agent/src/index.ts"],
       "@aihu/plugin": ["../plugin/src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu/context": ["../context/src/index.ts"]
     }
   },

@@ -18,7 +18,7 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
   '@aihu/runtime': '^6.0.0',
 }
 
-/** Third-party ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
+/** External package ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
 export const EXTERNAL_DEP_VERSIONS: Readonly<Record<string, string>> = {
   vite: '^6 || ^8',
 }
@@ -36,7 +36,7 @@ export function aihuDep(name: string): string {
   if (range === undefined) {
     throw new Error(
       `[@aihu/cli] no generated version range for '${name}'. Either the package is not a ` +
-        'published workspace package, or dep-versions.ts is stale — run ' +
+        'published source package, or dep-versions.ts is stale — run ' +
         '`bun scripts/sync-template-versions.ts`.',
     )
   }

@@ -9,10 +9,10 @@
     "dev": "bun run build && bun server.ts"
   },
   "dependencies": {
-    "@aihu/arbor": "workspace:*",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/compiler": "workspace:*",
     "@aihu/runtime": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.0"

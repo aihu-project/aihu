@@ -142,7 +142,7 @@ function countOccurrences(haystack: string, needle: string): number {
  * them would inflate the count without naming an additional thing to fix.
  */
 async function assertAdoption(r: Rendered): Promise<string[]> {
-  const { hydrate } = await import('@aihu/arbor')
+  const { hydrate } = await import('@aihu/arbor/hydrate')
 
   const host = document.createElement('div')
   host.innerHTML = r.html
@@ -241,7 +241,7 @@ const SENTINEL_ROOT = 'UNREACHABLE-ROOT'
 
 async function renderForMode(mode: ProbeMode): Promise<Rendered> {
   const { renderToString } = await import('@aihu/server')
-  const { _ROOT_PATH } = await import('../packages/arbor/src/hydrate.ts')
+  const { _ROOT_PATH } = await import('@aihu/arbor/hydrate')
   const { component, setText } = await makeFixture()
 
   if (mode === 'markerless') {
@@ -260,7 +260,7 @@ async function runHaA(mode: ProbeMode): Promise<Finding | null> {
   const reasons = await assertAdoption(await renderForMode(mode))
   if (reasons.length === 0) return null
   return {
-    where: 'packages/arbor/src/hydrate.ts',
+    where: '@aihu/arbor/hydrate',
     rule: 'HA-a',
     message: `the client did not adopt server-rendered DOM — ${reasons.join('; ')}.`,
   }
@@ -310,7 +310,7 @@ async function runHaB(mode: ProbeMode): Promise<Finding | null> {
   } else if (mode === 'disagreeing') {
     html = rekey(html, SENTINEL_ROOT)
   } else if (mode === 'agreeing') {
-    const { _ROOT_PATH } = await import('../packages/arbor/src/hydrate.ts')
+    const { _ROOT_PATH } = await import('@aihu/arbor/hydrate')
     html = rekey(html, _ROOT_PATH)
   }
 

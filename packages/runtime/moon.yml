@@ -3,11 +3,8 @@ language: typescript
 layer: library
 
 dependsOn:
-  - 'arbor'
   - 'context'
   - 'primitives'
-  - 'signals'
-
 # src/a11y.ts imports @aihu/primitives/focus-trap (the single shared focus-trap
 # implementation — FEL-397 / aihu-project/aihu#537). Keep the edge explicit so
 # Moon schedules Primitives before Runtime's declaration-aware build and

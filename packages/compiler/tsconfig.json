@@ -8,10 +8,8 @@
     "declarationDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@aihu/arbor": ["../arbor/src/index.ts"],
       "@aihu/runtime": ["../runtime/src/index.ts"],
-      "@aihu/primitives/focus-trap": ["../primitives/src/dialog/focus-trap.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"]
+      "@aihu/primitives/focus-trap": ["../primitives/src/dialog/focus-trap.ts"]
     }
   },
   "include": ["js/**/*.ts"]

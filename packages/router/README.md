@@ -66,7 +66,7 @@ bun add @aihu/router
 
 - `@aihu/context` — `workspace:*`
 - `@aihu/server` — `workspace:*`
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 
 <sub><i>Auto-generated against `@aihu/router@0.5.0`.</i></sub>
 

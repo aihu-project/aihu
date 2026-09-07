@@ -101,10 +101,7 @@ function compileRouteJson(src: string): {
 /** Emitted artifacts import bare `@aihu/*`; pin them to workspace sources
  * (same rationale as tests/integration/server-emission-ssr.test.ts). */
 function withResolvedImports(code: string): string {
-  return code
-    .replaceAll("'@aihu/arbor'", `'${repoRoot}/packages/arbor/src/index.ts'`)
-    .replaceAll("'@aihu/runtime'", `'${repoRoot}/packages/runtime/src/index.ts'`)
-    .replaceAll("'@aihu/signals'", `'${repoRoot}/packages/signals/src/index.ts'`)
+  return code.replaceAll("'@aihu/runtime'", `'${repoRoot}/packages/runtime/src/index.ts'`)
 }
 
 async function importServerArtifact(name: string, code: string): Promise<Record<string, unknown>> {

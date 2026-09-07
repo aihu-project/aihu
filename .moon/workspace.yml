@@ -4,10 +4,8 @@
 projects:
   - "packages/*"
   - "!packages/_moved"
-  - "bench/arbor"
   - "bench/baselines"
   - "bench/compiler-conformance"
-  - "bench/signals"
   - "bench/js-framework-benchmark/keyed/*"
 
 # Configures the version control system (VCS). Also known as
@@ -21,4 +19,3 @@ vcs:
   # @since 1.8.0
   # @values "bitbucket" | "github" | "gitlab" | "other"
   provider: "github"
-

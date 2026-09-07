@@ -34,7 +34,7 @@
   "dependencies": {
     "@aihu/context": "workspace:*",
     "@aihu/server": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "description": "File-based router for the aihu meta-framework.",
   "repository": {

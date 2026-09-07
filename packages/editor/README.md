@@ -102,7 +102,7 @@ bun add @aihu/editor
 
 **Dependencies:**
 
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 
 <sub><i>Auto-generated against `@aihu/editor@0.1.2`.</i></sub>
 

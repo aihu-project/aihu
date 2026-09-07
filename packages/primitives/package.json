@@ -95,8 +95,8 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@aihu/signals": "workspace:*",
-    "@aihu/arbor": "workspace:*"
+    "@aihu/signals": "^0.5.1",
+    "@aihu/arbor": "^4.1.2"
   },
   "scripts": {
     "build": "rolldown -c",
@@ -104,7 +104,7 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
-  "description": "aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS.",
+  "description": "aihu headless behavior primitives \u2014 WAI-ARIA APG patterns as vanilla custom elements, zero CSS.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

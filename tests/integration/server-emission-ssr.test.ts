@@ -76,10 +76,7 @@ const SCRATCH = join(__dirname, '.scratch-ssr')
  * sources so resolution can never silently fall back to a stale dist build.
  */
 function withResolvedImports(code: string): string {
-  return code
-    .replaceAll("'@aihu/arbor'", `'${repoRoot}/packages/arbor/src/index.ts'`)
-    .replaceAll("'@aihu/runtime'", `'${repoRoot}/packages/runtime/src/index.ts'`)
-    .replaceAll("'@aihu/signals'", `'${repoRoot}/packages/signals/src/index.ts'`)
+  return code.replaceAll("'@aihu/runtime'", `'${repoRoot}/packages/runtime/src/index.ts'`)
 }
 
 async function importServerArtifact(name: string, code: string): Promise<Record<string, unknown>> {

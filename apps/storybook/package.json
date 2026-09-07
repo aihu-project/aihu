@@ -9,12 +9,12 @@
     "test-storybook": "test-storybook --url ${AIHU_STORYBOOK_URL:-http://127.0.0.1:6006}"
   },
   "dependencies": {
-    "@aihu/arbor": "workspace:*",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/compiler": "workspace:*",
     "@aihu/css-engine": "workspace:*",
     "@aihu/primitives": "workspace:*",
     "@aihu/runtime": "workspace:*",
-    "@aihu/signals": "workspace:*",
+    "@aihu/signals": "^0.5.1",
     "@aihu/ui": "workspace:*",
     "@aihu/use": "workspace:*"
   },

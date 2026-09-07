@@ -6,8 +6,7 @@
     "baseUrl": ".",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
-      "@aihu/editor": ["./src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"]
+      "@aihu/editor": ["./src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "e2e/**/*.ts"],

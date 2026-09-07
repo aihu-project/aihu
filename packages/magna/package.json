@@ -1,7 +1,7 @@
 {
   "name": "@aihu/magna",
   "version": "0.2.7",
-  "description": "aihu bridge for Magna GraphQL — dep-free fetch, resource composition, JWT relay",
+  "description": "aihu bridge for Magna GraphQL \u2014 dep-free fetch, resource composition, JWT relay",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -29,7 +29,7 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "@aihu/signals": "workspace:*",
+    "@aihu/signals": "^0.5.1",
     "@aihu/plugin": "workspace:*",
     "@aihu/context": "workspace:*",
     "@aihu-plugin/data": "workspace:*"

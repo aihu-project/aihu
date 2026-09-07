@@ -72,7 +72,7 @@ bun add @aihu/magna
 
 **Dependencies:**
 
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 - `@aihu/plugin` — `workspace:*`
 - `@aihu/context` — `workspace:*`
 - `@aihu-plugin/data` — `workspace:*`

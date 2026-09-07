@@ -84,12 +84,6 @@
     "isPlatform": false
   },
   {
-    "name": "@aihu/arbor",
-    "version": "4.1.1",
-    "dir": "packages/arbor",
-    "isPlatform": false
-  },
-  {
     "name": "@aihu/auth",
     "version": "6.0.0",
     "dir": "packages/auth",
@@ -252,12 +246,6 @@
     "isPlatform": false
   },
   {
-    "name": "@aihu/reactive",
-    "version": "0.2.0",
-    "dir": "packages/reactive",
-    "isPlatform": false
-  },
-  {
     "name": "@aihu/router",
     "version": "0.5.0",
     "dir": "packages/router",
@@ -310,12 +298,6 @@
     "version": "0.1.2",
     "dir": "packages/server/npm/win32-x64-msvc",
     "isPlatform": true
-  },
-  {
-    "name": "@aihu/signals",
-    "version": "0.5.0",
-    "dir": "packages/signals",
-    "isPlatform": false
   },
   {
     "name": "@aihu/store",

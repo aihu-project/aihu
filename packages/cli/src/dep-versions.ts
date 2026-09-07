@@ -27,7 +27,6 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
   '@aihu/agent-service': '^0.4.0',
   '@aihu/ai': '^0.1.0',
   '@aihu/app': '^10.0.0',
-  '@aihu/arbor': '^4.1.1',
   '@aihu/auth': '^6.0.0',
   '@aihu/cli': '^1.3.0',
   '@aihu/compiler': '^1.3.0',
@@ -39,21 +38,22 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
   '@aihu/mcp': '^0.2.0',
   '@aihu/plugin': '^0.1.0',
   '@aihu/primitives': '^0.2.3',
-  '@aihu/reactive': '^0.2.0',
   '@aihu/router': '^0.5.0',
   '@aihu/runtime': '^6.1.0',
   '@aihu/scraping': '^0.2.0',
   '@aihu/seo': '^1.0.5',
   '@aihu/server': '^0.6.0',
-  '@aihu/signals': '^0.5.0',
   '@aihu/store': '^0.1.2',
   '@aihu/tsc': '^0.3.3',
   '@aihu/ui': '^0.1.1',
   '@aihu/use': '^2.0.0',
 }
 
-/** Third-party ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
+/** External package ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
 export const EXTERNAL_DEP_VERSIONS: Readonly<Record<string, string>> = {
+  '@aihu/arbor': '^4.1.2',
+  '@aihu/reactive': '^0.2.1',
+  '@aihu/signals': '^0.5.1',
   vite: '^6 || ^8',
 }
 
@@ -70,7 +70,7 @@ export function aihuDep(name: string): string {
   if (range === undefined) {
     throw new Error(
       `[@aihu/cli] no generated version range for '${name}'. Either the package is not a ` +
-        'published workspace package, or dep-versions.ts is stale — run ' +
+        'published source package, or dep-versions.ts is stale — run ' +
         '`bun scripts/sync-template-versions.ts`.',
     )
   }

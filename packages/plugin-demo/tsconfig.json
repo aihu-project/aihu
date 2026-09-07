@@ -9,7 +9,6 @@
     "baseUrl": ".",
     "paths": {
       "@aihu/plugin": ["../plugin/src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu/agent-service": ["../agent-service/src/index.ts"],
       "@aihu/agent": ["../agent/src/index.ts"],
       "@aihu/runtime/ssr": ["../runtime/src/ssr-string.ts"],
