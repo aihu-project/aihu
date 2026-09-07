@@ -8,8 +8,7 @@
       "@aihu/agent-server": ["../../packages/agent-server/src/index.ts"],
       "@aihu/agent-service": ["../../packages/agent-service/src/index.ts"],
       "@aihu/runtime": ["../../packages/runtime/src/index.ts"],
-      "@aihu/primitives/focus-trap": ["../../packages/primitives/src/dialog/focus-trap.ts"],
-      "@aihu/compiler": ["../../packages/compiler/js/index.ts"]
+      "@aihu/primitives/focus-trap": ["../../packages/primitives/src/dialog/focus-trap.ts"]
     }
   },
   "include": [

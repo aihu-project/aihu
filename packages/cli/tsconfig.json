@@ -9,7 +9,6 @@
       "@aihu/mcp": ["../mcp/src/index.ts"],
       "@aihu-plugin/agent-readiness": ["../plugin-agent-readiness/src/index.ts"],
       "@aihu/app/client": ["../app/src/client.ts"],
-      "@aihu/compiler/plugin": ["../compiler/js/index.ts"],
       "@aihu-plugin/data": ["../plugin-data/src/index.ts"],
       "@aihu/plugin": ["../plugin/src/index.ts"],
       "@aihu/router": ["../router/src/index.ts"],

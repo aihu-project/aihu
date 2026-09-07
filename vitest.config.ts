@@ -60,15 +60,9 @@ export default defineConfig({
       // '@aihu/context/ssr' until now, so the breakage had nowhere to surface.
       '@aihu/context/ssr': new URL('./packages/context/src/ssr.ts', import.meta.url).pathname,
       '@aihu/context': new URL('./packages/context/src/index.ts', import.meta.url).pathname,
-      // Order matters: the subpath alias must precede the package alias.
-      // `@aihu/compiler/plugin` is a RETIRED subpath (it never existed in the
-      // published `exports` map — @aihu/cli 0.3.4 moved the scaffold to the
-      // bare `@aihu/compiler` main export) and nothing imports it today. It is
-      // mirrored here only because packages/cli/tsconfig.json still maps it, and
-      // the alias-parity gate requires the two systems to agree; if that
-      // tsconfig entry is ever removed, remove this line with it.
-      '@aihu/compiler/plugin': new URL('./packages/compiler/js/index.ts', import.meta.url).pathname,
-      '@aihu/compiler': new URL('./packages/compiler/js/index.ts', import.meta.url).pathname,
+      // @aihu/compiler intentionally resolves from npm. The compiler source is
+      // being extracted to aihu-compiler; consumer tests must exercise the same
+      // published package and platform binary that applications receive.
       '@aihu/tsc': new URL('./packages/tsc/src/index.ts', import.meta.url).pathname,
       // Order matters: the subpath alias must precede the package alias, or
       // '@aihu/app' matches first and '@aihu/app/client' resolves to the

@@ -9,7 +9,6 @@ layer: library
 # project deps so Moon's `^:build` builds those packages' dist + .d.ts BEFORE
 # @aihu/ui typecheck — same rationale as primitives' css-engine dep.
 dependsOn:
-  - 'compiler'
   - 'css-engine'
   - 'primitives'
   - 'runtime'

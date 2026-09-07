@@ -17,7 +17,7 @@
     "@aihu/agent-server": "workspace:*",
     "@aihu/agent-service": "workspace:*",
     "@aihu/arbor": "^4.1.2",
-    "@aihu/compiler": "workspace:*",
+    "@aihu/compiler": "^1.3.1",
     "@aihu/runtime": "workspace:*",
     "@aihu/signals": "^0.5.1",
     "ws": "^8.18.0"

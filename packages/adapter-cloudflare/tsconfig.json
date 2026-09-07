@@ -9,7 +9,6 @@
     "baseUrl": ".",
     "paths": {
       "@aihu/app": ["../app/src/index.ts"],
-      "@aihu/compiler": ["../compiler/js/index.ts"],
       "@aihu/router": ["../router/src/index.ts"],
       "@aihu/router/plugin": ["../router/src/plugin.ts"],
       "@aihu-plugin/agent-readiness": ["../plugin-agent-readiness/src/index.ts"],

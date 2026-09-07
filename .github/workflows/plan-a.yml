@@ -292,6 +292,10 @@ jobs:
       - run: bun run test packages/app/tests/load-config.test.ts
         env:
           AIHU_CONFIG_LOADER_E2E: '1'
+      # The compiler lives in its own repository. This proves consumers resolve
+      # the npm package and platform binary, rather than falling back to the
+      # retained packages/compiler source tree during the extraction.
+      - run: bun run test:compiler-registry
       - run: bun run test --coverage
       - run: bun run build
       # API datasheet drift, caught on the PR that causes it.

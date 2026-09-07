@@ -6,7 +6,6 @@ dependsOn:
   - 'agent'
   - 'agent-server'
   - 'app'
-  - 'compiler'
   - 'plugin'
   - 'plugin-agent-readiness'
   - 'plugin-data'

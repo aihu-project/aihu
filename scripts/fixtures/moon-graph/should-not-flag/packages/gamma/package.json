@@ -1,4 +1,7 @@
 {
   "name": "@fixture/gamma",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "dependencies": {
+    "@fixture/beta": "^1.0.0"
+  }
 }

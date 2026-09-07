@@ -12,7 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aihu/compiler": "workspace:*",
+    "@aihu/compiler": "^1.3.1",
     "@aihu/signals": "^0.5.1",
     "@aihu/arbor": "^4.1.2",
     "@aihu/runtime": "workspace:*",
