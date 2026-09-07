@@ -9,7 +9,10 @@ Held-private workspace package. Not yet published to npm.
 > **Status:** Held private — not yet published to npm. See [v1.1 roadmap](../../docs/roadmap/SUMMARY.md) for ratification gating (e.g. RFC #56 live-binding for `@aihu/plugin` enforcement).
 
 <!-- BEGIN_HANDWRITTEN: prose -->
-# optional, build-time only — graceful-skips if absent
+Magna's optional build-time GraphQL parser is loaded dynamically and
+gracefully skipped when absent. Install it explicitly when it becomes available:
+
+```bash
 bun add @aihu/magna-gqlmin
 ```
 
@@ -73,10 +76,6 @@ bun add @aihu/magna
 - `@aihu/plugin` — `workspace:*`
 - `@aihu/context` — `workspace:*`
 - `@aihu-plugin/data` — `workspace:*`
-
-**Optional dependencies (platform-specific):**
-
-- `@aihu/magna-gqlmin` — `^0.2.0`
 
 <sub><i>Auto-generated against `@aihu/magna@0.2.7`.</i></sub>
 

@@ -115,6 +115,8 @@ interface StepResult {
 interface CellResult {
   readonly template: string
   readonly pm: Pm
+  /** Local package directories packed into this consumer-shaped cell. */
+  readonly localPkgs: readonly string[]
   /** Label of the vite version this cell installed; `'tpl'` = whatever the template pins. */
   readonly vite: string
   readonly steps: StepResult[]
@@ -458,6 +460,32 @@ const localPkgsRaw = (
 
 const localPkgs =
   localPkgsRaw.length === 1 && localPkgsRaw[0] === 'all' ? discoverAllLocalPkgs() : localPkgsRaw
+
+const requestedAllLocalPkgs = localPkgsRaw.length === 1 && localPkgsRaw[0] === 'all'
+
+/**
+ * A workspace scaffold only needs tarballs for the packages its app actually
+ * consumes.  Feeding Bun every publishable package as a root override makes
+ * its workspace resolver spin indefinitely, while testing unrelated packages
+ * in that cell adds no release evidence.  The other template rows still use
+ * the full `--local-pkg all` set.
+ */
+const CF_TEAM_LOCAL_PKGS = [
+  'adapter-cloudflare',
+  'arbor',
+  'compiler',
+  'plugin-agent-readiness',
+  'router',
+  'runtime',
+  'server',
+  'signals',
+] as const
+
+function localPkgsForCell(spec: TemplateSpec): readonly string[] {
+  if (!requestedAllLocalPkgs || spec.id !== 'cf-team') return localPkgs
+  const wanted = new Set(CF_TEAM_LOCAL_PKGS)
+  return localPkgs.filter((pkg) => wanted.has(pkg as (typeof CF_TEAM_LOCAL_PKGS)[number]))
+}
 
 const wantPms = (flagValue('pm')
   ?.split(',')
@@ -873,7 +901,7 @@ interface LocalTarball {
 }
 
 /** Package name → packed tarball, built once and reused by every cell. */
-let localPkgSpecs: ReadonlyMap<string, LocalTarball> | undefined
+const localPkgSpecs = new Map<string, ReadonlyMap<string, LocalTarball>>()
 
 /**
  * Build and pack each `--local-pkg`, returning name → `file:<tgz>`.
@@ -896,10 +924,15 @@ let localPkgSpecs: ReadonlyMap<string, LocalTarball> | undefined
  * release while reporting green. That failure mode is silent, which is the only
  * reason paying for the build every time is the right trade.
  */
-function packLocalPkgs(destRoot: string): ReadonlyMap<string, LocalTarball> {
-  if (localPkgSpecs) return localPkgSpecs
+function packLocalPkgs(
+  destRoot: string,
+  packages: readonly string[],
+): ReadonlyMap<string, LocalTarball> {
+  const cacheKey = packages.join(',')
+  const cached = localPkgSpecs.get(cacheKey)
+  if (cached) return cached
   const specs = new Map<string, LocalTarball>()
-  for (const short of localPkgs) {
+  for (const short of packages) {
     const pkgDir = join(repoRoot, 'packages', short)
     const manifestPath = join(pkgDir, 'package.json')
     if (!existsSync(manifestPath)) {
@@ -936,7 +969,7 @@ function packLocalPkgs(destRoot: string): ReadonlyMap<string, LocalTarball> {
     }
     specs.set(name, { spec: `file:${join(dest, files[0]!)}`, optionalDeps })
   }
-  localPkgSpecs = specs
+  localPkgSpecs.set(cacheKey, specs)
   return specs
 }
 
@@ -1127,7 +1160,15 @@ async function runCell(
   parentDir: string,
 ): Promise<CellResult> {
   const pm = info.pm
-  const cell: CellResult = { template: spec.id, pm, vite: viteReq.label, steps: [], status: 'pass' }
+  const cellLocalPkgs = localPkgsForCell(spec)
+  const cell: CellResult = {
+    template: spec.id,
+    pm,
+    vite: viteReq.label,
+    localPkgs: cellLocalPkgs,
+    steps: [],
+    status: 'pass',
+  }
   // The vite label is part of the directory name: two points on the axis are
   // two independent FRESH trees, never the same tree installed twice.
   const appName = `m-${spec.id}-${pm}-v${viteReq.label}`.toLowerCase().replace(/[^a-z0-9-]/g, '-')
@@ -1269,8 +1310,8 @@ async function runCell(
       }
     }
 
-    if (localPkgs.length > 0) {
-      const specs = packLocalPkgs(join(parentDir, '.local-tarballs'))
+    if (cellLocalPkgs.length > 0) {
+      const specs = packLocalPkgs(join(parentDir, '.local-tarballs'), cellLocalPkgs)
       // `exactOptionalPropertyTypes` forbids assigning `undefined` to an
       // optional property explicitly — only omitting it is allowed. `swap`
       // therefore mutates its bucket in place and returns void, so there is
@@ -1572,12 +1613,12 @@ async function runCell(
 function renderGrid(results: readonly CellResult[], skipped: readonly PmInfo[]): void {
   const glyph: Record<StepStatus, string> = { pass: 'ok', fail: 'FAIL', skip: '-', 'n/a': 'n/a' }
   const cols = ['template', 'pm', 'vite', ...STEP_NAMES]
-  const mark = `${extraDeps.length > 0 ? '*' : ''}${localPkgs.length > 0 ? '†' : ''}`
   const rows = results.map((c) => {
     const byName = (n: string): string => {
       const s = c.steps.find((x) => x.name === n || x.name.startsWith(`${n} `))
       return s ? glyph[s.status] : '-'
     }
+    const mark = `${extraDeps.length > 0 ? '*' : ''}${c.localPkgs.length > 0 ? '†' : ''}`
     return [c.template + mark, c.pm, c.vite, ...STEP_NAMES.map(byName)]
   })
   const widths = cols.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i]!.length)))
@@ -1599,9 +1640,10 @@ function renderGrid(results: readonly CellResult[], skipped: readonly PmInfo[]):
         `  scaffold would do, and are NOT evidence that the published scaffold works.\n`,
     )
   }
-  if (localPkgs.length > 0) {
+  const allCellLocalPkgs = [...new Set(results.flatMap((cell) => cell.localPkgs))]
+  if (allCellLocalPkgs.length > 0) {
     out(
-      `${bold('†')} these cells installed ${localPkgs.map((p) => `@aihu/${p}`).join(', ')} from ` +
+      `${bold('†')} these cells installed the relevant subset of ${allCellLocalPkgs.map((p) => `@aihu/${p}`).join(', ')} from ` +
         `\`npm pack\` tarballs of THIS CHECKOUT,\n` +
         `  not from the registry — they show what a RELEASE would do, and are NOT evidence that\n` +
         `  the currently published packages work.\n`,
@@ -1722,6 +1764,7 @@ async function main(): Promise<number> {
               template: spec.id,
               pm: info.pm,
               vite: viteReq.label,
+              localPkgs: localPkgsForCell(spec),
               steps: [
                 {
                   name: 'scaffold',

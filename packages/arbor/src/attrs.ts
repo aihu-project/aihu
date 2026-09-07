@@ -4,6 +4,14 @@ import type { AttrMap, ErrorHandler, EventHandler } from './types.ts'
 export const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /**
+ * Compiler-only AttrMap key prefix for component properties whose names look
+ * like DOM event handlers (for example `onSave`). Event handlers have the
+ * explicit `on:<event>` template syntax, so these must bypass Arbor's `onX`
+ * listener shortcut and be assigned to the custom element property verbatim.
+ */
+export const COMPONENT_PROP_PREFIX = '__aihu_prop:'
+
+/**
  * Internal AttrMap binding per `.team/phase-3/spec-arbor.md` §1.2 + §2.4
  * + §2.7 (Task 15).
  *
@@ -82,6 +90,28 @@ export function _applyAttrs(
   if (!attrs) return
   for (const key in attrs) {
     const value = attrs[key]
+    // Component properties named `onX` need an unambiguous path around the
+    // event-handler heuristic below. This is emitted only by the compiler;
+    // keep its reactive behavior identical to an ordinary property binding.
+    if (key.startsWith(COMPONENT_PROP_PREFIX)) {
+      const prop = key.slice(COMPONENT_PROP_PREFIX.length)
+      if (Array.isArray(value)) {
+        const get = value[0] as () => unknown
+        const path = `${pathBase}.prop:${prop}`
+        registry?.set(path, get)
+        mountEffect(
+          disposers,
+          () => {
+            ;(el as unknown as Record<string, unknown>)[prop] = get()
+          },
+          path,
+          errorHandler,
+        )
+      } else {
+        ;(el as unknown as Record<string, unknown>)[prop] = value
+      }
+      continue
+    }
     // Path 1: event handler. Function values under `onX` keys win
     // ahead of the static-primitive path (which would `String()` the
     // function) and ahead of the array check (functions aren't

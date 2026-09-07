@@ -34,9 +34,6 @@
     "@aihu/context": "workspace:*",
     "@aihu-plugin/data": "workspace:*"
   },
-  "optionalDependencies": {
-    "@aihu/magna-gqlmin": "^0.2.0"
-  },
   "devDependencies": {
     "rolldown": "^1.0.0-rc.17",
     "rolldown-plugin-dts": "^0.23.2",

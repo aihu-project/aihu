@@ -296,6 +296,51 @@ fn emitted_js_normalizes_pascal_case_component_references() {
     );
 }
 
+/// A plain `onX={handler}` on a child component is a prop, not a DOM event
+/// listener. `on:<event>` remains the explicit event-listener spelling.
+#[test]
+fn component_function_prop_bypasses_dom_event_lowering() {
+    let src = r#"
+@state {
+  const onSave = () => 'saved'
+}
+@template {
+  <child-card onSave={onSave}></child-card>
+}
+"#;
+    let parsed = sfc::parse(src).unwrap();
+    let unit = compile_full(&parsed).unwrap();
+    let js = emit(&unit, "x-parent").js;
+    assert!(
+        js.contains("'__aihu_prop:onSave': onSave"),
+        "a component callback prop must carry the property marker, got:\n{js}"
+    );
+}
+
+/// A ref on a child custom element must retain its mount-time assignment.
+#[test]
+fn component_ref_keeps_mount_time_wiring() {
+    let src = r#"
+@state {
+  let childEl: HTMLElement | null = null
+}
+@template {
+  <child-card ref={childEl}></child-card>
+}
+"#;
+    let parsed = sfc::parse(src).unwrap();
+    let unit = compile_full(&parsed).unwrap();
+    let js = emit(&unit, "x-parent").js;
+    assert!(
+        js.contains("branch('child-card', undefined, [])"),
+        "child element must be emitted, got:\n{js}"
+    );
+    assert!(
+        js.contains("childEl = _el"),
+        "child ref must retain its mount-time assignment, got:\n{js}"
+    );
+}
+
 /// A page with no component references omits the `components` member entirely —
 /// existing consumers and the common no-component page stay byte-identical.
 #[test]

@@ -52,7 +52,7 @@ describe('SAMPLE-M03: Dep-free thesis', () => {
       readFileSync(join(import.meta.dirname, '../package.json'), 'utf8'),
     ) as {
       dependencies: Record<string, string>
-      optionalDependencies: Record<string, string>
+      optionalDependencies?: Record<string, string>
     }
 
     const deps = Object.keys(pkgJson.dependencies ?? {})
@@ -63,9 +63,10 @@ describe('SAMPLE-M03: Dep-free thesis', () => {
       ).toBe(true)
     }
 
-    expect(pkgJson.optionalDependencies).toEqual({
-      '@aihu/magna-gqlmin': '^0.2.0',
-    })
+    // gqlmin is loaded dynamically when an application installs it. It cannot
+    // be a manifest optionalDependency until it exists on npm: Yarn 1 treats a
+    // missing optional package as an install error, defeating the fallback.
+    expect(pkgJson.optionalDependencies).toBeUndefined()
   })
 })
 
