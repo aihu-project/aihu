@@ -3,7 +3,6 @@ language: typescript
 layer: library
 
 dependsOn:
-  - 'compiler'
   - 'context'
   - 'plugin-agent-readiness'
   - 'router'

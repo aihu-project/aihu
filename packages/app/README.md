@@ -62,6 +62,10 @@ bun add @aihu/app
 <!-- BEGIN_AUTOGEN: deps -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
+**Dependencies:**
+
+- `@aihu/compiler` — `^1.3.2`
+
 **Peer dependencies:**
 
 - `@aihu/arbor` — `^4.1.2`

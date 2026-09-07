@@ -2,13 +2,7 @@
 language: typescript
 layer: library
 
-# css-engine's TS layer imports @aihu/compiler (compileToAst). Declare the
-# project dependency so Moon's `^:build` builds compiler:build (which emits
-# dist/index.d.ts) BEFORE css-engine:typecheck. Without this, typecheck fails
-# in CI with TS2307 "Cannot find module '@aihu/compiler'" — it only passes
-# locally when compiler's dist already exists from a prior full build.
-dependsOn:
-  - 'compiler'
+# @aihu/compiler is a published dependency. Moon does not build compiler source.
 
 # NOTE: The Rust crate (aihu-css-core) is NOT built automatically by any Moon task.
 # Run `cargo build --release -p aihu-css-core` manually before running integration
@@ -29,8 +23,7 @@ tasks:
   # deps: ["^:build"]). Do NOT override the command here: without
   # options.mergeArgs: replace, Moon merges the inherited args into
   # `tsc --noEmit --noEmit tsc` and the stray `tsc` is read as a file (TS6231).
-  # Inheriting also keeps the `^:build` dep css-engine needs once it depends on
-  # @aihu/compiler (Plan 2), so typecheck never races the upstream build.
+  # The published compiler supplies its declarations independently.
 
   test:
     command: "bunx vitest run"

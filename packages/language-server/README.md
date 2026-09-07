@@ -92,7 +92,7 @@ bun add @aihu/language-server
 
 **Dependencies:**
 
-- `@aihu/compiler` — `workspace:*`
+- `@aihu/compiler` — `^1.3.2`
 - `@volar/language-core` — `2.4.28`
 - `@volar/language-server` — `2.4.28`
 - `@volar/source-map` — `2.4.28`

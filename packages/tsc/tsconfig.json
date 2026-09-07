@@ -2,11 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "noEmit": true,
-    "baseUrl": ".",
-    "paths": {
-      "@aihu/compiler": ["../compiler/js/index.ts"]
-    }
+    "noEmit": true
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]

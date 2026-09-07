@@ -7,5 +7,4 @@ layer: library
 # package.json here (see `moon project language-server` → "Depends on: —"), so
 # declare it explicitly; the global `typecheck` task's `^:build` then builds it.
 dependsOn:
-  - 'compiler'
   - 'tsc'

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@aihu/agent": "workspace:*",
-    "@aihu/compiler": "workspace:*",
+    "@aihu/compiler": "^1.3.2",
     "@aihu-plugin/data": "workspace:*"
   },
   "devDependencies": {

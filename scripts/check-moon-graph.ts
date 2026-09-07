@@ -20,9 +20,12 @@
  * never silently outrun the graph again.
  *
  * RULE: for every workspace package `Q` that package `P` imports (static,
- * `import type`, dynamic `import()`, or `require()`, at any subpath), `P`'s
- * `dependsOn` must list `Q` (unless Q === P) — UNLESS that edge would close a
- * cycle. Both `build` and `typecheck` inherit `deps: ["^:build"]`
+ * `import type`, dynamic `import()`, or `require()`, at any subpath) AND
+ * declares with a `workspace:` range, `P`'s `dependsOn` must list `Q` (unless
+ * Q === P) — UNLESS that edge would close a cycle. A registry range is a
+ * package boundary: Moon must not build that source project before `P`, even
+ * if this repository happens to retain a duplicate source checkout. Both
+ * `build` and `typecheck` inherit `deps: ["^:build"]`
  * (.moon/tasks/tasks.yml), so `dependsOn` is a BUILD-ORDER graph and Moon
  * rejects it if cyclic. Where P imports Q but Q already (transitively) depends
  * on P, the codebase breaks the cycle with a LAZY `import('...')` of an optional
@@ -87,6 +90,34 @@ function buildNameToProject(dirs: string[]): Map<string, string> {
     }
   }
   return map
+}
+
+/**
+ * Project dependencies that intentionally resolve to another source project.
+ * Only these need Moon build ordering. A normal semver range resolves from the
+ * registry and must stay outside the source graph, which is how extracted
+ * packages prove their published contract before their former source is gone.
+ */
+function buildWorkspaceDependencies(dirs: string[]): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>()
+  const sections = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
+  for (const dir of dirs) {
+    const deps = new Set<string>()
+    try {
+      const pkg = JSON.parse(
+        readFileSync(join(packagesDir, dir, 'package.json'), 'utf-8'),
+      ) as Record<string, Record<string, string> | undefined>
+      for (const section of sections) {
+        for (const [name, range] of Object.entries(pkg[section] ?? {})) {
+          if (range.startsWith('workspace:')) deps.add(name)
+        }
+      }
+    } catch {
+      // No/unreadable package.json cannot declare a workspace dependency.
+    }
+    out.set(dir, deps)
+  }
+  return out
 }
 
 /**
@@ -312,6 +343,7 @@ function reaches(graph: Map<string, Set<string>>, from: string, to: string): boo
 // ── Run ──────────────────────────────────────────────────────────────────────
 const dirs = packageDirs()
 const nameToProject = buildNameToProject(dirs)
+const workspaceDependencies = buildWorkspaceDependencies(dirs)
 
 // The declared build-order graph (a working copy we grow with acyclic edges).
 const graph = new Map<string, Set<string>>()
@@ -324,6 +356,7 @@ const candidates: Edge[] = []
 for (const dir of dirs) {
   if (!consumesDts(readFileSync(join(packagesDir, dir, 'moon.yml'), 'utf-8'))) continue
   for (const importedName of importedPackages(join(packagesDir, dir), nameToProject)) {
+    if (!workspaceDependencies.get(dir)?.has(importedName)) continue
     const target = nameToProject.get(importedName)!
     if (target === dir) continue // self-import
     if (!graph.get(dir)!.has(target)) {
@@ -414,7 +447,7 @@ if (missing.length === 0) {
 
 console.error('check:moon-graph — FAIL: Moon graph is missing build-ordering edges.\n')
 console.error(
-  'Each package below imports a workspace package its moon.yml does NOT list in\n' +
+  'Each package below imports a package declared with a `workspace:` range but its moon.yml does NOT list it in\n' +
     "`dependsOn`, so Moon's `^:build` cannot order the dependency's dist/*.d.ts before\n" +
     'this package typechecks — a TS2307 race (FEL-411). Add the edge (derived, not guessed),\n' +
     'or run `bun scripts/check-moon-graph.ts --fix`:\n',
