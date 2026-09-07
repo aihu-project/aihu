@@ -241,6 +241,61 @@ describe('defineComponent — Plan 1.2 props tests', () => {
 //   AC10 fine-grained signal preserved            (R1-AC10)
 //   AC11 attribute: false + reflect: true rejected (R1-AC11)
 describe('defineComponent — R1 ($prop reactivity)', () => {
+  it('receives compiler-marked callback and value props before the child connects', () => {
+    _setSignal(signal)
+    const onSave = vi.fn()
+    const back = vi.fn()
+    let propsAtSetup: Record<string, unknown> | null = null
+    const Cmp = defineComponent({
+      props: {
+        onSave: { value: () => undefined, attribute: false },
+        back: { value: () => undefined, attribute: false },
+        label: { value: '', attribute: false },
+      },
+      setup: (ctx) => {
+        propsAtSetup = {
+          onSave: ctx.props.onSave!(),
+          back: ctx.props.back!(),
+          label: ctx.props.label!(),
+        }
+        return leaf('callback boundary')
+      },
+    })
+    defineElement('x-callback-prop-boundary', Cmp, { shadowMode: 'light' })
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const scope = mount(
+      branch(
+        'x-callback-prop-boundary',
+        {
+          '__aihu_prop:onSave': onSave,
+          '__aihu_prop:back': back,
+          '__aihu_prop:label': 'from parent',
+        },
+        [],
+      ),
+      host,
+    )
+    const el = host.querySelector('x-callback-prop-boundary') as HTMLElement & {
+      onSave: () => void
+      back: () => void
+      label: string
+    }
+
+    expect(el.onSave).toBe(onSave)
+    expect(el.back).toBe(back)
+    expect(el.label).toBe('from parent')
+    expect(propsAtSetup).toEqual({ onSave, back, label: 'from parent' })
+    el.onSave()
+    el.back()
+    expect(onSave).toHaveBeenCalledOnce()
+    expect(back).toHaveBeenCalledOnce()
+
+    scope.dispose()
+    host.remove()
+  })
+
   it('R1-AC5: setAttribute → ctx.props.<name>() updates the signal', () => {
     _setSignal(signal)
     let captured: (() => unknown) | null = null
