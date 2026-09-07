@@ -54,6 +54,20 @@ describe('@aihu/server ssr', () => {
     expect(result).toBe('<br class="x">')
   })
 
+  it('serializes component-prop transport keys under their public names', async () => {
+    const component = () => ({
+      kind: 'branch',
+      tag: 'x-child',
+      attrs: { '__aihu_prop:title': [() => 'live', () => {}] },
+      children: [],
+    })
+
+    const result = await renderToString(component, { hydratable: true })
+    expect(result).toContain('<x-child title="live" data-aihu-path="0"></x-child>')
+    expect(result).not.toContain('__aihu_prop:')
+    expect(result).toContain('"0.prop:title":"live"')
+  })
+
   it('with opts.head.title → output starts with <!DOCTYPE html> and contains <title>', async () => {
     const component = { toHtml: () => '<p>Content</p>' }
     const result = await renderToString(component, {

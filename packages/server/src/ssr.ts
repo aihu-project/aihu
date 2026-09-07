@@ -357,6 +357,16 @@ const VOID_ELEMENTS = new Set([
   'wbr',
 ])
 
+// Client codegen uses this transport-only key for values passed across a custom
+// element boundary. Arbor consumes it as a property assignment, but HTML must
+// contain the public prop name: an internal marker in server markup cannot be
+// read by the browser and breaks parity with the compiled string renderer.
+const COMPONENT_PROP_PREFIX = '__aihu_prop:'
+
+function serializedAttrName(key: string): string {
+  return key.startsWith(COMPONENT_PROP_PREFIX) ? key.slice(COMPONENT_PROP_PREFIX.length) : key
+}
+
 /**
  * Serialize a branch/leaf attr map to ` k="v"` / boolean-attr form.
  *
@@ -383,6 +393,7 @@ const VOID_ELEMENTS = new Set([
 function serializeAttrs(attrs: Record<string, string | boolean>): string {
   let out = ''
   for (const [k, v] of Object.entries(attrs)) {
+    const name = serializedAttrName(k)
     let val: unknown = v
     if (Array.isArray(val)) {
       const get = val[0]
@@ -397,9 +408,9 @@ function serializeAttrs(attrs: Record<string, string | boolean>): string {
     // through the same predicate `__aihu_sattr` uses so the two renderers drop
     // the same keys — a divergence here is a byte-identity failure, not just a
     // hole. See `_isSerializableAttrName` for why this drops rather than throws.
-    if (!_isSerializableAttrName(k)) continue
-    if (val === true) out += ` ${k}`
-    else out += ` ${k}="${escapeAttr(String(val))}"`
+    if (!_isSerializableAttrName(name)) continue
+    if (val === true) out += ` ${name}`
+    else out += ` ${name}="${escapeAttr(String(val))}"`
   }
   return out
 }
@@ -1149,7 +1160,9 @@ function _collectAttrSignals(attrs: unknown, path: string, out: Record<string, u
   if (typeof attrs !== 'object' || attrs === null) return
   for (const [key, v] of Object.entries(attrs as Record<string, unknown>)) {
     if (Array.isArray(v) && typeof v[0] === 'function' && typeof v[1] === 'function') {
-      out[`${path}.attr:${key}`] = (v[0] as () => unknown)()
+      const name = serializedAttrName(key)
+      const kind = key.startsWith(COMPONENT_PROP_PREFIX) ? 'prop' : 'attr'
+      out[`${path}.${kind}:${name}`] = (v[0] as () => unknown)()
     }
   }
 }
