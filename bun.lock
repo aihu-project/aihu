@@ -19,7 +19,7 @@
         "@aihu/agent-service": "workspace:*",
         "@aihu/app": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/compiler-source": "file:packages/compiler",
         "@aihu/context": "workspace:*",
         "@aihu/plugin": "workspace:*",
@@ -47,16 +47,16 @@
         "vitest": "^3.2.6",
       },
       "optionalDependencies": {
-        "@aihu/compiler-darwin-arm64": "1.3.1",
-        "@aihu/compiler-darwin-x64": "1.3.1",
-        "@aihu/compiler-linux-arm64-gnu": "1.3.1",
-        "@aihu/compiler-linux-x64-gnu": "1.3.1",
-        "@aihu/compiler-native-darwin-arm64": "1.3.1",
-        "@aihu/compiler-native-darwin-x64": "1.3.1",
-        "@aihu/compiler-native-linux-arm64-gnu": "1.3.1",
-        "@aihu/compiler-native-linux-x64-gnu": "1.3.1",
-        "@aihu/compiler-native-win32-x64-msvc": "1.3.1",
-        "@aihu/compiler-win32-x64-msvc": "1.3.1",
+        "@aihu/compiler-darwin-arm64": "1.3.2",
+        "@aihu/compiler-darwin-x64": "1.3.2",
+        "@aihu/compiler-linux-arm64-gnu": "1.3.2",
+        "@aihu/compiler-linux-x64-gnu": "1.3.2",
+        "@aihu/compiler-native-darwin-arm64": "1.3.2",
+        "@aihu/compiler-native-darwin-x64": "1.3.2",
+        "@aihu/compiler-native-linux-arm64-gnu": "1.3.2",
+        "@aihu/compiler-native-linux-x64-gnu": "1.3.2",
+        "@aihu/compiler-native-win32-x64-msvc": "1.3.2",
+        "@aihu/compiler-win32-x64-msvc": "1.3.2",
       },
     },
     "apps/docs": {
@@ -81,7 +81,7 @@
       },
       "devDependencies": {
         "@aihu-plugin/agent-readiness": "workspace:*",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@playwright/test": "1.59.1",
         "rolldown": "^1.0.0-rc.17",
         "vite": "^8.0.0",
@@ -91,7 +91,7 @@
       "name": "aihu-storybook",
       "dependencies": {
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/css-engine": "workspace:*",
         "@aihu/primitives": "workspace:*",
         "@aihu/runtime": "workspace:*",
@@ -129,7 +129,7 @@
       "name": "@aihu/cookbook",
       "version": "0.5.36",
       "dependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
       },
     },
     "examples/agent-driven-demo": {
@@ -140,7 +140,7 @@
         "@aihu/agent-server": "workspace:*",
         "@aihu/agent-service": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
         "ws": "^8.18.0",
@@ -162,7 +162,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@cloudflare/workers-types": "^4.20250601.0",
         "typescript": "^5.0.0",
         "vite": "^6.4.3",
@@ -177,7 +177,7 @@
         "@aihu/agent-a2a": "workspace:*",
         "@aihu/agent-acp": "workspace:*",
         "@aihu/agent-service": "workspace:*",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/context": "workspace:*",
       },
       "devDependencies": {
@@ -227,7 +227,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "vite": "^6.4.3",
       },
     },
@@ -238,7 +238,7 @@
         "@aihu/adapter-cloudflare": "workspace:*",
         "@aihu/agent": "workspace:*",
         "@aihu/app": "workspace:*",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
       },
       "devDependencies": {
         "vite": "^6.4.3",
@@ -250,7 +250,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -264,7 +264,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/css-engine": "workspace:*",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
@@ -286,7 +286,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "vite": "^6.4.3",
       },
     },
@@ -295,7 +295,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -308,7 +308,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -329,7 +329,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "vite": "^6.4.3",
         "vitest": "^3.2.6",
       },
@@ -345,7 +345,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "vite": "^6.4.3",
       },
     },
@@ -354,7 +354,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -380,7 +380,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/css-engine": "workspace:*",
         "@aihu/primitives": "workspace:*",
         "@aihu/runtime": "workspace:*",
@@ -397,7 +397,7 @@
       "dependencies": {
         "@aihu-plugin/data": "workspace:*",
         "@aihu/agent": "workspace:*",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
       },
       "devDependencies": {
         "vite": "^8.0.0",
@@ -418,7 +418,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "vite": "^8.0.0",
       },
     },
@@ -429,7 +429,7 @@
         "@aihu-plugin/data": "workspace:*",
         "@aihu/agent": "workspace:*",
         "@aihu/auth": "workspace:*",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/context": "workspace:*",
       },
       "devDependencies": {
@@ -443,7 +443,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -457,7 +457,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -471,7 +471,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -485,7 +485,7 @@
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/runtime": "workspace:*",
         "@aihu/signals": "^0.5.1",
       },
@@ -581,7 +581,7 @@
       "name": "@aihu/app",
       "version": "10.0.0",
       "dependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
       },
       "devDependencies": {
         "@aihu-plugin/agent-readiness": "workspace:*",
@@ -645,7 +645,7 @@
       "version": "0.6.1",
       "dependencies": {
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
       },
       "optionalDependencies": {
         "@aihu/css-engine-darwin-arm64": "0.1.17",
@@ -661,7 +661,7 @@
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
       },
     },
     "packages/language-server": {
@@ -671,7 +671,7 @@
         "aihu-language-server": "./dist/bin.js",
       },
       "dependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@aihu/tsc": "workspace:*",
         "@volar/language-core": "2.4.28",
         "@volar/language-server": "2.4.28",
@@ -877,7 +877,7 @@
         "aihu-tsc": "./bin/aihu-tsc.mjs",
       },
       "dependencies": {
-        "@aihu/compiler": "^1.3.1",
+        "@aihu/compiler": "^1.3.2",
         "@volar/language-core": "2.4.28",
         "@volar/typescript": "2.4.28",
       },
@@ -967,29 +967,29 @@
 
     "@aihu/cli": ["@aihu/cli@workspace:packages/cli"],
 
-    "@aihu/compiler": ["@aihu/compiler@1.3.1", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.1", "@aihu/compiler-darwin-x64": "1.3.1", "@aihu/compiler-linux-arm64-gnu": "1.3.1", "@aihu/compiler-linux-x64-gnu": "1.3.1", "@aihu/compiler-native-darwin-arm64": "1.3.1", "@aihu/compiler-native-darwin-x64": "1.3.1", "@aihu/compiler-native-linux-arm64-gnu": "1.3.1", "@aihu/compiler-native-linux-x64-gnu": "1.3.1", "@aihu/compiler-native-win32-x64-msvc": "1.3.1", "@aihu/compiler-win32-x64-msvc": "1.3.1" }, "peerDependencies": { "vite": ">=5.0.0" }, "optionalPeers": ["vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-4xg37IC5Gecs6X5aBQPqMd8GL+sOMDvZQtuhAiNwx8950taBViUa4rnD6y8YsT9tDDhu6esRmbW5CunDYDBttQ=="],
+    "@aihu/compiler": ["@aihu/compiler@1.3.2", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.2", "@aihu/compiler-darwin-x64": "1.3.2", "@aihu/compiler-linux-arm64-gnu": "1.3.2", "@aihu/compiler-linux-x64-gnu": "1.3.2", "@aihu/compiler-native-darwin-arm64": "1.3.2", "@aihu/compiler-native-darwin-x64": "1.3.2", "@aihu/compiler-native-linux-arm64-gnu": "1.3.2", "@aihu/compiler-native-linux-x64-gnu": "1.3.2", "@aihu/compiler-native-win32-x64-msvc": "1.3.2", "@aihu/compiler-win32-x64-msvc": "1.3.2" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-RZq0EmyT2azKKrJdsK7FnL6dUIPXgCTXuvTix2f76Dr6rAhvGQ5+My/iRwlJxCy7E2JOdAyXet8ZxXZmzPOZYg=="],
 
-    "@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-lbYtYr7Q2QZ8asPJbX3K+FEXv+psOT83gvg2vjjphj0tytAD4YUIwpxDcX+BsF4mSzhufDjvduPygJnIkG6I2w=="],
+    "@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.2", "", { "os": "darwin", "cpu": "arm64" }, "sha512-DDAbkI38VmnHNIpBr9Lpg0tqrrLsT0wsvHBPt/cRbVx1CBP+zv92ULIKM4EXtvAQ0qxQTBHOxab/VK8qcFxjmg=="],
 
-    "@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-QLQIj5Scg7jR2YiHMZD08wJeITB5iHvvg8GDlPIDHgG/cafH8psNsNm1mTdYhass7yqst/q4sZRwCDW1v+CPLg=="],
+    "@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-YdJgC1q+hJmSpf6PgCB7/C8xLYR0taXpz+kwetSHcd9+zSD6YZC4V8CoH+/gHl/O2q71uuy//bW5FDebDtt0FA=="],
 
-    "@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-Z5xYe6RIfX6XwiDRSPeJkhWk6ZQCAM8SgotoqyYTpRf0rtSo99TjwQWdsGjjngsrXlubPIrtxb45D6d0IgnlTA=="],
+    "@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-EPOssIzdVdkaid48QcpA5IT5dMk1322rhgIIi06Fj7b4fJedrEvk63Kip3KYZ0c+ifSkNHC6SIsJldTXRN3eoQ=="],
 
-    "@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.1", "", { "os": "linux", "cpu": "x64" }, "sha512-JSKS5unHFOPkQwGmleMjMi+7Xw8X5h0+q0vbT0dnE7wgeBsdfZSzuJ5+9bzcoYDXZTruzExGZmoSgW6UmCtLeA=="],
+    "@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.2", "", { "os": "linux", "cpu": "x64" }, "sha512-FI88/T1Z6iBifwJh9yWpGoSXWnwzsl7kCmMkGxrhMLYVOm/rlHBJYGxS8ilEsWm4gMLbcaodzG/e5AKm1FUvwQ=="],
 
-    "@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-0tZDwz+PjcwGjZMeJSESVovBwzYtHWp1y7GSLjYp7dmDiThs1LxjhowrlPDF2MOwdpQEyOYjHbnXNv+4hK/7cA=="],
+    "@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.2", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Egi9WQ8ndpIwrDMtSnIk67fklT0AvUkkSKCpSJ0l5lylml8d+twq2qiSCD0Il4D7NYxAlt+Do6gxjhljN9Hxnw=="],
 
-    "@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-65QbUIHYxBGRkW8DzW1E0dN0mRfHCYOaILDaPB8d1wPcyjEi0B7Hz/Z8KgRY+2sTiUjfuiGSpkisPyHwaJCd1A=="],
+    "@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-1jkRpWv7NMT3hpXr1SW3Uhw/Kk4q9dJcYPEwcj7EjFA54CNvL8BOJWfUJeiCRB1Ld8WmZNzBIOLaQA01s+QSsQ=="],
 
-    "@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-XzfmEMT0kTsW2ie/q+i1L534EzcStS4i4Soxc+lkPvc9LIY0D+49Oh0ZIiFJrJQcRdvef38K+FsUC8hqtYV6tw=="],
+    "@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-xNNRS69UWXLHl5Yz4h8PZojKUsFvu5RkoDIYwkzb45vVkV8noool8ZQOLTPR/9U5reggTMB4dBgUUy51X1AQ4w=="],
 
-    "@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.1", "", { "os": "linux", "cpu": "x64" }, "sha512-P9B4Ch4Yq2p76y8ej+pnIzdXTAUwQ69GmOZkqqf2igl5HGJqJeKgLT2JOpOvK5M4qjInpEEMLR4I79m4+yWBLw=="],
+    "@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.2", "", { "os": "linux", "cpu": "x64" }, "sha512-mw8oTo2qw+rF2l6JVPSKwLl/hy4/XA2RkqGhqoyNBjrbqnyZ1dBhknuoxAzx54OG+ICku6AhyDBxPyQkw5kBYA=="],
 
-    "@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.1", "", { "os": "win32", "cpu": "x64" }, "sha512-SAYyZ55r9NnprMwwYCnty3n51ul1ttmNVBE1kHQTrYpqfOEUSBQG2mZOaI8MPO6TB6ggJndSoGAqklVyVK77fg=="],
+    "@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.2", "", { "os": "win32", "cpu": "x64" }, "sha512-eMrtZlXFQXSxun3KQGn0+1suir583Cm98kITRjWImMov2m+/+oGBnWHiKG3XHRdzlrbnh2b/tTAR+62YYbKg2w=="],
 
     "@aihu/compiler-source": ["@aihu/compiler@file:packages/compiler", { "devDependencies": { "@aihu/css-engine": "workspace:*" }, "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.0", "@aihu/compiler-darwin-x64": "1.3.0", "@aihu/compiler-linux-arm64-gnu": "1.3.0", "@aihu/compiler-linux-x64-gnu": "1.3.0", "@aihu/compiler-native-darwin-arm64": "1.3.0", "@aihu/compiler-native-darwin-x64": "1.3.0", "@aihu/compiler-native-linux-arm64-gnu": "1.3.0", "@aihu/compiler-native-linux-x64-gnu": "1.3.0", "@aihu/compiler-native-win32-x64-msvc": "1.3.0", "@aihu/compiler-win32-x64-msvc": "1.3.0" }, "peerDependencies": { "vite": ">=5.0.0" }, "optionalPeers": ["vite"], "bin": { "aihu-compile": "./bin/aihu-compile.mjs" } }],
 
-    "@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.1", "", { "os": "win32", "cpu": "x64" }, "sha512-osrQvfrjcWpB7Xs1tLuemppQlw6ed5iGdBwok468uXgmRVdotjIlVGKQFwLXIvsVr8Y26Gos5/FXu9xpgxib5Q=="],
+    "@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.2", "", { "os": "win32", "cpu": "x64" }, "sha512-R0hpkj1h3JL0f2nizKVKEwSjXgyUZlf4BIUKVCOHBAgUuGubIMWy2nbCnWQaWLJJ25iJXhpTeiFsIj74hQZ3Kw=="],
 
     "@aihu/context": ["@aihu/context@workspace:packages/context"],
 

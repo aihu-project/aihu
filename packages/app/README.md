@@ -64,7 +64,7 @@ bun add @aihu/app
 
 **Dependencies:**
 
-- `@aihu/compiler` — `^1.3.1`
+- `@aihu/compiler` — `^1.3.2`
 
 **Peer dependencies:**
 

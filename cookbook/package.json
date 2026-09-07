@@ -7,6 +7,6 @@
     "test": "bun run harness.ts"
   },
   "dependencies": {
-    "@aihu/compiler": "^1.3.1"
+    "@aihu/compiler": "^1.3.2"
   }
 }

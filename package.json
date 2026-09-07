@@ -100,7 +100,7 @@
     "@aihu/agent-service": "workspace:*",
     "@aihu/app": "workspace:*",
     "@aihu/arbor": "^4.1.2",
-    "@aihu/compiler": "^1.3.1",
+    "@aihu/compiler": "^1.3.2",
     "@aihu/context": "workspace:*",
     "@aihu/plugin": "workspace:*",
     "@aihu/router": "workspace:*",
@@ -131,15 +131,15 @@
     "@aihu/reactive": "^0.2.1"
   },
   "optionalDependencies": {
-    "@aihu/compiler-darwin-arm64": "1.3.1",
-    "@aihu/compiler-darwin-x64": "1.3.1",
-    "@aihu/compiler-linux-arm64-gnu": "1.3.1",
-    "@aihu/compiler-linux-x64-gnu": "1.3.1",
-    "@aihu/compiler-native-darwin-arm64": "1.3.1",
-    "@aihu/compiler-native-darwin-x64": "1.3.1",
-    "@aihu/compiler-native-linux-arm64-gnu": "1.3.1",
-    "@aihu/compiler-native-linux-x64-gnu": "1.3.1",
-    "@aihu/compiler-native-win32-x64-msvc": "1.3.1",
-    "@aihu/compiler-win32-x64-msvc": "1.3.1"
+    "@aihu/compiler-darwin-arm64": "1.3.2",
+    "@aihu/compiler-darwin-x64": "1.3.2",
+    "@aihu/compiler-linux-arm64-gnu": "1.3.2",
+    "@aihu/compiler-linux-x64-gnu": "1.3.2",
+    "@aihu/compiler-native-darwin-arm64": "1.3.2",
+    "@aihu/compiler-native-darwin-x64": "1.3.2",
+    "@aihu/compiler-native-linux-arm64-gnu": "1.3.2",
+    "@aihu/compiler-native-linux-x64-gnu": "1.3.2",
+    "@aihu/compiler-native-win32-x64-msvc": "1.3.2",
+    "@aihu/compiler-win32-x64-msvc": "1.3.2"
   }
 }

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@aihu/arbor": "^4.1.2",
-    "@aihu/compiler": "^1.3.1",
+    "@aihu/compiler": "^1.3.2",
     "@aihu/runtime": "workspace:*",
     "@aihu/signals": "^0.5.1"
   },
