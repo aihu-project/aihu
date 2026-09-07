@@ -87,8 +87,8 @@ PKGS=(
                        # so it never reached npm — same silent gap that hit ui/seo/store.
   "magna"              # @aihu/magna — depends on @aihu/signals + @aihu/plugin + @aihu/context +
                        # @aihu-plugin/data (must follow them all). Same gap: reached 0.2.4 unpublished.
-                       # Its @aihu/magna-gqlmin optionalDependency is not a workspace package and is
-                       # unpublished; npm skips unresolvable optional deps, so installs still succeed.
+                       # Its unpublished @aihu/magna-gqlmin addon is dynamically loaded when consumers
+                       # opt in; it must not be a manifest dependency because Yarn rejects its absence.
   "_moved/data"
   "_moved/agent-readiness"
 )
