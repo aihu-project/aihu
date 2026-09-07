@@ -1,6 +1,11 @@
 import type { Dispose } from '@aihu/signals'
 import { describe, expect, it, vi } from 'vitest'
-import { _applyAttrs, _setAttrOrProp, type MountEffectFn } from '../src/attrs.ts'
+import {
+  _applyAttrs,
+  _setAttrOrProp,
+  COMPONENT_PROP_PREFIX,
+  type MountEffectFn,
+} from '../src/attrs.ts'
 
 /**
  * Tests for `_applyAttrs` + `_setAttrOrProp` per spec §1.2 + §2.4 + §2.7
@@ -107,6 +112,19 @@ describe('_applyAttrs — three detection paths', () => {
     expect(calls.length).toBe(0)
     el.dispatchEvent(new Event('click'))
     expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('writes compiler-marked onX component props instead of registering an event listener', () => {
+    const el = document.createElement('x-child') as HTMLElement & { onSave?: () => string }
+    const handler = vi.fn(() => 'saved')
+    const { spy, calls } = makeSpyMountEffect()
+
+    _applyAttrs(el, { [`${COMPONENT_PROP_PREFIX}onSave`]: handler }, [], '0', spy)
+
+    expect(el.onSave).toBe(handler)
+    expect(calls).toHaveLength(0)
+    el.dispatchEvent(new Event('save'))
+    expect(handler).not.toHaveBeenCalled()
   })
 
   it('null attrs is a no-op (no side effects, no mountEffect calls)', () => {
