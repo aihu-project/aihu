@@ -10,11 +10,9 @@
  * `@agent { $expose/$describe }` form (C440) — all of which the existing
  * file-presence harness (scaffold-and-compile.test.ts) silently passed.
  *
- * Binary resolution: prefer a pre-built workspace binary at
- * `target/release/aihu-compile[.exe]`; if absent, build it from source with
- * `cargo build --release -p aihu-compiler --bin aihu-compile`. The compiler
- * is the v0→v1 gate, so this never `--no-verify`s — it runs the real Rust
- * compiler the project ships.
+ * Binary resolution uses the locked published compiler package. Compiler
+ * source is tested and released from aihu-compiler, while this suite verifies
+ * the version a freshly scaffolded application receives.
  *
  * The `@route` block carries a path-scoped check (C500: `@route` only valid
  * in `src/pages/`). Emitted files are compiled IN PLACE at their real project
@@ -34,13 +32,12 @@ import { fileURLToPath } from 'node:url'
 // inputs (duplicate top-level `const`, TS that won't transpile).
 import { transformWithOxc } from 'vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 import { scaffoldApp, scaffoldComponent, scaffoldPage } from '../src/index.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const CLI_BIN = resolve(HERE, '..', 'src', 'bin.ts')
-const REPO_ROOT = resolve(HERE, '..', '..', '..')
-const BIN_EXT = process.platform === 'win32' ? '.exe' : ''
-const COMPILE_BIN = join(REPO_ROOT, 'target', 'release', `aihu-compile${BIN_EXT}`)
+const COMPILE_BIN = resolvePublishedCompilerBinary()
 
 /** Recursively collect absolute paths of every `.aihu` file under `root`. */
 function collectAihu(root: string): string[] {
@@ -119,26 +116,6 @@ function assertNoHyphenWarning(stderr: string, file: string): void {
 }
 
 let parentDir: string
-
-beforeAll(() => {
-  // Ensure the compiler binary exists; build from source if not. The compiler
-  // is the v1 gate — we must run the real binary, never skip the check.
-  if (!existsSync(COMPILE_BIN)) {
-    const build = spawnSync(
-      'cargo',
-      ['build', '--release', '-p', 'aihu-compiler', '--bin', 'aihu-compile'],
-      { cwd: REPO_ROOT, encoding: 'utf8', stdio: 'inherit' },
-    )
-    if (build.status !== 0) {
-      throw new Error(
-        `failed to build aihu-compile (status=${build.status}). ` +
-          'Install the Rust toolchain or set up the prebuilt binary at ' +
-          `${COMPILE_BIN}.`,
-      )
-    }
-  }
-  expect(existsSync(COMPILE_BIN), `compiler binary missing at ${COMPILE_BIN}`).toBe(true)
-}, 600_000)
 
 beforeAll(() => {
   parentDir = mkdtempSync(join(tmpdir(), 'aihu-scaffold-clean-'))

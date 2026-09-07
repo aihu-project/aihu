@@ -10,10 +10,8 @@
  * this script is the mechanical gate that keeps the skill honest against the
  * compiler in this checkout.
  *
- * Compiler resolution: $AIHU_COMPILE_BIN, else <repo>/target/release/aihu-compile,
- * else <repo>/target/debug/aihu-compile. (The published napi addon may be a
- * stale compiler generation — this script only trusts a binary built from
- * source. Build one: cargo build --release -p aihu-compiler --bin aihu-compile)
+ * Compiler resolution: $AIHU_COMPILE_BIN, else the published @aihu/compiler
+ * package. Compiler source now has its own repository and release checks.
  *
  * Run: bun skills/aihu/check-samples.ts
  */
@@ -22,20 +20,16 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolvePublishedCompilerBinary } from '../../scripts/lib/compiler-binary.ts'
 
 const skillDir = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(skillDir, '..', '..')
 
-const bin =
-  process.env.AIHU_COMPILE_BIN ??
-  [
-    join(repoRoot, 'target', 'release', 'aihu-compile'),
-    join(repoRoot, 'target', 'debug', 'aihu-compile'),
-  ].find((p) => existsSync(p))
+const bin = process.env.AIHU_COMPILE_BIN ?? resolvePublishedCompilerBinary()
 
 if (!bin || !existsSync(bin)) {
   console.error(
-    'ERROR: no aihu-compile binary. Set AIHU_COMPILE_BIN or run: cargo build --release -p aihu-compiler --bin aihu-compile',
+    'ERROR: no published @aihu/compiler binary. Reinstall dependencies or set AIHU_COMPILE_BIN.',
   )
   process.exit(1)
 }

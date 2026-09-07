@@ -13,13 +13,12 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const ext = process.platform === 'win32' ? '.exe' : ''
-
 export default function setup(): void {
   const src = resolve(__dirname, '../src/task-list.aihu')
-  const bin = resolve(__dirname, `../../../packages/compiler/bin/aihu-compile${ext}`)
+  const bin = resolvePublishedCompilerBinary()
   const compiled = execFileSync(
     bin,
     ['--stdin', '--tag', 'task-list', '--path', src, '--target', 'client'],

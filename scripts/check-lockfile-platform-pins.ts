@@ -36,9 +36,9 @@
  *
  * ── SCOPE ────────────────────────────────────────────────────────────────────
  *
- * Checks all three hosts, not just the lockstepped one. css-engine and server
- * still hand-bump, and a hand-bumped pin can be typo'd or point at something
- * unpublished just as easily.
+ * Checks the two native hosts still released by this repository. Compiler
+ * platform pins are released from aihu-compiler; its source tree remains here
+ * temporarily only while extraction follow-up work lands.
  *
  * Usage:
  *   bun scripts/check-lockfile-platform-pins.ts
@@ -50,7 +50,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = process.env.LOCKFILE_PINS_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), '..')
 
-const HOSTS = ['compiler', 'css-engine', 'server']
+const HOSTS = ['css-engine', 'server']
 
 const lockPath = join(ROOT, 'bun.lock')
 if (!existsSync(lockPath)) {

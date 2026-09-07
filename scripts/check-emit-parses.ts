@@ -30,36 +30,21 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { Glob } from 'bun'
-import { resolveNewest } from './lib/invariant.ts'
+import { resolvePublishedCompilerBinary } from './lib/compiler-binary.ts'
 
 const ROOT = join(import.meta.dir, '..')
 
 /**
- * Resolve the compiler binary, preferring the NEWEST build.
- *
- * Deliberately not the Vite plugin's fixed precedence (bin → release → debug):
- * that order silently picks a stale `target/release` over a fresh
- * `target/debug`, which made this script report already-fixed bugs as live.
- * A checker that reads a stale artifact is worse than no checker.
- *
- * The newest-mtime rule itself now lives in `scripts/lib/invariant.ts` as
- * `resolveNewest`, so the four Slice-0 invariants and this script share one
- * copy of the fix. Behavior here is unchanged: same candidates, same order,
- * same message.
+ * The root repository exercises the published compiler, exactly as an Aihu
+ * application does. Compiler-source checks live in aihu-compiler.
  */
 function resolveCompiler(): string {
-  const candidates = [
-    join(ROOT, 'packages/compiler/bin/aihu-compile'),
-    join(ROOT, 'target/release/aihu-compile'),
-    join(ROOT, 'target/debug/aihu-compile'),
-  ]
-  const newest = resolveNewest(candidates)
-  if (newest !== null) return newest
-  console.error(
-    'check:emit-parses — no aihu-compile binary found. Run `cargo build --release` first.\nLooked in:\n  ' +
-      candidates.join('\n  '),
-  )
-  process.exit(1)
+  try {
+    return resolvePublishedCompilerBinary()
+  } catch (error) {
+    console.error(`check:emit-parses — ${(error as Error).message}`)
+    process.exit(1)
+  }
 }
 
 const compiler = resolveCompiler()

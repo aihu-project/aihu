@@ -18,11 +18,12 @@
  *      where #572 put the defect.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { transform } from '@aihu/compiler'
 import { afterAll, describe, expect, it } from 'vitest'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 import { type Block, parseHnMarkup } from '../src/lib/parse-hn-markup.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -30,9 +31,10 @@ const exampleRoot = resolve(__dirname, '..')
 const repoRoot = resolve(exampleRoot, '../..')
 const SCRATCH = join(__dirname, '.scratch-smoke')
 
-const COMPILER = ['target/release/aihu-compile', 'target/debug/aihu-compile'].find((p) =>
-  existsSync(join(repoRoot, p)),
-)
+// Governed examples are compiler consumers. Exercise the installed release
+// rather than requiring CI to build and stage compiler source in this repo.
+process.env.AIHU_COMPILER_NATIVE = '0'
+process.env.AIHU_COMPILE_BIN ??= resolvePublishedCompilerBinary()
 
 afterAll(() => rmSync(SCRATCH, { recursive: true, force: true }))
 
@@ -235,22 +237,11 @@ describe('loader trust boundary', () => {
 
 /**
  * LAYER 4 — SERVED BYTES. The only layer that exercises the SSR emitter, which
- * is where #572 put the defect. Skipped when no Rust compiler has been built;
- * in CI, where the governed lane stages one, absence is a FAILURE — a gate that
- * quietly degrades to nothing is the bug this file exists to close.
+ * is where #572 put the defect. It runs through the installed compiler release
+ * so the governed lane is a consumer test, never a source-build requirement.
  */
 describe('served bytes (SSR)', () => {
-  it('has a compiler available in CI', () => {
-    if (process.env.CI && !COMPILER) {
-      throw new Error(
-        'No aihu-compile binary. The governed lane must stage one before this suite; ' +
-          'skipping here would make the served-bytes assertion vacuous.',
-      )
-    }
-    expect(true).toBe(true)
-  })
-
-  it.skipIf(!COMPILER)('renders every payload class inert in the served bytes', async () => {
+  it('renders every payload class inert in the served bytes', async () => {
     const src = readFileSync(join(exampleRoot, 'src/components/hn-rich-text.aihu'), 'utf-8')
     const { code } = transform(src, 'src/components/hn-rich-text.aihu', { target: 'server' })
 

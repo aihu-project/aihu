@@ -10,7 +10,6 @@ on:
       - 'packages/primitives/**'
       - 'packages/ui/**'
       - 'packages/css-engine/**'
-      - 'packages/compiler/**'
       - 'apps/storybook/**'
       - 'scripts/check-required-stories.ts'
       - '.github/workflows/storybook.yml'
@@ -43,7 +42,6 @@ jobs:
               - 'packages/primitives/**'
               - 'packages/ui/**'
               - 'packages/css-engine/**'
-              - 'packages/compiler/**'
               - 'apps/storybook/**'
               - 'scripts/check-required-stories.ts'
               - '.github/workflows/storybook.yml'
@@ -62,20 +60,9 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           auto-install: true
-      # Same stale-binary hardening as plan-a.yml: compiling .aihu stories
-      # needs BOTH freshly-built Rust binaries (aihu-compile + aihu-css-compile).
-      - name: Cache Rust build (deps only; workspace crates always rebuild)
-        uses: Swatinem/rust-cache@v2
-      - name: Build Rust binaries (aihu-compile + aihu-css-compile)
-        run: cargo build --release
-      - name: Stage compiler binary
-        run: |
-          mkdir -p packages/compiler/bin
-          cp target/release/aihu-compile packages/compiler/bin/aihu-compile
-          chmod 0755 packages/compiler/bin/aihu-compile
+      # Storybook is a framework consumer. Its .aihu transforms use the
+      # locked, published @aihu/compiler package.
       - run: bun install --frozen-lockfile
-        env:
-          AIHU_SKIP_POSTINSTALL: "1"
       - name: Build workspace packages
         run: bun run build
       - name: Install Playwright chromium (version matched to the lockfile)

@@ -38,30 +38,6 @@ permissions:
   contents: read
 jobs:
   check:
-    # Test the compiler THIS PR builds, not the one npm published.
-    #
-    # `@aihu/compiler` resolves its backend in this order: `AIHU_COMPILER_NATIVE=0`
-    # (spawn the CLI) -> `AIHU_COMPILER_NATIVE_ADDON` (explicit path) -> otherwise
-    # `require('@aihu/compiler-native-<platform>')` from node_modules, i.e. the
-    # PUBLISHED npm package. This job runs `cargo build --release` and stages the
-    # CLI binary, but that build produces no napi addon — so without this env the
-    # published addon wins and every gate below validates a compiler the PR never
-    # touched. A Rust change could go green having never executed.
-    #
-    # It has been safe only by accident: the platform pins currently lead their
-    # published versions, so bun drops the unresolvable optionalDependency and
-    # the CLI is used by default. That protection disappears the moment those
-    # versions publish.
-    #
-    # `check:skill-samples` already documents this hazard for itself ("must never
-    # be pointed at the published napi addon, which is a stale v1 compiler"). The
-    # reasoning was always job-wide.
-    #
-    # The napi path is NOT left untested: `packages/server/tests/native-parity.
-    # test.ts` and the string-differential suite cover it where a real addon is
-    # present.
-    env:
-      AIHU_COMPILER_NATIVE: '0'
     # Skip CI on draft PRs to keep the inner Builder loop cheap.
     # Skip the heavy build on doc-only PRs (changes.code == 'false') — the
     # always-on `ci-ok` job still reports green for branch protection.
@@ -79,39 +55,14 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           auto-install: true
-      # css-engine e2e suites (tests/e2e.test.ts spawns aihu-css-compile;
-      # tests/sfc-e2e.test.ts spawns aihu-compile --ast-json via compileToAst)
-      # depend on locally-built Rust binaries that are gitignored. On a clean
-      # CI checkout the postinstall download fetches the published release
-      # aihu-compile, which predates the --ast-json hook and makes those e2e
-      # tests fail. Build BOTH binaries from source at the workspace root and
-      # stage them where the TS resolvers look, before `bun run test`.
-      # Swatinem/rust-cache caches the registry + dependency build artifacts
-      # but CLEANS the local workspace crates out of target/ before saving, so
-      # aihu-compile + aihu-css-compile ALWAYS rebuild from source. The previous
-      # hand-rolled actions/cache (keyed only on Cargo.lock) could restore a
-      # stale target/ with fresh mtimes and let cargo skip rebuilding changed
-      # crate source — shipping a stale aihu-css-compile into the e2e suites
-      # (seen as the css-engine "static island / zero @aihu" fallback).
-      - name: Cache Rust build (deps only; workspace crates always rebuild)
+      # css-engine remains in this repository, so its native binary is built
+      # here. The SFC compiler is published by aihu-compiler and is resolved
+      # from the locked @aihu/compiler dependency.
+      - name: Cache Rust build (css-engine dependencies)
         uses: Swatinem/rust-cache@v2
-      - name: Build Rust binaries (aihu-compile + aihu-css-compile)
-        # Workspace build emits both binaries into the workspace-root
-        # target/release/ — aihu-css-compile is resolved there directly by
-        # packages/css-engine/src/index.ts resolveBinary().
-        run: cargo build --release
-      - name: Stage compiler binary
-        # compileToAst (packages/compiler/js/index.ts) resolves aihu-compile
-        # from packages/compiler/bin/ (the postinstall location).
-        run: |
-          mkdir -p packages/compiler/bin
-          cp target/release/aihu-compile packages/compiler/bin/aihu-compile
-          chmod 0755 packages/compiler/bin/aihu-compile
+      - name: Build css-engine binary
+        run: cargo build --release -p aihu-css-core
       - run: bun install --frozen-lockfile
-        env:
-          # Do NOT clobber the freshly-built aihu-compile with the stale
-          # release download — it predates the --ast-json hook.
-          AIHU_SKIP_POSTINSTALL: "1"
       # One Rust pin, enforced: rust-toolchain.toml is the source of truth and
       # every other copy (.prototools, the dtolnay steps, RUSTUP_TOOLCHAIN)
       # must match it EXACTLY. Cheap, and it runs before anything expensive.
@@ -148,11 +99,8 @@ jobs:
       # coding agent `.aihu` syntax — if its samples rot, every agent working in
       # an aihu project is taught code the compiler rejects.
       #
-      # Runs AFTER "Build Rust binaries" above, which puts aihu-compile at
-      # target/release/ — exactly where check-samples.ts looks. It must not be
-      # moved before that step, and it must never be pointed at the published
-      # napi addon, which is a stale v1 compiler and would verify the samples
-      # against the wrong grammar.
+      # The checker resolves the locked published compiler package, matching
+      # the compiler version Aihu applications receive.
       #
       # The gate carries its own floor assertion: it fails if it finds fewer
       # samples than expected, so a renamed fence or moved file cannot make it
@@ -247,8 +195,7 @@ jobs:
       # invariant not wired in protects nothing.
       #
       # Runs here with the rest of the Slice-0-style compile invariants: it needs
-      # the aihu-compile binary, staged at packages/compiler/bin above (resolved
-      # newest-first by the script), and no built dist, so it can fail fast
+      # the published @aihu/compiler binary, and no built dist, so it can fail fast
       # before the coverage run.
       - run: bun scripts/check-emit-parses.ts --expect-parse 0 --expect-compile 0
       # cookbook corpus (P0 — corpus unification): the cookbook is the single
@@ -258,7 +205,7 @@ jobs:
       # playground presets.generated.ts) against a fresh build — a stale or
       # hand-edited artifact is a red PR, which is what prevents the pre-#497
       # fossil-index state from recurring. test:cookbook is the compile harness
-      # (needs the aihu-compile binary staged above, like emit-parses).
+      # (uses the same published compiler as emit-parses).
       - run: bun run check:cookbook
       - run: bun run test:cookbook
       # governed examples (Phase 2a — governed set + coverage matrix): asserts
@@ -315,12 +262,6 @@ jobs:
       - name: API datasheets are up to date
         run: bun scripts/gen-api.ts --check
         working-directory: apps/docs
-      # b3b-sidecar-tsc (#445 audit): excluded at root and previously invoked
-      # NOWHERE. It needs the built aihu-compile binary (staged above) AND
-      # packages/*/dist type surfaces (its tsc pass maps @aihu/* ->
-      # packages/*/dist/index.d.ts), so it runs here — after `bun run build` —
-      # via the gates config. 5/5 pass with those prerequisites.
-      - run: bun run test packages/compiler/tests/b3b-sidecar-tsc.test.ts --config vitest.gates.config.ts
       - run: bun run size
       # v0.2.4 — .size-limit.json row-policy lint. Flags any browser-eligible
       # package missing a row, or any server-side / build-dev-time-only package
@@ -1026,21 +967,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
-      - uses: Swatinem/rust-cache@v2
-      - name: Build Rust binaries
-        run: cargo build --release
-      - name: Stage compiler binary
-        # See `check`'s identical step above: without this, the scaffold's
-        # `AIHU_COMPILE_BIN` override below has nothing to point at, and the
-        # published napi addon would silently validate a compiler this PR
-        # never touched.
-        run: |
-          mkdir -p packages/compiler/bin
-          cp target/release/aihu-compile packages/compiler/bin/aihu-compile
-          chmod 0755 packages/compiler/bin/aihu-compile
       - run: bun install --frozen-lockfile
-        env:
-          AIHU_SKIP_POSTINSTALL: "1"
       - name: Build @aihu/cli
         run: bun run --cwd packages/cli build
       - name: Scaffold consistency — minimal × vite 6, vite 8
@@ -1053,8 +980,7 @@ jobs:
         # template change (a new template, a widened `vite` range) was therefore
         # invisible to the one job that exists to catch scaffold regressions.
         run: |
-          AIHU_COMPILER_NATIVE=0 AIHU_COMPILE_BIN="$(pwd)/target/release/aihu-compile" \
-            bun packages/cli/tests/scaffold-matrix-e2e.ts \
+          bun packages/cli/tests/scaffold-matrix-e2e.ts \
             --template minimal --pm bun --mode local --vite 6,8 \
             --local-pkg all \
             --cmd-timeout 300000 --server-timeout 120000 \
@@ -1079,8 +1005,7 @@ jobs:
         # would exit with "not a template". See the step above for why the flag
         # belongs on both.
         run: |
-          AIHU_COMPILER_NATIVE=0 AIHU_COMPILE_BIN="$(pwd)/target/release/aihu-compile" \
-            bun packages/cli/tests/scaffold-matrix-e2e.ts \
+          bun packages/cli/tests/scaffold-matrix-e2e.ts \
             --template ssr --pm bun --mode local \
             --local-pkg all \
             --cmd-timeout 300000 --server-timeout 120000 \
@@ -1095,30 +1020,7 @@ jobs:
           retention-days: 14
 
   examples:
-    # Test the compiler THIS PR builds, not the one npm published.
-    #
-    # `@aihu/compiler` resolves its backend in this order: `AIHU_COMPILER_NATIVE=0`
-    # (spawn the CLI) -> `AIHU_COMPILER_NATIVE_ADDON` (explicit path) -> otherwise
-    # `require('@aihu/compiler-native-<platform>')` from node_modules, i.e. the
-    # PUBLISHED npm package. This job runs `cargo build --release` and stages the
-    # CLI binary, but that build produces no napi addon — so without this env the
-    # published addon wins and every gate below validates a compiler the PR never
-    # touched. A Rust change could go green having never executed.
-    #
-    # It has been safe only by accident: the platform pins currently lead their
-    # published versions, so bun drops the unresolvable optionalDependency and
-    # the CLI is used by default. That protection disappears the moment those
-    # versions publish.
-    #
-    # `check:skill-samples` already documents this hazard for itself ("must never
-    # be pointed at the published napi addon, which is a stale v1 compiler"). The
-    # reasoning was always job-wide.
-    #
-    # The napi path is NOT left untested: `packages/server/tests/native-parity.
-    # test.ts` and the string-differential suite cover it where a real addon is
-    # present.
-    env:
-      AIHU_COMPILER_NATIVE: '0'
+    # Consumer integration validates the published compiler package.
     # Build and smoke-test all polished examples (arch-2 M1 gate).
     # The governed path filter is the documented coverage boundary for this
     # suite. Keep the full example builds off unrelated package changes while
@@ -1137,25 +1039,7 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           auto-install: true
-      # Same stale-binary hardening as the check job — workspace crate
-      # (aihu-compile) always rebuilds; only deps are cached. packages/compiler
-      # is a root-workspace member, so it builds into the workspace-root target/
-      # (NOT packages/compiler/target/) — cache the default root workspace.
-      - name: Cache Rust build (deps only; workspace crates always rebuild)
-        uses: Swatinem/rust-cache@v2
-      - name: Build compiler binary
-        run: cargo build --release --manifest-path packages/compiler/Cargo.toml
-      - name: Stage compiler binary
-        run: |
-          mkdir -p packages/compiler/bin
-          # Root-workspace member → binary is at the workspace-root target/.
-          # (The old actions/cache masked this by restoring a stale binary at
-          # packages/compiler/target/; rust-cache's clean exposed the real path.)
-          cp target/release/aihu-compile packages/compiler/bin/aihu-compile
-          chmod 0755 packages/compiler/bin/aihu-compile
       - run: bun install --frozen-lockfile
-        env:
-          AIHU_SKIP_POSTINSTALL: "1"
       - name: Build workspace packages
         run: bun run build
       - name: Build examples
@@ -1191,30 +1075,7 @@ jobs:
           done
 
   governed-examples:
-    # Test the compiler THIS PR builds, not the one npm published.
-    #
-    # `@aihu/compiler` resolves its backend in this order: `AIHU_COMPILER_NATIVE=0`
-    # (spawn the CLI) -> `AIHU_COMPILER_NATIVE_ADDON` (explicit path) -> otherwise
-    # `require('@aihu/compiler-native-<platform>')` from node_modules, i.e. the
-    # PUBLISHED npm package. This job runs `cargo build --release` and stages the
-    # CLI binary, but that build produces no napi addon — so without this env the
-    # published addon wins and every gate below validates a compiler the PR never
-    # touched. A Rust change could go green having never executed.
-    #
-    # It has been safe only by accident: the platform pins currently lead their
-    # published versions, so bun drops the unresolvable optionalDependency and
-    # the CLI is used by default. That protection disappears the moment those
-    # versions publish.
-    #
-    # `check:skill-samples` already documents this hazard for itself ("must never
-    # be pointed at the published napi addon, which is a stale v1 compiler"). The
-    # reasoning was always job-wide.
-    #
-    # The napi path is NOT left untested: `packages/server/tests/native-parity.
-    # test.ts` and the string-differential suite cover it where a real addon is
-    # present.
-    env:
-      AIHU_COMPILER_NATIVE: '0'
+    # Consumer integration validates the published compiler package.
     # Phase 2a — the governed example set under live conditions.
     #
     # Path-gated (needs.changes.outputs.governed): only pays out when a subsystem
@@ -1229,8 +1090,7 @@ jobs:
     #
     # Cost: ~4 vite builds (each ~0.1–0.4s of transform, ~20–40s incl. cold
     # workspace build amortised) + a handful of smoke suites → roughly +3–5 min
-    # wall on a qualifying PR, dominated by the shared `cargo build --release` +
-    # `bun run build` prerequisites (same as the `examples` job). Docs-only and
+    # wall on a qualifying PR, dominated by the workspace build. Docs-only and
     # unrelated-package PRs skip it.
     if: >-
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
@@ -1245,18 +1105,7 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           auto-install: true
-      - name: Cache Rust build (deps only; workspace crates always rebuild)
-        uses: Swatinem/rust-cache@v2
-      - name: Build compiler binary
-        run: cargo build --release --manifest-path packages/compiler/Cargo.toml
-      - name: Stage compiler binary
-        run: |
-          mkdir -p packages/compiler/bin
-          cp target/release/aihu-compile packages/compiler/bin/aihu-compile
-          chmod 0755 packages/compiler/bin/aihu-compile
       - run: bun install --frozen-lockfile
-        env:
-          SCRIBE_SKIP_POSTINSTALL: "1"
       # Manifest integrity (also runs in `check` — cheap, and keeps this lane
       # self-contained if `check` is ever re-scoped).
       - run: bun run check:coverage-manifest
