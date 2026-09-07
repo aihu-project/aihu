@@ -32,7 +32,12 @@ import { ssrPackageJson } from '../src/templates-ssr.ts'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 
-function manifestFor(pkg: string): { peerDependencies?: Record<string, string> } | undefined {
+function manifestFor(pkg: string):
+  | {
+      peerDependencies?: Record<string, string>
+      peerDependenciesMeta?: Record<string, { optional?: boolean }>
+    }
+  | undefined {
   // `@aihu/foo` → packages/foo. Only first-party packages participate in the
   // closure; anything else (vite, typescript) is a leaf we do not walk into.
   const m = /^@aihu\/(.+)$/.exec(pkg)
@@ -44,7 +49,7 @@ function manifestFor(pkg: string): { peerDependencies?: Record<string, string> }
   }
 }
 
-/** Every first-party peer reachable from `roots`, including the roots' own. */
+/** Every required first-party peer reachable from `roots`, including the roots' own. */
 function peerClosure(roots: readonly string[]): Set<string> {
   const seen = new Set<string>()
   const out = new Set<string>()
@@ -53,7 +58,9 @@ function peerClosure(roots: readonly string[]): Set<string> {
     const pkg = queue.pop()!
     if (seen.has(pkg)) continue
     seen.add(pkg)
-    for (const peer of Object.keys(manifestFor(pkg)?.peerDependencies ?? {})) {
+    const manifest = manifestFor(pkg)
+    for (const peer of Object.keys(manifest?.peerDependencies ?? {})) {
+      if (manifest?.peerDependenciesMeta?.[peer]?.optional) continue
       out.add(peer)
       queue.push(peer)
     }
@@ -82,7 +89,7 @@ const EMITTERS: ReadonlyArray<[string, () => string]> = [
 
 describe('scaffold declares the transitive peer closure', () => {
   for (const [label, emit] of EMITTERS) {
-    it(`covers every first-party peer — ${label}`, () => {
+    it(`covers every required first-party peer — ${label}`, () => {
       const pkg = JSON.parse(emit())
       const declared = new Set([
         ...Object.keys(pkg.dependencies ?? {}),
