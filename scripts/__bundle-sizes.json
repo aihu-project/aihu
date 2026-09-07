@@ -5,21 +5,6 @@
     "limit": "450 B"
   },
   {
-    "name": "@aihu/signals",
-    "bytes": 2232,
-    "limit": "2350 B"
-  },
-  {
-    "name": "@aihu/signals/lifecycle",
-    "bytes": 170,
-    "limit": "300 B"
-  },
-  {
-    "name": "@aihu/arbor",
-    "bytes": 3175,
-    "limit": "3200 B"
-  },
-  {
     "name": "@aihu/runtime",
     "bytes": 4731,
     "limit": "4750 B"
@@ -158,16 +143,6 @@
     "name": "@aihu/store",
     "bytes": 1856,
     "limit": "2.5 KB"
-  },
-  {
-    "name": "@aihu/reactive",
-    "bytes": 1309,
-    "limit": "1900 B"
-  },
-  {
-    "name": "@aihu/reactive/helpers",
-    "bytes": 528,
-    "limit": "700 B"
   },
   {
     "name": "@aihu/use/shared",

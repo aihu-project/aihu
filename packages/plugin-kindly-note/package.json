@@ -47,7 +47,7 @@
     }
   },
   "dependencies": {
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "devDependencies": {
     "@aihu/plugin": "workspace:*",
@@ -59,7 +59,7 @@
     "@kindly-note/lang-typescript": "^0.1.0",
     "@kindly-note/render-markdown": "^0.1.0"
   },
-  "description": "Runtime syntax highlighting + markdown rendering for aihu — <aihu-code>/<aihu-markdown> custom elements + signal-aware highlight()/renderMarkdown() helpers, powered by published @kindly-note/* packages with lazy loading.",
+  "description": "Runtime syntax highlighting + markdown rendering for aihu \u2014 <aihu-code>/<aihu-markdown> custom elements + signal-aware highlight()/renderMarkdown() helpers, powered by published @kindly-note/* packages with lazy loading.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

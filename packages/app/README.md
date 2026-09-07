@@ -64,12 +64,12 @@ bun add @aihu/app
 
 **Peer dependencies:**
 
-- `@aihu/arbor` — `workspace:*`
+- `@aihu/arbor` — `^4.1.2`
 - `@aihu/context` — `workspace:*`
 - `@aihu/router` — `workspace:*`
 - `@aihu/runtime` — `workspace:*`
 - `@aihu/server` — `workspace:*`
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 - `@aihu/store` — `workspace:*`
 - `vite` — `>=5.0.0`
 

@@ -3,12 +3,9 @@ language: typescript
 layer: library
 
 dependsOn:
-  - 'arbor'
   - 'context'
   - 'router'
   - 'runtime'
-  - 'signals'
-
 # NOTE: The Rust binary is NOT built automatically by any Moon task.
 # Run `cargo build --release` manually in packages/compiler/ before running
 # integration tests or using the Vite plugin.

@@ -198,7 +198,7 @@ bun add @aihu/use
 
 **Dependencies:**
 
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 
 **Peer dependencies:**
 
@@ -215,7 +215,7 @@ bun add @aihu/use
 <!-- BEGIN_AUTOGEN: see-also -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
-- [@aihu/signals](../signals)
+- [@aihu/signals](https://github.com/aihu-project/aihu-dom)
 - [@aihu/primitives](../primitives)
 - [Aihu framework root](../../README.md)
 

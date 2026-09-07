@@ -76,7 +76,7 @@ const CF_TEAM_CONFIG_TS = resolve(ROOT, 'packages/templates/cf-team/template.con
 const CF_TEAM_CONFIG_JS = resolve(ROOT, 'packages/templates/cf-team/template.config.js')
 
 /**
- * THIRD-PARTY ranges a scaffold pins, kept here rather than typed into each
+ * EXTERNAL ranges a scaffold pins, kept here rather than typed into each
  * template for exactly the reason the `@aihu/*` ranges are: `vite` was written
  * out in FOUR places (`appPackageJson`, `agentPackageJson`, cf-team's
  * `apps/web/package.json.tmpl`, and the legacy golden), and a range that lives
@@ -98,9 +98,38 @@ const CF_TEAM_CONFIG_JS = resolve(ROOT, 'packages/templates/cf-team/template.con
  * a compatibility claim with no measurement behind it. `^6 || ^8` names exactly
  * the two majors `scaffold-consistency` builds on every PR.
  */
-const EXTERNAL_RANGES: Readonly<Record<string, string>> = {
+const THIRD_PARTY_RANGES: Readonly<Record<string, string>> = {
   vite: '^6 || ^8',
 }
+
+/**
+ * DOM engine packages are released from aihu-dom, not this workspace. Derive
+ * their ranges from the root manifest so the scaffold stays aligned with the
+ * consumer graph without pretending they are local workspaces.
+ */
+const EXTERNAL_AIHU_PACKAGES = ['@aihu/arbor', '@aihu/reactive', '@aihu/signals'] as const
+
+function externalAihuRanges(): Record<string, string> {
+  const rootManifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as {
+    dependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+  }
+  const ranges: Record<string, string> = {}
+  for (const name of EXTERNAL_AIHU_PACKAGES) {
+    const range = rootManifest.dependencies?.[name] ?? rootManifest.devDependencies?.[name]
+    if (typeof range !== 'string' || range.startsWith('workspace:')) {
+      throw new Error(`sync-template-versions: root package.json lacks an npm range for ${name}`)
+    }
+    ranges[name] = range
+  }
+  return ranges
+}
+
+// Fixture mode must remain self-contained: its expected generated module has
+// only the two synthetic workspace packages and the Vite range.
+const EXTERNAL_RANGES: Readonly<Record<string, string>> = FIXTURE_MODE
+  ? THIRD_PARTY_RANGES
+  : { ...THIRD_PARTY_RANGES, ...externalAihuRanges() }
 
 // ---------------------------------------------------------------------------
 // Derivation
@@ -185,7 +214,7 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
 ${aihuLines}
 }
 
-/** Third-party ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
+/** External package ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
 export const EXTERNAL_DEP_VERSIONS: Readonly<Record<string, string>> = {
 ${externalLines}
 }
@@ -203,7 +232,7 @@ export function aihuDep(name: string): string {
   if (range === undefined) {
     throw new Error(
       \`[@aihu/cli] no generated version range for '\${name}'. Either the package is not a \` +
-        'published workspace package, or dep-versions.ts is stale — run ' +
+        'published source package, or dep-versions.ts is stale — run ' +
         '\`bun scripts/sync-template-versions.ts\`.',
     )
   }

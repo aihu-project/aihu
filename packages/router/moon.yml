@@ -7,7 +7,6 @@ dependsOn:
   - 'context'
   - 'runtime'
   - 'server'
-  - 'signals'
 tasks:
   check-boundary:
     command: "bash ../../scripts/check-boundary.sh"

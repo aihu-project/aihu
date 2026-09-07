@@ -4,4 +4,3 @@ layer: library
 dependsOn:
   - 'plugin'
   - 'server'
-  - 'signals'

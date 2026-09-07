@@ -84,27 +84,7 @@ export default defineConfig({
       '@aihu/editor': new URL('./packages/editor/src/index.ts', import.meta.url).pathname,
       '@aihu/mcp': new URL('./packages/mcp/src/index.ts', import.meta.url).pathname,
       '@aihu/seo': new URL('./packages/seo/src/index.ts', import.meta.url).pathname,
-      // Order matters: the subpath alias must precede the package alias
-      // (same pattern as '@aihu/runtime/ssr' below) so
-      // '@aihu/signals/lifecycle' resolves to the DOM-free ownership
-      // contract module, not '<index.ts>/lifecycle'.
-      '@aihu/signals/lifecycle': new URL('./packages/signals/src/lifecycle.ts', import.meta.url)
-        .pathname,
-      '@aihu/signals': new URL('./packages/signals/src/index.ts', import.meta.url).pathname,
       '@aihu/store': new URL('./packages/store/src/index.ts', import.meta.url).pathname,
-      // `@aihu/reactive/helpers` self-imports `@aihu/reactive` by package
-      // name (rolldown.config.ts marks it external so dist/helpers.js
-      // stays small); this alias makes that self-import resolvable when
-      // vitest loads the source directly.
-      '@aihu/reactive': new URL('./packages/reactive/src/index.ts', import.meta.url).pathname,
-      // Order matters: the subpath alias must precede the package alias, or
-      // '@aihu/arbor' matches first and its `hydrate` or `progressive` subpath
-      // resolves to a nonexistent '<index.ts>/…' path (the same inversion that
-      // silently broke '@aihu/context/ssr').
-      '@aihu/arbor/progressive': new URL('./packages/arbor/src/progressive.ts', import.meta.url)
-        .pathname,
-      '@aihu/arbor/hydrate': new URL('./packages/arbor/src/hydrate.ts', import.meta.url).pathname,
-      '@aihu/arbor': new URL('./packages/arbor/src/index.ts', import.meta.url).pathname,
       // Order matters: the subpath alias must precede the package alias or
       // '@aihu/runtime/ssr' resolves as '<index.ts>/ssr' (same pattern as
       // '@aihu/context/ssr' above).

@@ -15,7 +15,7 @@
     "@aihu/router": "workspace:*",
     "@aihu/runtime": "workspace:*",
     "@aihu/server": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "devDependencies": {
     "vite": "^6.4.3",

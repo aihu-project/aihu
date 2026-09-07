@@ -39,10 +39,8 @@ afterAll(() => {
 
 function withResolvedImports(code: string): string {
   return code
-    .replaceAll("'@aihu/arbor'", `'${repoRoot}/packages/arbor/src/index.ts'`)
     .replaceAll("'@aihu/runtime/ssr'", `'${repoRoot}/packages/runtime/src/ssr-string.ts'`)
     .replaceAll("'@aihu/runtime'", `'${repoRoot}/packages/runtime/src/index.ts'`)
-    .replaceAll("'@aihu/signals'", `'${repoRoot}/packages/signals/src/index.ts'`)
     .replaceAll("'@aihu/router'", `'${repoRoot}/packages/router/src/index.ts'`)
 }
 

@@ -76,13 +76,15 @@ const EMIT_DIR = join(__dirname, '.ssr-emit')
  *      `@aihu/primitives/slider` (which `package.json#exports` maps to
  *      `dist/slider.js`) would not resolve at all in a fresh clone.
  *
- * `resolveSpecifier` throws on anything not covered, so a recipe that starts
- * importing something new fails here loudly rather than silently skipping.
+ * The DOM engine is deliberately different: recipes exercise its published
+ * boundary, because it is independently released from this repository.
+ * `resolveSpecifier` throws on any other unknown Aihu package, so a recipe
+ * that starts importing something new still fails loudly rather than silently
+ * skipping.
  */
 function resolveSpecifier(spec: string): string {
+  if (spec === '@aihu/arbor' || spec === '@aihu/signals') return spec
   const direct: Record<string, string> = {
-    '@aihu/arbor': 'packages/arbor/src/index.ts',
-    '@aihu/signals': 'packages/signals/src/index.ts',
     '@aihu/runtime': 'packages/runtime/src/index.ts',
     '@aihu/runtime/ssr': 'packages/runtime/src/ssr-string.ts',
     '@aihu/context': 'packages/context/src/index.ts',
@@ -131,11 +133,11 @@ const RECIPES = recipes()
 function emit(name: string, file: string): string {
   const src = readFileSync(file, 'utf8')
   const { code } = transform(src, join(dirname(file), `aihu-${name}.aihu`), { target: 'server' })
-  const rewritten = code.replace(
-    /(\bfrom\s+)'([^']+)'/g,
-    (_m, kw: string, spec: string) =>
-      `${kw}'${spec.startsWith('@aihu/') ? pathToFileURL(resolveSpecifier(spec)).href : spec}'`,
-  )
+  const rewritten = code.replace(/(\bfrom\s+)'([^']+)'/g, (_m, kw: string, spec: string) => {
+    if (!spec.startsWith('@aihu/')) return `${kw}'${spec}'`
+    const resolved = resolveSpecifier(spec)
+    return `${kw}'${resolved.startsWith('@aihu/') ? resolved : pathToFileURL(resolved).href}'`
+  })
   const out = join(EMIT_DIR, `aihu-${name}.ts`)
   writeFileSync(out, rewritten)
   return out

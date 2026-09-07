@@ -43,10 +43,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 #     listed AFTER their new-home counterparts so the dep ref resolves at
 #     publish time.
 PKGS=(
-  "signals"
-  "use"                # @aihu/use — SSR-safe composables (multi-entry subpaths); peer-deps @aihu/signals only (must follow it)
-  "reactive"           # @aihu/reactive — deep reactive trees (2 entries: index + helpers); depends on @aihu/signals only (must follow it)
-  "arbor"
+  "compiler"           # compiler releases before every package that imports it.
+  "use"                # @aihu/use — SSR-safe composables; peer-deps @aihu/signals
   "runtime"
   "agent"
   "plugin-agent-readiness"
@@ -74,7 +72,6 @@ PKGS=(
                        # can now dev/build/typecheck across all 4 package managers).
                        # Unset `private` alongside restoring this entry — see
                        # docs/lessons for the removal history.
-  "compiler"
   "css-engine"        # build-time CSS engine; depends on @aihu/compiler (must follow it)
   "primitives"        # headless UI primitives; depends on css-engine + signals + arbor (must follow them)
   "ui"                # @aihu/ui styled-recipe registry; aihu add resolves it from npm (must follow primitives)
@@ -205,6 +202,12 @@ for pkg in "${PKGS[@]}"; do
     node -e "const fs=require('fs');const f='$PKG_DIR/package.json';const p=require(f);p.dependencies['@aihu/cli']='^$CLI_VERSION';fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n')"
     echo "   stamped @aihu/cli => ^$CLI_VERSION (delegator pin)"
   fi
+
+  # A package with an explicit npm range (rather than workspace:*) must not
+  # be published until that range resolves in the registry. This makes the
+  # compiler release a hard prerequisite for dependents that declare it, even
+  # when they are shipped from a separate repository.
+  node "$ROOT/scripts/verify-registry-dependencies.mjs" "$PKG_DIR"
 
   # bun pm pack rewrites workspace:* → real version range; npm publish
   # then uploads the tarball using npm's auth (which works in CI).

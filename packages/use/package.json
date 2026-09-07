@@ -327,7 +327,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "peerDependencies": {
     "@aihu/context": "workspace:*",
@@ -356,7 +356,7 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
-  "description": "aihu utility/sensor/state composables — SSR-safe, scope-aware, per-composable subpath entries.",
+  "description": "aihu utility/sensor/state composables \u2014 SSR-safe, scope-aware, per-composable subpath entries.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

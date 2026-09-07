@@ -205,7 +205,7 @@ bun add @aihu-plugin/kindly-note
 
 **Dependencies:**
 
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 
 **Peer dependencies:**
 

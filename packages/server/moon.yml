@@ -12,11 +12,9 @@ layer: library
 dependsOn:
   - 'agent'
   - 'agent-service'
-  - 'arbor'
   - 'context'
   - 'plugin'
   - 'runtime'
-  - 'signals'
   - 'store'
 
 tasks:

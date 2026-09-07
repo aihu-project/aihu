@@ -9,7 +9,6 @@
       "@aihu/magna": ["./src/index.ts"],
       "@aihu/context": ["../context/src/index.ts"],
       "@aihu/plugin": ["../plugin/src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu-plugin/data": ["../plugin-data/src/index.ts"]
     }
   },

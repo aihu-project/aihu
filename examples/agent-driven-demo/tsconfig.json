@@ -7,11 +7,8 @@
       "@aihu/agent": ["../../packages/agent/src/index.ts"],
       "@aihu/agent-server": ["../../packages/agent-server/src/index.ts"],
       "@aihu/agent-service": ["../../packages/agent-service/src/index.ts"],
-      "@aihu/arbor": ["../../packages/arbor/src/index.ts"],
       "@aihu/runtime": ["../../packages/runtime/src/index.ts"],
       "@aihu/primitives/focus-trap": ["../../packages/primitives/src/dialog/focus-trap.ts"],
-      "@aihu/signals/lifecycle": ["../../packages/signals/src/lifecycle.ts"],
-      "@aihu/signals": ["../../packages/signals/src/index.ts"],
       "@aihu/compiler": ["../../packages/compiler/js/index.ts"]
     }
   },

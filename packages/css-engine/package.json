@@ -37,7 +37,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@aihu/arbor": "workspace:^",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/compiler": "workspace:^"
   },
   "optionalDependencies": {
@@ -57,7 +57,7 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build:rust && bun run gen:cn-map && bun run gen:style-packs && bun run build"
   },
-  "description": "aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output.",
+  "description": "aihu CSS engine \u2014 Tailwind v4 hard fork with WC-native scoped output.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

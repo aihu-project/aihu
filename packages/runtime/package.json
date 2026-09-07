@@ -31,11 +31,11 @@
     "@aihu/primitives": "workspace:^"
   },
   "peerDependencies": {
-    "@aihu/arbor": "workspace:^",
-    "@aihu/signals": "workspace:^",
+    "@aihu/arbor": "^4.1.2",
+    "@aihu/signals": "^0.5.1",
     "@aihu/context": "workspace:^"
   },
-  "description": "Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler.",
+  "description": "Single File Component (.aihu) runtime \u2014 registers custom elements compiled by @aihu/compiler.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

@@ -23,13 +23,12 @@
  */
 
 import { branch, leaf } from '@aihu/arbor'
-import { hydrate } from '@aihu/arbor/hydrate'
+// This is intentionally exported by the hydration subpath: server and client
+// path-key parity is part of the package's release contract.
+import { _ROOT_PATH, hydrate } from '@aihu/arbor/hydrate'
 import { renderToString } from '@aihu/server'
 import { signal } from '@aihu/signals'
 import { describe, expect, it } from 'vitest'
-// Imported from source rather than the package entry: `_ROOT_PATH` is
-// `@internal` and deliberately not part of `@aihu/arbor`'s public surface.
-import { _ROOT_PATH } from '../../packages/arbor/src/hydrate.ts'
 
 const PRIMARY_TEXT = 'PRIMARY-CONTENT-ADOPTED-NOT-REBUILT'
 

@@ -149,7 +149,7 @@ bun add @aihu/store
 **Dependencies:**
 
 - `@aihu/context` — `workspace:*`
-- `@aihu/signals` — `workspace:*`
+- `@aihu/signals` — `^0.5.1`
 
 <sub><i>Auto-generated against `@aihu/store@0.1.2`.</i></sub>
 
@@ -160,7 +160,7 @@ bun add @aihu/store
 <!-- BEGIN_AUTOGEN: see-also -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
-- [@aihu/signals](../signals)
+- [@aihu/signals](https://github.com/aihu-project/aihu-dom)
 - [@aihu/context](../context)
 - [Aihu framework root](../../README.md)
 

@@ -7,8 +7,6 @@ layer: application
 # package. It imports @aihu/signals + @aihu/arbor and bundles via Vite into
 # dist/, which the GitHub Action stages into a fresh krausest checkout.
 dependsOn:
-  - 'signals'
-  - 'arbor'
   - 'runtime'
 
 tasks:

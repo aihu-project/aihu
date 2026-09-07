@@ -32,12 +32,12 @@
     "prepublishOnly": "bun run build"
   },
   "peerDependencies": {
-    "@aihu/arbor": "workspace:*",
+    "@aihu/arbor": "^4.1.2",
     "@aihu/context": "workspace:*",
     "@aihu/router": "workspace:*",
     "@aihu/runtime": "workspace:*",
     "@aihu/server": "workspace:*",
-    "@aihu/signals": "workspace:*",
+    "@aihu/signals": "^0.5.1",
     "@aihu/store": "workspace:*",
     "vite": ">=5.0.0"
   },
@@ -46,7 +46,7 @@
     "@aihu/compiler": "workspace:*",
     "@aihu/primitives": "workspace:*"
   },
-  "description": "Top-level app integration — wires runtime, router, and adapters into a Vite app.",
+  "description": "Top-level app integration \u2014 wires runtime, router, and adapters into a Vite app.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

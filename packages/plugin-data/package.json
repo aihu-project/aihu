@@ -24,7 +24,7 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "@aihu/signals": "workspace:*",
+    "@aihu/signals": "^0.5.1",
     "@aihu/context": "workspace:*"
   },
   "devDependencies": {

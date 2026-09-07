@@ -87,8 +87,8 @@ export const config = {
   // scripts/sync-template-versions.ts.
   appPeerDeps: {
     '@aihu/runtime': '^6.1.0',
-    '@aihu/arbor': '^4.1.1',
-    '@aihu/signals': '^0.5.0',
+    '@aihu/arbor': '^4.1.2',
+    '@aihu/signals': '^0.5.1',
     '@aihu/router': '^0.5.0',
     '@aihu/server': '^0.6.0',
     '@aihu/adapter-cloudflare': '^13.0.0',

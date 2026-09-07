@@ -25,12 +25,12 @@
   },
   "dependencies": {
     "@aihu/plugin": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
   "devDependencies": {
     "@aihu/server": "workspace:*"
   },
-  "description": "Canonical proof-of-life for the @aihu/plugin API — exercises macros, middleware, and transforms.",
+  "description": "Canonical proof-of-life for the @aihu/plugin API \u2014 exercises macros, middleware, and transforms.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

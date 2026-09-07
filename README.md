@@ -181,36 +181,18 @@ Migrating between versions is mechanical — `npx aihu migrate --v2 <file>` move
 
 ## Performance
 
-All results from `bench/`. Measured with [mitata](https://github.com/nicolo-ribaudo/mitata) + Bun 1.3.8. p50 latencies shown. Full tables in `bench/signals/RESULTS.md` and `bench/arbor/RESULTS.md`.
+DOM-engine measurements and deterministic update counts are maintained with their package source in [aihu-dom](https://github.com/aihu-project/aihu-dom).
 
 <!-- BEGIN_AUTOGEN: performance -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
-### `@aihu/signals` vs SOTA reactive libraries
+The independent DOM engine packages — `@aihu/signals`, `@aihu/reactive`, `@aihu/arbor`, and the `@aihu/dom` facade — now live in [aihu-dom](https://github.com/aihu-project/aihu-dom).
 
-*Source: [`bench/signals/RESULTS.md`](./bench/signals/RESULTS.md). p50 latency shown for each competitor.*
-
-| Workload | @aihu/signals | alien-signals | @preact/signals-core | @vue/reactivity | solid-js | s-js |
-|---|---:|---:|---:|---:|---:|---:|
-| `cellx` | 807.33 ns | 1.21 µs | 1.14 µs | 1.69 µs | 2.97 µs | 1.40 µs |
-| `batched-writes-100` | 5.07 µs | 8.10 µs | 7.20 µs | 15.43 µs | 12.80 µs | 5.75 µs |
-| `dynamic-deps` | 1.09 µs | 2.78 µs | 1.78 µs | 7.08 µs | 1.93 µs | 1.33 µs |
-| `creation-1to1000` | 69.02 µs | 90.01 µs | 64.53 µs | 92.97 µs | 139.98 µs | 107.53 µs |
-| `deep-propagation-100` | 3.25 µs | 3.97 µs | 3.87 µs | 7.34 µs | 11.86 µs | 4.12 µs |
-
-### `@aihu/arbor` — DOM update cost
-
-*No cross-library comparison table is published here. [`bench/arbor`](./bench/arbor) runs under jsdom in dev mode against source, not the shipped build — it is a regression detector, not a basis for public performance claims. A comparative figure will come from js-framework-benchmark against shipped artifacts.*
-
-What we can state exactly, because it is counted rather than timed: swapping two rows in a 1,000-row keyed list performs **4 DOM moves**, down from 1,994 before the reposition pass gained a longest-stable-subsequence step. That number is machine-independent and is pinned by a test ([`keyed-swap-dom-mutations.test.ts`](./tests/integration/keyed-swap-dom-mutations.test.ts)).
+Its manually triggered workflow runs package-focused deterministic update counts and optional timing measurements. Keeping those checks with the engine prevents a framework, documentation, or demo edit from rebuilding the whole benchmark harness.
 
 <sub><i>Auto-generated — run `bun scripts/sync-readme.ts` to update.</i></sub>
 
 <!-- END_AUTOGEN: performance -->
-
-> `update-1-of-10k-leaves` exercises arbor's `leaf()` binding, which keeps the text node it created at materialize time and assigns `textNode.nodeValue` directly (see `materialize.ts`). That write is O(1) in the parent's child count; reassigning `element.textContent` instead rebuilds the child list. The JSDOM timings in this table are directional only — they move with machine and load, and are not product claims.
-
-> solid-js and @vue/runtime-dom ERROR in all JSDOM workloads (client-only API / `SVGElement` not defined). Browser-native comparison deferred to Round N+2 Playwright runner.
 
 ### Bundle size (gz)
 
@@ -222,9 +204,6 @@ Per-package gates enforced by `bun run size`:
 | Package | Size (gz) | Limit | Status |
 |---|---:|---:|:---:|
 | `@aihu/context` | 420 B | 450 B | pass |
-| `@aihu/signals` | 2.18 kB | 2350 B | pass |
-| `@aihu/signals/lifecycle` | 170 B | 300 B | pass |
-| `@aihu/arbor` | 3.10 kB | 3200 B | pass |
 | `@aihu/runtime` | 4.62 kB | 4750 B | pass |
 | `@aihu/agent` | 141 B | 200 B | pass |
 | `@aihu-plugin/data` | 723 B | 800 B | pass |
@@ -253,8 +232,6 @@ Per-package gates enforced by `bun run size`:
 | `@aihu/primitives/switch` | 1.80 kB | 4 KB | pass |
 | `@aihu/primitives/radio-group` | 3.21 kB | 4 KB | pass |
 | `@aihu/store` | 1.81 kB | 2.5 KB | pass |
-| `@aihu/reactive` | 1.28 kB | 1900 B | pass |
-| `@aihu/reactive/helpers` | 528 B | 700 B | pass |
 | `@aihu/use/shared` | 288 B | 320 B | pass |
 | `@aihu/use/math` | 158 B | 1200 B | pass |
 | `@aihu/use/motion` | 423 B | 3 KB | pass |
@@ -287,13 +264,13 @@ Per-package gates enforced by `bun run size`:
 
 See [`packages/`](./packages) for all packages on disk. By tier:
 
-- **Reactive runtime core (sized, ships to client):** [`@aihu/arbor`](./packages/arbor), [`@aihu/context`](./packages/context), [`@aihu/runtime`](./packages/runtime), [`@aihu/signals`](./packages/signals).
+- **Reactive runtime core (sized, ships to client):** [`@aihu/context`](./packages/context), [`@aihu/runtime`](./packages/runtime).
 - **Meta-framework — server, routing, data & adapters:** [`@aihu-plugin/data`](./packages/plugin-data), [`@aihu-plugin/drizzle`](./packages/plugin-drizzle), [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare), [`@aihu/adapter-vercel`](./packages/adapter-vercel), [`@aihu/app`](./packages/app), [`@aihu/auth`](./packages/auth), [`@aihu/magna`](./packages/magna), [`@aihu/router`](./packages/router), [`@aihu/scraping`](./packages/scraping), [`@aihu/server`](./packages/server).
 - **Agent surface (built in, governed):** [`@aihu-plugin/agent-readiness`](./packages/plugin-agent-readiness), [`@aihu/agent`](./packages/agent), [`@aihu/agent-a2a`](./packages/agent-a2a), [`@aihu/agent-acp`](./packages/agent-acp), [`@aihu/agent-server`](./packages/agent-server), [`@aihu/agent-service`](./packages/agent-service), [`@aihu/ai`](./packages/ai), [`@aihu/mcp`](./packages/mcp), [`@aihu/seo`](./packages/seo).
 - **Compiler & toolchain (build-time):** [`@aihu/cli`](./packages/cli), [`@aihu/compiler`](./packages/compiler), [`@aihu/css-engine`](./packages/css-engine), [`@aihu/language-server`](./packages/language-server), [`@aihu/tsc`](./packages/tsc), [`create-aihu`](./packages/create-aihu).
 - **Plugin substrate, editor & templates:** [`@aihu/plugin`](./packages/plugin), [`@aihu/templates-cf-team`](./packages/templates/cf-team), [`vscode-aihu`](./packages/vscode-aihu).
 - **UI, styling & content rendering:** [`@aihu-plugin/kindly-note`](./packages/plugin-kindly-note), [`@aihu/primitives`](./packages/primitives), [`@aihu/ui`](./packages/ui).
-- **State & rich-content capabilities:** [`@aihu/editor`](./packages/editor), [`@aihu/reactive`](./packages/reactive), [`@aihu/store`](./packages/store), [`@aihu/use`](./packages/use).
+- **State & rich-content capabilities:** [`@aihu/editor`](./packages/editor), [`@aihu/store`](./packages/store), [`@aihu/use`](./packages/use).
 
 <sub><i>Auto-generated — run `bun scripts/sync-readme.ts` to update.</i></sub>
 
@@ -320,7 +297,6 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/agent-service`](./packages/agent-service) | `0.4.0` | Service-side agent runtime (server-hosted agent endpoints). |
 | [`@aihu/ai`](./packages/ai) | `0.1.0` | Thin adapters from AI SDK stream types to ReadableStream<string> for aihu $stream collections. |
 | [`@aihu/app`](./packages/app) | `10.0.0` | Top-level app integration — wires runtime, router, and adapters into a Vite app. |
-| [`@aihu/arbor`](./packages/arbor) | `4.1.1` | Reactive component tree (the rendering layer that consumes @aihu/signals). |
 | [`@aihu/auth`](./packages/auth) | `6.0.0` | JWT scope checks, ScopeSignal, and server middleware for aihu auth. |
 | [`@aihu/cli`](./packages/cli) | `1.3.0` | Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands. |
 | [`@aihu/compiler`](./packages/compiler) | `1.3.0` | Single File Component (.aihu) compiler — Rust binary + JS glue. |
@@ -339,13 +315,11 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/plugin`](./packages/plugin) | `0.1.0` | Plugin substrate shared by @aihu/server and the meta-framework — runtime hook surface. |
 | [`@aihu/plugin-demo`](./packages/plugin-demo) | `0.1.4` | Canonical proof-of-life for the @aihu/plugin API — exercises macros, middleware, and transforms. |
 | [`@aihu/primitives`](./packages/primitives) | `0.2.3` | aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS. |
-| [`@aihu/reactive`](./packages/reactive) | `0.2.0` | Fine-grained Proxy-backed deep reactive trees on aihu signals — lazy per-(object,key) tracking nodes, plain-assignment writes, mutate/reconcile. |
 | [`@aihu/router`](./packages/router) | `0.5.0` | File-based router for the aihu meta-framework. |
 | [`@aihu/runtime`](./packages/runtime) | `6.1.0` | Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler. |
 | [`@aihu/scraping`](./packages/scraping) | `0.2.0` | O(1) sliding-window rate limiter and bot-detection middleware for aihu agent services. |
 | [`@aihu/seo`](./packages/seo) | `1.0.5` | DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD). |
 | [`@aihu/server`](./packages/server) | `0.6.0` | Server runtime + native renderer (napi-rs) for aihu SSR. |
-| [`@aihu/signals`](./packages/signals) | `0.5.0` | Tiny reactive signals — the reactive primitive at the core of aihu. |
 | [`@aihu/store`](./packages/store) | `0.1.2` | Pinia-style global stores on aihu signals — defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins. |
 | [`@aihu/templates-cf-team`](./packages/templates/cf-team) | `3.1.0` | Cloudflare Workers + monorepo (bun workspaces + moon) team template for Aihu |
 | [`@aihu/tsc`](./packages/tsc) | `0.3.3` | aihu-tsc — `tsc` for projects containing .aihu Single File Components. Type-checks .aihu sources as virtual TypeScript, with no .aihu.ts files written to disk. |
@@ -431,12 +405,7 @@ bash scripts/check-edge-safe.sh  # AC-6: no Node-only globals in dist bundles
 bun run test:quality              # Lighthouse gate (≥ 90 on perf/a11y/best-practices/seo)
 ```
 
-Run the bench suites:
-
-```bash
-cd bench/signals && bun src/runner.ts   # signals vs SOTA
-cd bench/arbor   && bun src/runner.ts   # arbor vs SOTA (JSDOM)
-```
+Run the DOM-engine checks in [aihu-dom](https://github.com/aihu-project/aihu-dom): its manual workflow isolates signals and DOM benchmarks from framework, docs, and demo builds.
 
 Use the packages directly:
 
@@ -505,7 +474,7 @@ Run all compliance checks: `bun run test && bun run test:quality`
 - **CLI reference** — [`docs/cli.md`](./docs/cli.md): `create-aihu`, `aihu app` / `page` / `component` / `dev` / `build`, and `aihu migrate`.
 - **Contributing** — [`CONTRIBUTING.md`](./CONTRIBUTING.md): fork, branch, conventional commits, changesets, and the dependency-free thesis.
 - **Releasing** — [`docs/RELEASING.md`](./docs/RELEASING.md): changeset workflow, release PR, npm publish pipeline.
-- **Benchmarks** — [`bench/signals/`](./bench/signals) and [`bench/arbor/`](./bench/arbor): harness + full results.
+- **DOM-engine benchmarks** — [aihu-dom](https://github.com/aihu-project/aihu-dom): package-focused checks and measurement harnesses.
 
 ---
 

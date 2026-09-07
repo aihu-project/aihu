@@ -6,7 +6,6 @@ dependsOn:
   - 'agent'
   - 'agent-server'
   - 'app'
-  - 'arbor'
   - 'compiler'
   - 'plugin'
   - 'plugin-agent-readiness'
@@ -14,4 +13,3 @@ dependsOn:
   - 'primitives'
   - 'runtime'
   - 'server'
-  - 'signals'

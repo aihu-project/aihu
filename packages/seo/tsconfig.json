@@ -14,7 +14,6 @@
       "@aihu/runtime/ssr": ["../runtime/src/ssr-string.ts"],
       "@aihu/server": ["../server/src/index.ts"],
       "@aihu/agent": ["../agent/src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
       "@aihu-plugin/agent-readiness": ["../plugin-agent-readiness/src/index.ts"]
     }
   },

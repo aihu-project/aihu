@@ -8,7 +8,6 @@ layer: library
 # in CI with TS2307 "Cannot find module '@aihu/compiler'" — it only passes
 # locally when compiler's dist already exists from a prior full build.
 dependsOn:
-  - 'arbor'
   - 'compiler'
 
 # NOTE: The Rust crate (aihu-css-core) is NOT built automatically by any Moon task.

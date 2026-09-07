@@ -25,9 +25,9 @@
   },
   "dependencies": {
     "@aihu/context": "workspace:*",
-    "@aihu/signals": "workspace:*"
+    "@aihu/signals": "^0.5.1"
   },
-  "description": "Pinia-style global stores on aihu signals — defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins.",
+  "description": "Pinia-style global stores on aihu signals \u2014 defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

@@ -25,7 +25,6 @@ layer: library
 # as families grow (see families.json's `peers` map) — anyone adding a new
 # one must add its project name here too, or hit the same race.
 dependsOn:
-  - 'signals'
   - 'router'
   - 'context'
 

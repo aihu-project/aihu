@@ -4,7 +4,7 @@
  * packages/**\/README.md from canonical sources.
  *
  * Canonical sources (root README):
- *   - bench/signals/RESULTS.md, bench/arbor/RESULTS.md  → performance tables
+ *   - aihu-dom package release data                         → performance link
  *   - .size-limit.json + rolldown bundling              → bundle-size table
  *   - examples/* / package.json + README.md             → examples table
  *   - packages/* / package.json                         → packages list
@@ -76,143 +76,18 @@ function replaceMarker(source: string, key: string, body: string, versionStamp?:
 }
 
 // ---------------------------------------------------------------------------
-// Bench parsing — read RESULTS.md, find p50 from each per-workload table
+// Performance
 // ---------------------------------------------------------------------------
 
-interface BenchRow {
-  competitor: string
-  p50: string
-}
-
-function parseBenchResults(path: string): Record<string, BenchRow[]> {
-  if (!existsSync(path)) return {}
-  const md = readFileSync(path, 'utf8')
-  const sections: Record<string, BenchRow[]> = {}
-  const workloadRe = /## Workload: `([^`]+)`/g
-  let match: RegExpExecArray | null
-  while ((match = workloadRe.exec(md)) !== null) {
-    const workload = match[1]
-    // find the next "### Time" or just the next table
-    const tail = md.slice(match.index)
-    const tableRe = /\| Competitor \| mean \| p50 \|[\s\S]+?\n\n/m
-    const tableMatch = tableRe.exec(tail)
-    if (!tableMatch) continue
-    const rows: BenchRow[] = []
-    const lines = tableMatch[0]
-      .split('\n')
-      .filter((l) => l.startsWith('|') && !l.startsWith('| ---') && !l.startsWith('| Competitor'))
-    for (const line of lines) {
-      const cols = line
-        .split('|')
-        .map((c) => c.trim())
-        .filter(Boolean)
-      if (cols.length < 4) continue
-      const [competitor, _mean, p50] = cols
-      rows.push({ competitor, p50 })
-    }
-    sections[workload] = rows
-  }
-  return sections
-}
-
 function genPerformanceSection(): SectionResult {
-  const sigPath = join(REPO_ROOT, 'bench/signals/RESULTS.md')
-  const arbPath = join(REPO_ROOT, 'bench/arbor/RESULTS.md')
-  const sigData = parseBenchResults(sigPath)
-  const arbData = parseBenchResults(arbPath)
-
-  const lines: string[] = []
-
-  // Signals section
-  lines.push(`### \`@aihu/signals\` vs SOTA reactive libraries`)
-  lines.push('')
-  lines.push(
-    `*Source: [\`bench/signals/RESULTS.md\`](./bench/signals/RESULTS.md). p50 latency shown for each competitor.*`,
-  )
-  lines.push('')
-
-  const sigWorkloads = [
-    'cellx',
-    'batched-writes-100',
-    'dynamic-deps',
-    'creation-1to1000',
-    'deep-propagation-100',
-  ]
-  const sigPresent = sigWorkloads.filter((w) => sigData[w])
-  if (sigPresent.length > 0) {
-    const competitors = sigData[sigPresent[0]].map((r) => r.competitor)
-    lines.push(`| Workload | ${competitors.join(' | ')} |`)
-    lines.push(`|---|${competitors.map(() => '---:').join('|')}|`)
-    for (const wl of sigPresent) {
-      const row = sigData[wl]
-      const cells = competitors.map((c) => {
-        const found = row.find((r) => r.competitor === c)
-        return found ? found.p50 : '—'
-      })
-      lines.push(`| \`${wl}\` | ${cells.join(' | ')} |`)
-    }
-  } else {
-    lines.push('_No bench results found yet — run `cd bench/signals && bun src/runner.ts`._')
+  return {
+    key: 'performance',
+    body: [
+      'The independent DOM engine packages — `@aihu/signals`, `@aihu/reactive`, `@aihu/arbor`, and the `@aihu/dom` facade — now live in [aihu-dom](https://github.com/aihu-project/aihu-dom).',
+      '',
+      'Its manually triggered workflow runs package-focused deterministic update counts and optional timing measurements. Keeping those checks with the engine prevents a framework, documentation, or demo edit from rebuilding the whole benchmark harness.',
+    ].join('\n'),
   }
-
-  lines.push('')
-
-  // Arbor section — DELIBERATELY NOT A COMPARISON TABLE (FEL-407).
-  //
-  // This used to emit `@aihu/arbor` vs lit-html/preact/vanilla p50s straight out
-  // of bench/arbor/RESULTS.md. Two independent reasons that table must not be
-  // published, either of which is sufficient:
-  //
-  // 1. The committed numbers are not a measurement of anything. RESULTS.md was
-  //    last generated at a16fa989 (2026-05-25); the dead-binding fix landed at
-  //    3a875483 (2026-07-19). Before that fix arbor's tsconfig lacked `baseUrl`,
-  //    bun ignored its `paths`, and arbor resolved a DIFFERENT @aihu/signals
-  //    instance than the bench did. Every reactive binding was inert — 0
-  //    nodeValue writes per op. The published `update-1-of-10k-leaves` row read
-  //    28.63 ns against vanilla's 4.36 µs; that ratio (~152x) is the cost of
-  //    doing nothing divided by the cost of doing something, and it is where the
-  //    "122x faster" claim in the README, CLAUDE.md and three docs pages came
-  //    from. See docs/plans/2026-07-25-arbor-perf-bisect.md.
-  //
-  // 2. Even measured correctly, this harness cannot support a public claim. It
-  //    runs jsdom, in dev mode (`__DEV__` live, NODE_ENV unset), against source
-  //    rather than the shipped dist. It is valid for REGRESSION DETECTION and
-  //    nothing else. The vanilla column is a strawman that reassigns
-  //    element.textContent; against a vanilla implementation that caches the
-  //    text node the honest ratio is ~1x.
-  //
-  // Refreshing RESULTS.md is NOT the fix and is explicitly blocked (FEL-409): a
-  // stale invalid number and a fresh invalid number are equally unpublishable,
-  // and the fresh one merely looks trustworthy. Regenerating would also bless
-  // 27-52% of unattributed May->July drift as the new normal and destroy the
-  // only evidence it existed.
-  //
-  // A real comparative figure has to come from js-framework-benchmark against
-  // shipped artifacts (FEL-408/417), not from this harness. Until then the
-  // README states the mechanism and the exact, machine-independent numbers we
-  // can actually stand behind.
-  lines.push(`### \`@aihu/arbor\` — DOM update cost`)
-  lines.push('')
-  lines.push(
-    `*No cross-library comparison table is published here. [\`bench/arbor\`](./bench/arbor) ` +
-      `runs under jsdom in dev mode against source, not the shipped build — it is a ` +
-      `regression detector, not a basis for public performance claims. A comparative ` +
-      `figure will come from js-framework-benchmark against shipped artifacts.*`,
-  )
-  lines.push('')
-  lines.push(
-    `What we can state exactly, because it is counted rather than timed: swapping two ` +
-      `rows in a 1,000-row keyed list performs **4 DOM moves**, down from 1,994 before ` +
-      `the reposition pass gained a longest-stable-subsequence step. That number is ` +
-      `machine-independent and is pinned by a test ` +
-      `([\`keyed-swap-dom-mutations.test.ts\`](./tests/integration/keyed-swap-dom-mutations.test.ts)).`,
-  )
-
-  // Referenced so the arbor results file stays wired to this generator: if the
-  // ban is ever lifted the parse is still here and correct.
-  void arbData
-
-  return { key: 'performance', body: lines.join('\n') }
 }
 
 // ---------------------------------------------------------------------------
@@ -616,31 +491,12 @@ interface TierInfo {
 
 const PACKAGE_TIERS: Record<string, TierInfo> = {
   // Tier A — runtime core
-  '@aihu/signals': {
-    tier: 'A',
-    label: 'Reactive runtime core — signals/computeds/effects',
-    seeAlso: [
-      { label: 'Phase 2 spec (signals)', href: '../../.team/phase-2/spec-signals.md' },
-      { label: 'bench/signals', href: '../../bench/signals/RESULTS.md' },
-      { label: '@aihu/arbor', href: '../arbor' },
-    ],
-  },
-  '@aihu/arbor': {
-    tier: 'A',
-    label: 'Reactive runtime core — DOM materialization layer',
-    seeAlso: [
-      { label: 'Phase 3 spec (arbor)', href: '../../.team/phase-3/spec-arbor.md' },
-      { label: 'bench/arbor', href: '../../bench/arbor/RESULTS.md' },
-      { label: '@aihu/signals', href: '../signals' },
-      { label: '@aihu/runtime', href: '../runtime' },
-    ],
-  },
   '@aihu/runtime': {
     tier: 'A',
     label: 'Reactive runtime core — custom-element wiring for compiled SFCs',
     seeAlso: [
       { label: 'Phase 4 spec (runtime)', href: '../../.team/phase-4/spec-runtime.md' },
-      { label: '@aihu/arbor', href: '../arbor' },
+      { label: '@aihu/arbor', href: 'https://github.com/aihu-project/aihu-dom' },
       { label: '@aihu/compiler', href: '../compiler' },
     ],
   },
@@ -947,17 +803,8 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
     tier: 'G',
     label: 'State — Pinia-style global stores on aihu signals (SSR-safe per-request)',
     seeAlso: [
-      { label: '@aihu/signals', href: '../signals' },
+      { label: '@aihu/signals', href: 'https://github.com/aihu-project/aihu-dom' },
       { label: '@aihu/context', href: '../context' },
-    ],
-  },
-  '@aihu/reactive': {
-    tier: 'G',
-    label:
-      'State — fine-grained Proxy-backed deep reactive trees (lazy per-key nodes, plain-assignment writes)',
-    seeAlso: [
-      { label: '@aihu/signals', href: '../signals' },
-      { label: '@aihu/store', href: '../store' },
     ],
   },
   '@aihu/editor': {
@@ -973,7 +820,7 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
     label:
       'Composables — VueUse-style sensor/state/browser utilities on aihu signals (SSR-safe, per-composable entries)',
     seeAlso: [
-      { label: '@aihu/signals', href: '../signals' },
+      { label: '@aihu/signals', href: 'https://github.com/aihu-project/aihu-dom' },
       { label: '@aihu/primitives', href: '../primitives' },
     ],
   },

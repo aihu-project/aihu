@@ -6,9 +6,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
     "paths": {
-      "@aihu/arbor": ["../arbor/src/index.ts"],
-      "@aihu/signals": ["../signals/src/index.ts"],
-      "@aihu/signals/lifecycle": ["../signals/src/lifecycle.ts"],
       "@aihu/context": ["../context/src/index.ts"],
       "@aihu/primitives/focus-trap": ["../primitives/src/dialog/focus-trap.ts"]
     }

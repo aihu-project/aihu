@@ -67,8 +67,8 @@ bun add @aihu/runtime
 
 **Peer dependencies:**
 
-- `@aihu/arbor` — `workspace:^`
-- `@aihu/signals` — `workspace:^`
+- `@aihu/arbor` — `^4.1.2`
+- `@aihu/signals` — `^0.5.1`
 - `@aihu/context` — `workspace:^`
 
 <sub><i>Auto-generated against `@aihu/runtime@6.1.0`.</i></sub>
@@ -81,7 +81,7 @@ bun add @aihu/runtime
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
 - [Phase 4 spec (runtime)](../../.team/phase-4/spec-runtime.md)
-- [@aihu/arbor](../arbor)
+- [@aihu/arbor](https://github.com/aihu-project/aihu-dom)
 - [@aihu/compiler](../compiler)
 - [Aihu framework root](../../README.md)
 
