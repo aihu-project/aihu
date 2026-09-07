@@ -1,0 +1,19 @@
+{
+  "only": ["ts", "rs", "aihu", "mjs", "js", "json", "toml", "yml", "yaml", "md"],
+  "exclude": [
+    "node_modules",
+    "target",
+    "coverage",
+    "dist",
+    "repos",
+    "apps/docs/.design-review",
+    "apps/docs/src/data/api/generated"
+  ],
+  "depth": 5,
+  "budgets": {},
+  "routing": {
+    "retrieval": {}
+  },
+  "drift": {},
+  "guidance": {}
+}

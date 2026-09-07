@@ -137,3 +137,5 @@ docs/spec-headless.md
 # Per-agent role marker for the swarm skill. Machine-local identity:
 # committing it would hand every checkout one agent's identity.
 .agent-role
+.codemap/*
+!.codemap/config.json
