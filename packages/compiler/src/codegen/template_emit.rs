@@ -1388,9 +1388,10 @@ pub(crate) fn emit_attrs(
     emit_attrs_for_element(attrs, state_names, signal_map, mode, false)
 }
 
-/// Emit an element's attribute object.  A plain `onX={fn}` on a component is
-/// a property value; event listeners use the explicit `on:<event>` directive.
-/// The internal key tells Arbor to bypass its deliberate `onX` event shortcut.
+/// Emit an element's attribute object. Every bound value on a component is a
+/// property value; event listeners use the explicit `on:<event>` directive.
+/// The internal key bypasses Arbor's DOM-attribute paths, including both its
+/// `onX` event shortcut and custom-element upgrade timing.
 fn emit_attrs_for_element(
     attrs: &[Attr],
     state_names: &StateNames,
@@ -1438,7 +1439,7 @@ fn emit_attrs_for_element(
                 // runtime's Path 1 (typeof === 'function'). They MUST stay raw —
                 // wrapping them in a thunk array would put a function value
                 // inside an array and trigger Path 2 instead, breaking events.
-                let is_event = is_event_attr_name(name);
+                let is_event = !component_props && is_event_attr_name(name);
                 // B3 — `class={[a, b && 'c']}` array form. When the binding is
                 // `class` and the expression syntactically starts with `[`, wrap
                 // the expression in `__aihu_cls([…])` so the runtime joins truthy
@@ -1478,7 +1479,7 @@ fn emit_attrs_for_element(
                 } else {
                     lower_attr_expr(expr, state_names, signal_map, mode)
                 };
-                let key = if component_props && is_event_attr_name(name) {
+                let key = if component_props {
                     format_attr_key(&format!("__aihu_prop:{}", name))
                 } else {
                     format_attr_key(name)

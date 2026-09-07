@@ -299,22 +299,29 @@ fn emitted_js_normalizes_pascal_case_component_references() {
 /// A plain `onX={handler}` on a child component is a prop, not a DOM event
 /// listener. `on:<event>` remains the explicit event-listener spelling.
 #[test]
-fn component_function_prop_bypasses_dom_event_lowering() {
+fn component_bound_props_bypass_dom_attribute_lowering() {
     let src = r#"
 @state {
   const onSave = () => 'saved'
+  const back = () => 'back'
+  const label = 'dynamic'
 }
 @template {
-  <child-card onSave={onSave}></child-card>
+  <child-card onSave={onSave} back={back} label={label} title="static"></child-card>
+  <button onClick={onSave}></button>
 }
 "#;
     let parsed = sfc::parse(src).unwrap();
     let unit = compile_full(&parsed).unwrap();
     let js = emit(&unit, "x-parent").js;
-    assert!(
-        js.contains("'__aihu_prop:onSave': onSave"),
-        "a component callback prop must carry the property marker, got:\n{js}"
-    );
+    for prop in ["onSave", "back", "label"] {
+        assert!(
+            js.contains(&format!("'__aihu_prop:{prop}':")),
+            "component prop `{prop}` must carry the property marker, got:\n{js}"
+        );
+    }
+    assert!(js.contains("title: 'static'"), "static attributes stay normal, got:\n{js}");
+    assert!(js.contains("onClick: onSave"), "native events stay listeners, got:\n{js}");
 }
 
 /// A ref on a child custom element must retain its mount-time assignment.
