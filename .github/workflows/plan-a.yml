@@ -1116,10 +1116,16 @@ jobs:
     env:
       AIHU_COMPILER_NATIVE: '0'
     # Build and smoke-test all polished examples (arch-2 M1 gate).
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # The governed path filter is the documented coverage boundary for this
+    # suite. Keep the full example builds off unrelated package changes while
+    # still running them whenever a covered subsystem, example, cookbook, or
+    # the workflow itself changes.
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+      && needs.changes.outputs.governed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [check]
+    needs: [check, changes]
     steps:
       - uses: actions/checkout@v7
         with:

@@ -37,6 +37,14 @@ describe('CI gate honesty (#445)', () => {
     expect(gatesExclude).toEqual(['**/node_modules/**'])
   })
 
+  it('runs polished examples only for the governed coverage boundary', () => {
+    const planA = readFileSync(new URL('../.github/workflows/plan-a.yml', import.meta.url), 'utf8')
+    const examples = planA.match(/ {2}examples:\n([\s\S]*?)\n {2}governed-examples:/)?.[1] ?? ''
+
+    expect(examples).toContain('needs: [check, changes]')
+    expect(examples).toContain("needs.changes.outputs.governed == 'true'")
+  })
+
   it('every root-excluded test file is genuinely invoked in plan-a.yml via the gates config', () => {
     // The b3b class of bug: excluded at root AND invoked nowhere = a test
     // that exists but gates nothing. Any test file excluded at root must
