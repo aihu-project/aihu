@@ -66,13 +66,6 @@ export const EXPORTS: readonly ApiExport[] = [
       'Portal `el` to a top-layer-emulating container appended to `<body>` with a high z-index.',
   },
   {
-    name: 'position',
-    kind: 'function',
-    signature:
-      'function position( anchor: Element, floating: HTMLElement, opts: PositionOptions = {}, ): Placement',
-    summary: 'Position `floating` against `anchor` and apply `position: fixed; left/top`.',
-  },
-  {
     name: 'aihuDefault',
     kind: 'const',
     signature: 'const aihuDefault: StylePack',
@@ -98,10 +91,9 @@ export const EXPORTS: readonly ApiExport[] = [
     summary: 'The selector the dark overrides are emitted under.',
   },
   {
-    name: 'PositionOptions',
-    kind: 'interface',
-    signature:
-      "interface PositionOptions {\n  /** Preferred side. Default `'bottom'`. */\n  placement?: Placement\n  /** Gap between anchor and floating element, in px. Default `4`. */\n  offset?: number\n  /** Flip to the opposite side if it would overflow the viewport. Default `true`. */\n  flip?: boolean\n}",
+    name: 'position',
+    kind: 'const',
+    signature: 'const position',
     summary: '',
   },
   {
@@ -127,8 +119,14 @@ export const EXPORTS: readonly ApiExport[] = [
   {
     name: 'Placement',
     kind: 'type',
-    signature: "type Placement = 'top' | 'bottom' | 'left' | 'right'",
-    summary: 'Where to place the floating element relative to its anchor.',
+    signature: 'type Placement',
+    summary: '',
+  },
+  {
+    name: 'PositionOptions',
+    kind: 'type',
+    signature: 'type PositionOptions',
+    summary: '',
   },
   {
     name: 'TokenMap',

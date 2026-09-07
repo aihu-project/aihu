@@ -34,5 +34,6 @@ export default defineConfig({
     // the LIVE compiler module (with its current binary-resolution logic)
     // instead of a frozen pre-fix copy inlined into our bundle at build time.
     '@aihu/compiler',
+    '@aihu/arbor/progressive',
   ],
 })

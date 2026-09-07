@@ -25,6 +25,12 @@
     "ignore": ["@aihu/signals"]
   },
   {
+    "name": "@aihu/arbor/progressive",
+    "path": "packages/arbor/dist/progressive.js",
+    "limit": "1 KB",
+    "gzip": true
+  },
+  {
     "name": "@aihu/runtime",
     "path": "packages/runtime/dist/index.js",
     "limit": "5100 B",

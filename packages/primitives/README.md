@@ -5,10 +5,10 @@
 aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS.
 
 <!-- BEGIN_HANDWRITTEN: prose -->
-The **headless behavior layer** on top of the aihu CSS engine. Every primitive is a
-vanilla custom element that manages focus, keyboard interaction, ARIA wiring, and
+The **headless behavior layer** works alongside any aihu style provider. Every primitive
+is a vanilla custom element that manages focus, keyboard interaction, ARIA wiring, and
 controlled/uncontrolled state — the WAI-ARIA APG patterns — while emitting **NO CSS**.
-Consumers style via the CSS engine's `cn()` + style packs.
+Consumers may use the CSS engine's `cn()` + style packs or another styling solution.
 
 State lives on `@aihu/signals`; DOM structure comes from `@aihu/arbor`; focus/ARIA use
 native DOM APIs; cross-component coordination uses a self-contained DOM-walk context
@@ -25,7 +25,7 @@ native DOM APIs; cross-component coordination uses a self-contained DOM-walk con
 | `@aihu/primitives/roving-focus` | arrow-key roving tabindex (orientation/loop/RTL) |
 | `@aihu/primitives/collection` | DOM-ordered descendant registration |
 | `@aihu/primitives/dialog` | dialog-root + pieces (focus-trap, return-focus, escape) — APG Dialog Modal |
-| `@aihu/primitives/tooltip` | tooltip-root + pieces (reuses css-engine `position()` shim) — APG Tooltip |
+| `@aihu/primitives/tooltip` | tooltip-root + pieces (reuses Arbor's dependency-free `position()` utility) — APG Tooltip |
 | `@aihu/primitives/button` | headless button base (ARIA/keyboard/toggle/disabled) — APG Button |
 
 ### Local development
@@ -109,7 +109,6 @@ bun add @aihu/primitives
 
 - `@aihu/signals` — `workspace:*`
 - `@aihu/arbor` — `workspace:*`
-- `@aihu/css-engine` — `workspace:*`
 
 <sub><i>Auto-generated against `@aihu/primitives@0.2.3`.</i></sub>
 

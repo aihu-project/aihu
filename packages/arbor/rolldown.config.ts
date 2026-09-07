@@ -8,7 +8,7 @@ export default defineConfig({
   // whether or not it could ever run. `@aihu/app`'s `spa` mode literally
   // cannot: its own comment says it "skips _setHydrate — no SSR HTML to
   // hydrate". Splitting drops index.js from 4005 B to 2671 B gz.
-  input: { index: 'src/index.ts', hydrate: 'src/hydrate.ts' },
+  input: { index: 'src/index.ts', hydrate: 'src/hydrate.ts', progressive: 'src/progressive.ts' },
   checks: { circularDependency: true },
   // __DEV__ = false in production: Rolldown DCEs all `if (__DEV__)` branches,
   // eliminating the three _observeMount call sites in _mountEffect.

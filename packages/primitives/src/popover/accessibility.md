@@ -48,9 +48,9 @@ dismissal (same escape hatch `dialog-content` uses).
 
 ## Positioning
 
-Placement REUSES the CSS engine's `position()` shim
-(`@aihu/css-engine/runtime/progressive`) with the trigger as anchor — the same
-shim `tooltip` uses. Popover contains no positioning math of its own and adds
+Placement REUSES Arbor's dependency-free `position()` utility
+(`@aihu/arbor/progressive`) with the trigger as anchor — the same utility
+`tooltip` uses. Popover contains no positioning math of its own and adds
 no `@floating-ui/dom` dependency. While open, the content re-positions on
 capture-phase `scroll` and on `resize`; the listeners are removed on close and
 on disconnect.

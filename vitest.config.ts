@@ -98,9 +98,11 @@ export default defineConfig({
       // vitest loads the source directly.
       '@aihu/reactive': new URL('./packages/reactive/src/index.ts', import.meta.url).pathname,
       // Order matters: the subpath alias must precede the package alias, or
-      // '@aihu/arbor' matches first and '@aihu/arbor/hydrate' resolves to a
-      // nonexistent '<index.ts>/hydrate' (the same inversion that silently
-      // broke '@aihu/context/ssr').
+      // '@aihu/arbor' matches first and its `hydrate` or `progressive` subpath
+      // resolves to a nonexistent '<index.ts>/…' path (the same inversion that
+      // silently broke '@aihu/context/ssr').
+      '@aihu/arbor/progressive': new URL('./packages/arbor/src/progressive.ts', import.meta.url)
+        .pathname,
       '@aihu/arbor/hydrate': new URL('./packages/arbor/src/hydrate.ts', import.meta.url).pathname,
       '@aihu/arbor': new URL('./packages/arbor/src/index.ts', import.meta.url).pathname,
       // Order matters: the subpath alias must precede the package alias or

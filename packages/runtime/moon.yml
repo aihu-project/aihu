@@ -5,19 +5,10 @@ layer: library
 dependsOn:
   - 'arbor'
   - 'context'
+  - 'primitives'
   - 'signals'
 
-# DELIBERATELY NOT a dependsOn edge: 'primitives'.
-#
 # src/a11y.ts imports @aihu/primitives/focus-trap (the single shared focus-trap
-# implementation — FEL-397 / aihu-project/aihu#537), but the edge cannot exist:
-# primitives -> css-engine -> compiler -> runtime, so runtime -> primitives
-# closes a real Moon cycle (`moon run runtime:typecheck` fails with
-# task_graph::would_cycle). `scripts/check-moon-graph.ts` detects this itself
-# and reports the import in its cycle-avoidance bucket rather than demanding an
-# edge.
-#
-# Nothing needs the ordering anyway: runtime's tsconfig maps the specifier
-# straight at primitives' SOURCE (same as arbor/signals/context), and
-# rolldown.config.ts marks it EXTERNAL, so neither typecheck nor build ever
-# reads packages/primitives/dist.
+# implementation — FEL-397 / aihu-project/aihu#537). Keep the edge explicit so
+# Moon schedules Primitives before Runtime's declaration-aware build and
+# typecheck tasks.

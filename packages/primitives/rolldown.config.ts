@@ -41,9 +41,7 @@ export default defineConfig({
   },
   plugins: [dts()],
   // Substrate stays external so each primitive's dist measures only its own
-  // code (matching the `.size-limit.json` ignore lists). tooltip imports the
-  // position() shim from @aihu/css-engine/runtime/progressive — both the bare
-  // and subpath specifiers are externalized.
+  // code (matching the `.size-limit.json` ignore lists).
   //
   // DELIBERATE: no `node:` externals, and DO NOT add a `/^node:/` pattern
   // (FEL-EXTERNALS ruling). primitives is a BROWSER-tier, size-gated package
@@ -51,11 +49,5 @@ export default defineConfig({
   // entry is a genuine bug that must FAIL LOUDLY, not be silently externalized.
   // (The only current node: imports are in a *.test.ts, which is not a bundle
   // input — so nothing to externalize here.)
-  external: [
-    '@aihu/signals',
-    '@aihu/arbor',
-    '@aihu/css-engine',
-    '@aihu/css-engine/runtime/progressive',
-    '@aihu/css-engine/runtime/cn',
-  ],
+  external: ['@aihu/signals', '@aihu/arbor', '@aihu/arbor/progressive'],
 })

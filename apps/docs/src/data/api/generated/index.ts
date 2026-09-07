@@ -180,9 +180,9 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     version: '4.1.1',
     tagline: 'Reactive component tree (the rendering layer that consumes @aihu/signals).',
     note: '',
-    exportCount: 21,
-    valueCount: 9,
-    typeCount: 12,
+    exportCount: 24,
+    valueCount: 10,
+    typeCount: 14,
     agent: true,
   },
   {

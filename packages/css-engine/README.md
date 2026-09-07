@@ -244,6 +244,7 @@ bun add @aihu/css-engine
 
 **Dependencies:**
 
+- `@aihu/arbor` — `workspace:^`
 - `@aihu/compiler` — `workspace:^`
 
 **Optional dependencies (platform-specific):**

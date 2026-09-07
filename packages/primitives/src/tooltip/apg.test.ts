@@ -63,16 +63,14 @@ describe('APG conformance — Tooltip', () => {
     expect(root.open()).toBe(false)
   })
 
-  it('REUSES the css-engine position() shim (no reimplemented positioning math)', () => {
+  it('REUSES the core position() utility (no reimplemented positioning math)', () => {
     // Read the tooltip source from the repo (cwd is the repo root under vitest).
     const src = readFileSync(
       join(process.cwd(), 'packages/primitives/src/tooltip/index.ts'),
       'utf8',
     )
     // Imports position from the progressive shim.
-    expect(src).toMatch(
-      /import\s*\{[^}]*\bposition\b[^}]*\}\s*from\s*'@aihu\/css-engine\/runtime\/progressive'/,
-    )
+    expect(src).toMatch(/import\s*\{[^}]*\bposition\b[^}]*\}\s*from\s*'@aihu\/arbor\/progressive'/)
     // Calls the shim.
     expect(src).toMatch(/position\(\s*anchor\s*,\s*this/)
     // Contains no homegrown geometry (no getBoundingClientRect math in tooltip).

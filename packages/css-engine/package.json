@@ -37,6 +37,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
+    "@aihu/arbor": "workspace:^",
     "@aihu/compiler": "workspace:^"
   },
   "optionalDependencies": {

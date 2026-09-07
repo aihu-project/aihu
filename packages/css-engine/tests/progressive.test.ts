@@ -1,3 +1,4 @@
+import { position as corePosition } from '@aihu/arbor/progressive'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { anchorFallback, popoverFallback, portal, position } from '../src/runtime/progressive.ts'
 
@@ -33,6 +34,10 @@ afterEach(() => {
 })
 
 describe('@aihu/css-engine/runtime/progressive — positioning shim', () => {
+  it('keeps position as a compatibility re-export of the core DOM utility', () => {
+    expect(position).toBe(corePosition)
+  })
+
   it('places the floating element below the anchor by default (+offset)', () => {
     // Anchor at (100,100) sized 50x20; floating 40x10; viewport large.
     Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true })
