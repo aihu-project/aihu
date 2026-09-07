@@ -43,14 +43,10 @@
     "@aihu/compiler-native-win32-x64-msvc": "1.3.0"
   },
   "peerDependencies": {
-    "vite": ">=5.0.0",
-    "@aihu/css-engine": ">=0.6.1"
+    "vite": ">=5.0.0"
   },
   "peerDependenciesMeta": {
     "vite": {
-      "optional": true
-    },
-    "@aihu/css-engine": {
       "optional": true
     }
   },

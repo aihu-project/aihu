@@ -88,10 +88,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
       # moon/proto is the SINGLE toolchain source (moon is needed anyway: the
       # cf-team template's scripts shell out to it — the only cell exercising
       # `aihu app --template <id>` resolving a template package FROM npm; without
@@ -124,12 +120,17 @@ jobs:
       # cause is not "a second store" — it is that the winning `node` on PATH is
       # a shim at all.
       #
-      # Hence: setup-toolchain FIRST (moon on PATH for cf-team), then setup-node
-      # LAST so a REAL node binary is prepended ahead of proto's shims. Do not
-      # swap these back.
+      # Hence: setup-toolchain FIRST (moon on PATH for cf-team), then put the
+      # current Bun ahead of proto's pinned Bun (1.3.8 stalls resolving the
+      # cf-team workspace), and finally setup-node so a REAL node binary wins
+      # ahead of proto's shims. Do not swap these back.
       - uses: moonrepo/setup-toolchain@v0
         with:
           auto-install: true
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - uses: actions/setup-node@v7
         with:
