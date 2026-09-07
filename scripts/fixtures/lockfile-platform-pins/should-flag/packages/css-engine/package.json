@@ -1,0 +1,7 @@
+{
+  "name": "@aihu/css-engine",
+  "version": "0.1.17",
+  "optionalDependencies": {
+    "@aihu/css-engine-darwin-arm64": "0.1.17"
+  }
+}

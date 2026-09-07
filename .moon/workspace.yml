@@ -4,6 +4,9 @@
 projects:
   - "packages/*"
   - "!packages/_moved"
+  # The compiler is built and released from aihu-compiler. Aihu consumers use
+  # its npm package, so do not rebuild its source in this workspace.
+  - "!packages/compiler"
   - "bench/baselines"
   - "bench/compiler-conformance"
   - "bench/js-framework-benchmark/keyed/*"

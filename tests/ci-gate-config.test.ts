@@ -49,7 +49,13 @@ describe('CI gate honesty (#445)', () => {
     // The b3b class of bug: excluded at root AND invoked nowhere = a test
     // that exists but gates nothing. Any test file excluded at root must
     // have a dedicated plan-a step running it through the gates config.
-    const excludedFiles = (rootTest.exclude ?? []).filter((e) => !e.includes('node_modules'))
+    // Compiler-source tests moved to aihu-compiler with its release pipeline;
+    // this root workspace intentionally excludes them instead of duplicating
+    // their CI. Every other excluded test remains a root-owned gate.
+    const standaloneOwned = new Set(['packages/compiler/tests/**'])
+    const excludedFiles = (rootTest.exclude ?? []).filter(
+      (entry) => !entry.includes('node_modules') && !standaloneOwned.has(entry),
+    )
     expect(excludedFiles.length).toBeGreaterThan(0)
     const planA = readFileSync(new URL('../.github/workflows/plan-a.yml', import.meta.url), 'utf8')
     for (const file of excludedFiles) {

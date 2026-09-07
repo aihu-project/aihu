@@ -14,19 +14,11 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'cookbook/**/*.test.ts',
     ],
-    // These two tests are NOT dead — they run in CI as dedicated plan-a.yml
-    // gate steps through vitest.gates.config.ts (root config minus this
-    // exclude). They are excluded HERE so the default `bun run test`
-    // [--coverage] run stays green in a fresh clone and does not double-run
-    // them (#434/#445):
-    //   - b3b-sidecar-tsc: needs the built aihu-compile binary AND
-    //     packages/signals/dist (its tsc pass maps @aihu/* -> packages/*/dist),
-    //     so its CI step runs AFTER `bun run build`.
-    //   - legacy-snapshot: the arch-6 §7.3 backward-compat freeze; its CI step
-    //     runs it exactly once (the coverage run would double it).
+    // Compiler-source tests run in aihu-compiler. This consumer workspace
+    // exercises the published package through its integration suites.
     exclude: [
       '**/node_modules/**',
-      'packages/compiler/tests/b3b-sidecar-tsc.test.ts',
+      'packages/compiler/tests/**',
       'packages/cli/tests/legacy-snapshot.test.ts',
     ],
     // #445: a step that selects zero test files must FAIL, not exit 0. The

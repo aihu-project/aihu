@@ -2,46 +2,28 @@
  * FEL-434b — agent-readiness CONSUMES the compiler's agent-meta sidecars.
  *
  * PROOF METHOD IS PART OF THE BAR. Every assertion below runs against artifacts
- * produced by a SOURCE-BUILT `aihu-compile`, never the published napi addon:
- * `aihu` resolves the published addon unless `AIHU_COMPILE_BIN` points at a
- * local build, so a compiler-side change is invisible to a test that does not
- * pin the binary — a confident green that proves nothing. `compilerBinary()`
- * resolves and then ASSERTS the binary is a source build.
+ * produced by the published `aihu-compile` executable. This package is a
+ * compiler consumer, so its CI must exercise the same released compiler that
+ * an application receives instead of rebuilding compiler source in this repo.
  */
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 import { componentsFromManifestJson, readAgentManifestDir } from '../src/agent-manifest-sidecar.ts'
 import { generateLlmsTxt } from '../src/llms-txt.ts'
 import { createAgentReadinessRoutes } from '../src/vite-plugin.ts'
 
-const repoRoot = resolve(__dirname, '../../..')
-
 /**
- * The source-built compiler. Prefers `AIHU_COMPILE_BIN`, then the binary CI
- * stages at `packages/compiler/bin/`, then a local `cargo build --release`.
- * NEVER a `node_modules` copy — that is the published addon, which cannot see
- * an unlanded compiler change.
+ * This is deliberately the native executable from the published platform
+ * package. Compiler-source behavior is tested and released in aihu-compiler;
+ * this suite verifies the consumer contract.
  */
 function compilerBinary(): string {
-  const candidates = [
-    process.env.AIHU_COMPILE_BIN,
-    join(repoRoot, 'packages/compiler/bin/aihu-compile'),
-    join(repoRoot, 'target/release/aihu-compile'),
-  ].filter((p): p is string => p !== undefined)
-  const bin = candidates.find((p) => existsSync(p))
-  expect(
-    bin,
-    `no source-built aihu-compile found (tried ${candidates.join(', ')}) — run \`cargo build --release\``,
-  ).toBeDefined()
-  expect(
-    bin as string,
-    'the compiler under test must be a source build, not the published addon',
-  ).not.toContain('node_modules')
-  return bin as string
+  return resolvePublishedCompilerBinary()
 }
 
 /**

@@ -54,12 +54,13 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { mount } from '@aihu/arbor'
 import { _setMount, _setSignal } from '@aihu/runtime'
 import { signal } from '@aihu/signals'
 import { beforeAll, describe, expect, it } from 'vitest'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 
 const __dir = dirname(new URL(import.meta.url).pathname)
 const REPO = resolve(__dir, '../../..')
@@ -67,14 +68,7 @@ const REGISTRY = resolve(__dir, '../registry')
 /** Emitted modules land inside the repo so vitest transforms + aliases them. */
 const EMIT_DIR = resolve(__dir, '.client-emit')
 
-const COMPILER =
-  process.env.AIHU_COMPILE_BIN ??
-  [
-    resolve(REPO, 'target/release/aihu-compile'),
-    resolve(REPO, 'target/debug/aihu-compile'),
-    resolve(REPO, 'packages/compiler/bin/aihu-compile'),
-  ].find((p) => existsSync(p)) ??
-  ''
+const COMPILER = resolvePublishedCompilerBinary()
 
 /** The four recipes that carried the dead registration block. */
 const RECIPES = ['button', 'card', 'badge', 'separator'] as const
@@ -155,10 +149,6 @@ const instances = new Map<string, HTMLElement[]>()
 const sheetsBuilt = new Map<string, number>()
 
 beforeAll(async () => {
-  // THROW, never skip: a suite that silently covers zero recipes because the
-  // binary was missing is the false-confidence pattern this repo has been
-  // bitten by before.
-  expect(COMPILER, 'no aihu-compile binary — run `cargo build --release`').not.toBe('')
   rmSync(EMIT_DIR, { recursive: true, force: true })
   mkdirSync(EMIT_DIR, { recursive: true })
   writeFileSync(resolve(EMIT_DIR, '.gitignore'), '*\n')
