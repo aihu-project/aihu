@@ -6,7 +6,9 @@
  *   aihuCompilerPlugin()   — Vite plugin that wires transform() into the build
  */
 import { execFileSync } from 'node:child_process'
-import { basename } from 'node:path'
+import { createRequire } from 'node:module'
+import { basename, join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { _backendStampPath, _compileViaBackend } from './envelope.ts'
 import { resolveCompilerBinary } from './resolve-binary.ts'
 import { compileSpawnBounds, describeSpawnFailure } from './spawn-bounds.ts'
@@ -1906,6 +1908,28 @@ let _cssEngineWarned = false
 const _CSS_ENGINE_SPECIFIER = '@aihu/css-engine'
 
 /**
+ * Resolve the optional CSS engine from the compiler package first, then from
+ * the Vite consumer. Package managers commonly realpath a published plugin
+ * into their store, where an optional peer is not a physical sibling even
+ * though the application has installed it. The consumer fallback keeps the
+ * integration opt-in while making published and workspace compiler builds
+ * behave the same way.
+ */
+async function _loadCssEngine(): Promise<CssEngineModule | null> {
+  try {
+    return (await import(_CSS_ENGINE_SPECIFIER)) as unknown as CssEngineModule
+  } catch {
+    try {
+      const fromConsumer = createRequire(join(process.cwd(), 'package.json'))
+      const entry = fromConsumer.resolve(_CSS_ENGINE_SPECIFIER)
+      return (await import(pathToFileURL(entry).href)) as unknown as CssEngineModule
+    } catch {
+      return null
+    }
+  }
+}
+
+/**
  * Lazily resolve `@aihu/css-engine` and compile a `.aihu` source's utility
  * classes to scoped CSS. Returns `''` when css-engine is not installed
  * (the optional-peer no-op path) or when compilation fails for any reason —
@@ -1946,17 +1970,10 @@ async function _maybeCompileUtilityCss(
     }
   }
   if (_cssEngine === undefined) {
-    try {
-      // Guarded, lazy, OPTIONAL — see the plugin transform for the rationale.
-      // Importing via the `_CSS_ENGINE_SPECIFIER` variable (not a string
-      // literal) keeps this fully dynamic: TS does NOT resolve the peer's
-      // `.d.ts` at typecheck time, so `compiler:typecheck` passes even when
-      // css-engine's `dist` has not been built (the CI build-order window).
-      _cssEngine = (await import(_CSS_ENGINE_SPECIFIER)) as unknown as CssEngineModule
-    } catch {
-      _cssEngine = null
-      return ''
-    }
+    // Guarded, lazy, OPTIONAL — resolving through `_CSS_ENGINE_SPECIFIER`
+    // keeps TypeScript from taking a compile-time dependency on css-engine.
+    _cssEngine = await _loadCssEngine()
+    if (_cssEngine === null) return ''
   }
   try {
     return _cssEngine.compileSfc(source, id, lightScopeId)

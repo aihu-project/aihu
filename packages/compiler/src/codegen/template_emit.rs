@@ -1388,10 +1388,11 @@ pub(crate) fn emit_attrs(
     emit_attrs_for_element(attrs, state_names, signal_map, mode, false)
 }
 
-/// Emit an element's attribute object. Every bound value on a component is a
-/// property value; event listeners use the explicit `on:<event>` directive.
-/// The internal key bypasses Arbor's DOM-attribute paths, including both its
-/// `onX` event shortcut and custom-element upgrade timing.
+/// Emit an element's attribute object. Bound component props use the internal
+/// property channel, while standard attribute namespaces such as `aria-*` and
+/// `data-*` remain attributes. Event listeners use the explicit `on:<event>`
+/// directive. The property marker bypasses Arbor's DOM-attribute paths,
+/// including both its `onX` event shortcut and custom-element upgrade timing.
 fn emit_attrs_for_element(
     attrs: &[Attr],
     state_names: &StateNames,
@@ -1479,7 +1480,7 @@ fn emit_attrs_for_element(
                 } else {
                     lower_attr_expr(expr, state_names, signal_map, mode)
                 };
-                let key = if component_props {
+                let key = if component_props && is_component_property_name(name) {
                     format_attr_key(&format!("__aihu_prop:{}", name))
                 } else {
                     format_attr_key(name)
@@ -1625,6 +1626,15 @@ pub(crate) fn is_event_attr_name(name: &str) -> bool {
     // lowercase letter that pairs with a known DOM event (heuristic: any
     // remaining char is alphabetic).
     name.as_bytes()[2].is_ascii_alphabetic()
+}
+
+/// Aihu component props are normally named as JavaScript properties. Keep
+/// standard attribute namespaces on the attribute channel: browsers expose
+/// those names through the accessibility and dataset maps, not through custom
+/// element properties. Arbor's normal reactive-attribute path still updates
+/// them after the custom element upgrades.
+fn is_component_property_name(name: &str) -> bool {
+    !name.starts_with("aria-") && !name.starts_with("data-")
 }
 
 /// Lower a binding expression for the runtime attr setter. When the expression
