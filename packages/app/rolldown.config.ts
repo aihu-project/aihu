@@ -24,6 +24,10 @@ const external = [
   '@aihu/signals',
   '@aihu/store',
   '@aihu/runtime',
+  // The app bootstrap consumes the narrow runtime integration bridge. Keep
+  // its subpath external too, or a workspace build would inline a second
+  // runtime copy and hide the published package boundary.
+  '@aihu/runtime/app',
   '@aihu-plugin/agent-readiness',
   '@aihu/compiler',
   'vite',

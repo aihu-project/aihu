@@ -4,7 +4,7 @@
 
 Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler.
 
-Part of the **runtime core** layer of the Aihu meta-framework. Shipped to the client; sized via `bun run size`. The runtime core is dep-free and stacks under `@aihu/runtime` → `@aihu/router` → `@aihu/server` → `@aihu/app`.
+Part of the **runtime core** layer of the Aihu meta-framework. Shipped to the client; sized via `bun run size`. Runtime uses `@aihu/primitives` as its framework dependency and accepts `@aihu/arbor`, `@aihu/signals`, and `@aihu/context` as peer dependencies. It stacks under `@aihu/runtime` → `@aihu/router` → `@aihu/server` → `@aihu/app`.
 
 <!-- BEGIN_HANDWRITTEN: prose -->
 _(Hand-written prose lives in this block. Replace this placeholder; everything below is auto-generated.)_
@@ -51,6 +51,7 @@ bun add @aihu/runtime
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 | `./ssr` | `./dist/ssr-string.js` | `—` |
+| `./app` | `./dist/app.js` | `—` |
 
 <sub><i>Auto-generated against `@aihu/runtime@6.1.0`.</i></sub>
 

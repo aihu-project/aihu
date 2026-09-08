@@ -13,6 +13,7 @@
       "@aihu-plugin/agent-readiness": ["../plugin-agent-readiness/src/index.ts"],
       "@aihu/agent-service": ["../agent-service/src/index.ts"],
       "@aihu/runtime/ssr": ["../runtime/src/ssr-string.ts"],
+      "@aihu/runtime/app": ["../runtime/src/app.ts"],
       "@aihu/server": ["../server/src/index.ts"],
       "@aihu/agent": ["../agent/src/index.ts"],
       "@aihu/server/head-lowering": ["../server/src/head-lowering.ts"],

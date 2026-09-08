@@ -60,7 +60,7 @@ vi.mock('@aihu/router', () => ({
   bindRouteSignalWriter: vi.fn(),
   provideRouteContext: vi.fn(),
 }))
-vi.mock('@aihu/runtime', () => ({
+vi.mock('@aihu/runtime/app', () => ({
   _setMount: vi.fn(),
   _setSignal: vi.fn(),
   _setHydrate: vi.fn(),
@@ -69,7 +69,7 @@ vi.mock('@aihu/runtime', () => ({
   _withOwnerContext: vi.fn((_node: object, fn: () => unknown) => fn()),
 }))
 
-import { _setHydrate, _setMount, _setSignal } from '@aihu/runtime'
+import { _setHydrate, _setMount, _setSignal } from '@aihu/runtime/app'
 import { createApp } from '../src/client.ts'
 
 const flushPromises = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))

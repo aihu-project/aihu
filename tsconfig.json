@@ -4,6 +4,7 @@
     "noEmit": true,
     "paths": {
       "@aihu/runtime": ["./packages/runtime/src/index.ts"],
+      "@aihu/runtime/app": ["./packages/runtime/src/app.ts"],
       // The server-only SSR helper subpath. Without this mapping the
       // specifier resolves through package exports to runtime/dist, which
       // only exists after a build — so any package that typechecks
