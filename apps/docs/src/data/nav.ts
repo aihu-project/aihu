@@ -88,7 +88,7 @@ export const NAV: readonly NavSection[] = [
   // --- Playground (WASM) ---
   // Its own top-level section rather than a row under Examples: it is a tool,
   // not a document, and it is the only route that ships the compiler itself
-  // (the wasm-pack build of aihu-compile) to the browser.
+  // (the published aihu-compile WASM package) to the browser.
   {
     title: 'Playground',
     links: [{ label: 'Compile in-browser', href: '/playground', ready: true }],

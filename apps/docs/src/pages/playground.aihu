@@ -97,9 +97,9 @@
       <h2>How it works</h2>
       <ul class="dn-pgx-list">
         <li><b>The compiler is the real one.</b> <code>public/wasm/</code> is
-            built from this checkout's Rust sources with <code>wasm-pack</code>
-            at build time, never fetched from a release — so the grammar the
-            playground accepts is exactly the grammar this commit ships.</li>
+            staged from the version-pinned <code>@aihu/compiler-wasm</code>
+            release at build time. It matches the <code>@aihu/compiler</code>
+            release that builds this documentation site.</li>
         <li><b>The preview is sandboxed.</b> Compiled output runs in an iframe
             with <code>sandbox="allow-scripts"</code> and no
             <code>allow-same-origin</code>, so it cannot reach this page, its
@@ -111,8 +111,8 @@
             you can share.</li>
       </ul>
       <p class="dn-pgx-note">If the editor reports that the WASM bundle is
-         unavailable, the build ran without <code>wasm-pack</code> and the
-         <code>wasm32-unknown-unknown</code> target. Install both and re-run
+         unavailable, install dependencies with the matching
+         <code>@aihu/compiler-wasm</code> release and re-run
          <code>bun run prebuild</code>.</p>
     </section>
   </div>

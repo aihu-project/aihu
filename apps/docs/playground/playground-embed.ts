@@ -25,9 +25,9 @@
  * `typescript` out of every other route's bundle.
  *
  * The WASM bundle is staged into `public/wasm/` before `vite build` by
- * `apps/docs/scripts/stage-wasm.ts` → `scripts/build-wasm-bundle.ts`
- * (built from the workspace compiler so the playground grammar matches the
- * checkout — #491); Vite copies `public/` to the dist root verbatim. If the
+ * `apps/docs/scripts/stage-wasm.ts` from `@aihu/compiler-wasm`
+ * (version-pinned alongside `@aihu/compiler`); Vite copies `public/` to the
+ * dist root verbatim. If the
  * bundle is unavailable (no wasm toolchain and no release), the playground
  * renders a clear fallback message.
  *
@@ -610,7 +610,7 @@ export class PlaygroundEmbed extends HTMLElement {
     const [mod, bundle] = await Promise.all([loadWasm(this), loadBundle(this)])
     if (mod === null) {
       this.setError(
-        'WASM bundle unavailable. Install wasm-pack + the wasm32-unknown-unknown target and rebuild the docs app (bun run prebuild) to populate public/wasm/.',
+        'WASM bundle unavailable. Install dependencies with the matching @aihu/compiler-wasm release, then rebuild the docs app (bun run prebuild).',
       )
       return
     }

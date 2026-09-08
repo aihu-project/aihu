@@ -36,9 +36,8 @@ test('playground-embed upgrades and boots with no error banner or console errors
     return err && !err.hidden ? err.textContent : null
   })
 
-  // dist/wasm is built by wasm-pack at prebuild and may be absent in a local
-  // build that skipped the Rust toolchain — CI always has it (see
-  // deploy-docs.yml's wasm32 + wasm-pack steps + stage-wasm.ts --strict).
+  // dist/wasm is staged from the version-pinned release at prebuild. It can be
+  // absent only when local dependencies were not installed successfully.
   test.skip(
     bootError?.includes('WASM bundle unavailable') ?? false,
     'no ./wasm bundle in this build',
