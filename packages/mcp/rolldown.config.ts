@@ -3,6 +3,7 @@ import { dts } from 'rolldown-plugin-dts'
 
 const external = [
   'node:child_process',
+  'node:module',
   'node:path',
   'node:url',
   'node:util',
@@ -13,6 +14,7 @@ const external = [
   '@modelcontextprotocol/sdk/server/index.js',
   '@modelcontextprotocol/sdk/server/stdio.js',
   '@modelcontextprotocol/sdk/types.js',
+  '@aihu/compiler',
 ]
 
 export default defineConfig([
