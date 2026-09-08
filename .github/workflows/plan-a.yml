@@ -245,6 +245,25 @@ jobs:
       - run: bun run test:compiler-registry
       - run: bun run test --coverage
       - run: bun run build
+      # The governed example lane consumes these exact outputs rather than
+      # rebuilding the workspace from the same commit. Stage them under an
+      # explicit `packages/` root: upload-artifact strips the common prefix of
+      # wildcard paths, which otherwise restores `*/dist` at the repo root.
+      - name: Stage workspace build outputs
+        run: |
+          rm -rf .ci-artifacts/workspace-build
+          for package in packages/*; do
+            [ -d "$package/dist" ] || continue
+            mkdir -p ".ci-artifacts/workspace-build/$package"
+            cp -a "$package/dist" ".ci-artifacts/workspace-build/$package/"
+          done
+      - name: Upload workspace build outputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: workspace-build-${{ github.sha }}
+          path: .ci-artifacts/workspace-build
+          if-no-files-found: error
+          retention-days: 1
       # API datasheet drift, caught on the PR that causes it.
       #
       # The sheets are DERIVED from every documentable package's export surface,
@@ -1106,11 +1125,17 @@ jobs:
         with:
           auto-install: true
       - run: bun install --frozen-lockfile
+      # Reuse the dist outputs built by `check` for this SHA. The lane keeps its
+      # own install and manifest gate, but no longer pays for a second full
+      # workspace build before exercising the governed consumers.
+      - name: Download workspace build outputs
+        uses: actions/download-artifact@v8
+        with:
+          name: workspace-build-${{ github.sha }}
+          path: .
       # Manifest integrity (also runs in `check` — cheap, and keeps this lane
       # self-contained if `check` is ever re-scoped).
       - run: bun run check:coverage-manifest
-      - name: Build workspace packages
-        run: bun run build
       - name: Build + smoke the governed set (data-driven by manifest ci tiers)
         run: bun run build:governed-examples
         env:
