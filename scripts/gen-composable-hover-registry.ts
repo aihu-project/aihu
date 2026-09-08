@@ -31,6 +31,9 @@ const ROOT = resolve(__dirname, '..')
 const OUT_FILE = process.env.COMPOSABLE_REGISTRY_OUT
   ? resolve(ROOT, process.env.COMPOSABLE_REGISTRY_OUT)
   : join(ROOT, 'packages/language-server/src/core/composable-registry.ts')
+const CONTRACT_FILE = process.env.COMPOSABLE_REGISTRY_CONTRACT_OUT
+  ? resolve(ROOT, process.env.COMPOSABLE_REGISTRY_CONTRACT_OUT)
+  : join(ROOT, 'packages/use/composable-registry.json')
 const USE_SRC_ROOT = process.env.COMPOSABLE_USE_SRC_ROOT
   ? resolve(ROOT, process.env.COMPOSABLE_USE_SRC_ROOT)
   : join(ROOT, 'packages/use/src')
@@ -147,6 +150,19 @@ function main(): void {
     .map(({ name, specifier }) => ({ name, specifier, description: descriptionFor(specifier) }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
+  // This JSON is the portable contract. It is shipped by @aihu/use so the
+  // language server and compiler can validate/consume the registry after the
+  // package leaves this monorepo; neither consumer needs packages/use/src.
+  const contract = `${JSON.stringify(
+    {
+      schemaVersion: 1,
+      package: '@aihu/use',
+      entries,
+    },
+    null,
+    2,
+  )}\n`
+
   const lines: string[] = []
   lines.push('/**')
   lines.push(' * packages/language-server/src/core/composable-registry.ts')
@@ -203,11 +219,31 @@ function main(): void {
       )
       process.exit(1)
     }
+    // The gate-wiring fixture intentionally replaces the registry source and
+    // output paths. Its job is to prove the stale-file check fails closed; the
+    // real package contract check below applies only to the production paths.
+    if (!process.env.COMPOSABLE_REGISTRY_OUT) {
+      let existingContract = ''
+      try {
+        existingContract = readFileSync(CONTRACT_FILE, 'utf8')
+      } catch {
+        existingContract = ''
+      }
+      if (existingContract !== contract) {
+        console.error(
+          `[gen-composable-registry] ${basename(CONTRACT_FILE)} is stale — run: bun scripts/gen-composable-hover-registry.ts`,
+        )
+        process.exit(1)
+      }
+    }
     console.log('[gen-composable-registry] up to date')
     return
   }
 
-  console.log(`[gen-composable-registry] wrote ${entries.length} entries to ${OUT_FILE}`)
+  writeFileSync(CONTRACT_FILE, contract)
+  console.log(
+    `[gen-composable-registry] wrote ${entries.length} entries to ${OUT_FILE} and ${CONTRACT_FILE}`,
+  )
 }
 
 main()
