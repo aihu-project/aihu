@@ -265,7 +265,7 @@ Per-package gates enforced by `bun run size`:
 See [`packages/`](./packages) for all packages on disk. By tier:
 
 - **Reactive runtime core (sized, ships to client):** [`@aihu/context`](./packages/context), [`@aihu/runtime`](./packages/runtime).
-- **Meta-framework — server, routing, data & adapters:** [`@aihu-plugin/data`](./packages/plugin-data), [`@aihu-plugin/drizzle`](./packages/plugin-drizzle), [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare), [`@aihu/adapter-vercel`](./packages/adapter-vercel), [`@aihu/app`](./packages/app), [`@aihu/auth`](./packages/auth), [`@aihu/magna`](./packages/magna), [`@aihu/router`](./packages/router), [`@aihu/scraping`](./packages/scraping), [`@aihu/server`](./packages/server).
+- **Meta-framework — server, routing, data & adapters:** [`@aihu-plugin/data`](./packages/plugin-data), [`@aihu-plugin/drizzle`](./packages/plugin-drizzle), [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare), [`@aihu/adapter-vercel`](./packages/adapter-vercel), [`@aihu/app`](./packages/app), [`@aihu/auth`](./packages/auth), [`@aihu/magna`](./packages/magna), [`@aihu/router`](./packages/router), [`@aihu/server`](./packages/server).
 - **Agent surface (built in, governed):** [`@aihu-plugin/agent-readiness`](./packages/plugin-agent-readiness), [`@aihu/agent`](./packages/agent), [`@aihu/agent-a2a`](./packages/agent-a2a), [`@aihu/agent-acp`](./packages/agent-acp), [`@aihu/agent-server`](./packages/agent-server), [`@aihu/agent-service`](./packages/agent-service), [`@aihu/ai`](./packages/ai), [`@aihu/mcp`](./packages/mcp), [`@aihu/seo`](./packages/seo).
 - **Compiler & toolchain (build-time):** [`@aihu/cli`](./packages/cli), [`@aihu/css-engine`](./packages/css-engine), [`@aihu/language-server`](./packages/language-server), [`@aihu/tsc`](./packages/tsc), [`create-aihu`](./packages/create-aihu).
 - **Plugin substrate, editor & templates:** [`@aihu/plugin`](./packages/plugin), [`@aihu/templates-cf-team`](./packages/templates/cf-team), [`vscode-aihu`](./packages/vscode-aihu).
@@ -311,7 +311,6 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/primitives`](./packages/primitives) | `0.2.3` | aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS. |
 | [`@aihu/router`](./packages/router) | `0.5.0` | File-based router for the aihu meta-framework. |
 | [`@aihu/runtime`](./packages/runtime) | `6.1.0` | Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler. |
-| [`@aihu/scraping`](./packages/scraping) | `0.2.0` | O(1) sliding-window rate limiter and bot-detection middleware for aihu agent services. |
 | [`@aihu/seo`](./packages/seo) | `1.0.5` | DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD). |
 | [`@aihu/server`](./packages/server) | `0.6.0` | Server runtime + native renderer (napi-rs) for aihu SSR. |
 | [`@aihu/store`](./packages/store) | `0.1.2` | Pinia-style global stores on aihu signals — defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins. |

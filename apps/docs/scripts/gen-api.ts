@@ -160,7 +160,6 @@ const TIER_BY_SLUG: Record<string, Tier> = {
   'language-server': 'Compiler & tooling',
   'create-aihu': 'Compiler & tooling',
   'vscode-aihu': 'Compiler & tooling',
-  scraping: 'Compiler & tooling',
   // Agents & governance — the graphite axis: the agent-discoverable surface.
   agent: 'Agents & governance',
   'agent-a2a': 'Agents & governance',

@@ -142,7 +142,10 @@ completion.
 
 - [ ] **EX-16 — Evaluate integration packages by release cadence.**
   - Scope: `@aihu/magna`, `@aihu/auth`, `@aihu/ai`, `@aihu/mcp`,
-    `@aihu/scraping`, and `@aihu/seo`.
+    and `@aihu/seo`.
+  - `@aihu/scraping` has been extracted to
+    [`aihu-project/aihu-scraping`](https://github.com/aihu-project/aihu-scraping)
+    with its own release workflow; it is no longer an in-core evaluation item.
   - Complete when: each package has a recorded decision to remain in the core
     repository, move under the appropriate service owner, or become a plugin.
   - Depends on: EX-07 for packages that currently depend on the server or
