@@ -68,6 +68,15 @@ Two target rules shared by all sensors:
 More are coming — this landing establishes the pattern (packaging, per-entry
 size rows, SSR safety, getter return shape) for the curated ~25 set; see
 `docs/plans/2026-07-22-effect-scope-and-composables.md` §5.
+
+### Registry contract for tooling
+
+The published `./composable-registry.json` subpath contains the names,
+subpath specifiers, and one-line descriptions for the composables that aihu's
+compiler and language server may auto-import. It is a portable contract for
+tooling in separate repositories; consumers must read this artifact instead
+of depending on `packages/use/src` from the aihu monorepo. The file has a
+`schemaVersion` so future registry changes can be introduced deliberately.
 <!-- END_HANDWRITTEN: prose -->
 
 ## Install
@@ -94,7 +103,7 @@ bun add @aihu/use
 |---|---|
 | **Version** | `2.0.0` |
 | **Tier** | G — Composables — VueUse-style sensor/state/browser utilities on aihu signals (SSR-safe, per-composable entries) |
-| **Published files** | 3 entries |
+| **Published files** | 4 entries |
 | **License** | MIT |
 
 <sub><i>Auto-generated against `@aihu/use@2.0.0`.</i></sub>
@@ -110,6 +119,7 @@ bun add @aihu/use
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 | `./shared` | `./dist/shared.js` | `—` |
+| `./composable-registry.json` | `./composable-registry.json` | — |
 | `./useActiveElement` | `./dist/useActiveElement.js` | `—` |
 | `./useAsync` | `./dist/useAsync.js` | `—` |
 | `./useAsyncAbortable` | `./dist/useAsyncAbortable.js` | `—` |
