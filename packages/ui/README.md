@@ -18,6 +18,10 @@ package is bundled into your runtime *from the package*, it carries **no
 `.size-limit.json` row** — your own build measures the copied recipes. See
 [`.size-limit.README.md`](../../.size-limit.README.md).
 
+Tooling that reads the catalog can import the stable TypeScript contract from
+`@aihu/ui/registry`. The `./schema` export remains available as a compatibility
+alias for existing in-repo consumers.
+
 ### Phase 1 recipes
 
 | Recipe | Kind | Notes |
@@ -188,6 +192,7 @@ bun add @aihu/ui
 | Subpath | ESM | CJS |
 |---|---|---|
 | `./registry.json` | `./registry.json` | — |
+| `./registry` | `—` | `—` |
 | `./schema` | `—` | `—` |
 
 <sub><i>Auto-generated against `@aihu/ui@0.1.1`.</i></sub>

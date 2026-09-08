@@ -13,6 +13,9 @@
   ],
   "exports": {
     "./registry.json": "./registry.json",
+    "./registry": {
+      "types": "./src/registry.ts"
+    },
     "./schema": {
       "types": "./src/schema.ts"
     }

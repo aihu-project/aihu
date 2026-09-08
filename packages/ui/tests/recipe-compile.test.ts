@@ -58,7 +58,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { compileSfc } from '@aihu/css-engine'
 import { describe, expect, it } from 'vitest'
-import type { VariantMap } from '../src/schema.ts'
+import type { VariantMap } from '../src/registry.ts'
 
 const REGISTRY = join(__dirname, '..', 'registry')
 

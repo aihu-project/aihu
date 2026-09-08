@@ -613,6 +613,9 @@
       "dependencies": {
         "@aihu/mcp": "workspace:*",
       },
+      "devDependencies": {
+        "@aihu/ui": "workspace:*",
+      },
     },
     "packages/context": {
       "name": "@aihu/context",
