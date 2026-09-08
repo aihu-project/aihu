@@ -358,7 +358,7 @@ describe('createApp — route-scoped component registration (O1c)', () => {
 })
 
 // ─── Nested-outlet registrar global (F1) ─────────────────────────────────────
-// The compiler-emitted `createOutletBoundary` (packages/compiler/src/codegen/
+// The compiler-emitted `createOutletBoundary` (from the standalone compiler
 // emit.rs) cannot import virtual:aihu-components, so client.ts publishes
 // registerRouteComponents on globalThis at module top level. The emitted JS
 // calls it optional-chained: `globalThis.__aihuRegisterRouteComponents?.(m.route)`.

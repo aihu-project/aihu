@@ -138,7 +138,7 @@ $beforeNavigate((to, from, next) => { next() })
 - `packages/router/src/index.ts` — public API exports
 - `packages/router/src/runtime.ts` — `useRoute()`, `navigate()`, `createRouteSignal()`, `RouteContext`
 - `packages/router/src/router.ts` — `createRouter()`, `RouteDefinition`, pattern matching
-- `packages/compiler/src/codegen/emit.rs` — `createRouterBoundary` / `createOutletBoundary` /
+- The standalone aihu-compiler emitter — `createRouterBoundary` / `createOutletBoundary` /
   `createNavigateBoundary`: `<router>`, `<outlet>` and `<navigate>` are compiler-lowered
   framework elements, NOT SFCs. (`<a href>` is a plain anchor; there is no `<link>` component.)
 - `examples/blog-router/src/pages/index.aihu` — basic routing with `$each` list

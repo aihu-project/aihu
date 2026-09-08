@@ -3,14 +3,15 @@ import { spawnSync } from 'node:child_process'
 /**
  * `gen:use` — scaffold a new `@aihu/use` composable's touch points, family-aware.
  *
- * A CORE composable has SIX touch points (src dir, barrel, package.json
- * exports, rolldown input, .size-limit.json row, USE_COMPOSABLES tuple) PLUS
+ * A CORE composable has five root-owned touch points (src dir, barrel,
+ * package.json exports, rolldown input, .size-limit.json row) PLUS
  * an optional 7th (a Tier-2 row in tests/ssr-safety.test.ts, required only
  * when the implementation references `isClient`). A FAMILY composable
  * (`--family math`) has the same shape, except: its barrel lives at
  * `src/<family>/index.ts` (never the CORE barrel — the one-way rule forbids
- * it), and its USE_COMPOSABLES tuple is emitted ONLY when the family's
- * `autoImport` flag (in `packages/use/families.json`) is `true`.
+ * it). The compiler auto-import registry is maintained in the standalone
+ * aihu-compiler repository; this command prints a handoff reminder for
+ * auto-import families.
  *
  * Usage:
  *   bun scripts/gen-use.ts <name> [<name>...] [--bare] [--family <family>]
@@ -26,11 +27,9 @@ import { spawnSync } from 'node:child_process'
  * reviewed edit to that file (plus a dep-check/parity review), never a
  * scaffolder side effect.
  *
- * Multiple names in one invocation land together — this matters because
- * every USE_COMPOSABLES registry edit is a Rust source change and
- * `check:compiler-binary-bump` reads the COMMITTED diff: scaffolding a wave
- * one composable at a time means one 5-platform version bump PER composable.
- * One wave = one PR = one batched registry commit = one bump.
+ * Multiple names in one invocation land together so the root-owned manifest
+ * edits remain reviewable as one wave. Coordinate the corresponding compiler
+ * registry update in aihu-compiler before publishing.
  *
  * Every patch step is "check first, patch if absent, log SKIPPED if
  * present" — running this twice in a row is a no-op the second time, which
@@ -470,7 +469,7 @@ export function patchSizeLimit(
   return { text, changed: true }
 }
 
-// ---------- 6. packages/compiler/src/codegen/use_registry.rs ----------
+// ---------- 6. standalone compiler registry handoff ----------
 
 export function patchUseRegistryRs(
   src: string,
@@ -515,7 +514,7 @@ function findRepoRoot(start: string): string {
 function scaffoldOne(
   repoRoot: string,
   name: string,
-  bare: boolean,
+  _bare: boolean,
   family: string | undefined,
   families: Record<string, FamilyDef>,
 ): void {
@@ -670,8 +669,6 @@ function scaffoldOne(
   }
   if (sizeLimitChanged) writeFileSync(sizeLimitPath, sizeLimitSrc)
 
-  // 6. packages/compiler/src/codegen/use_registry.rs
-  const registryPath = join(repoRoot, 'packages/compiler/src/codegen/use_registry.rs')
   const autoImport = family ? (def?.autoImport ?? false) : true
   if (!autoImport) {
     console.log(
@@ -680,25 +677,10 @@ function scaffoldOne(
         `in apps without its peer (verified: vite fails at resolution, before tree-shaking).`,
     )
   } else {
-    const registryResult = patchUseRegistryRs(readFileSync(registryPath, 'utf8'), name, memberKey)
-    if (registryResult.changed) {
-      writeFileSync(registryPath, registryResult.text)
-      console.log(
-        '  [ok]   patched packages/compiler/src/codegen/use_registry.rs (USE_COMPOSABLES)',
-      )
-      if (bare) {
-        console.log(
-          `  [note] '${name}' is not \`use\`-prefixed — a slightly higher collision-risk bare ` +
-            'identifier than the rest of the registry. Add a one-line comment in use_registry.rs ' +
-            "explaining why it's safe here (or add it to REGISTRY_EXEMPT in " +
-            'scripts/check-use-registry-parity.ts to opt it out instead).',
-        )
-      }
-    } else {
-      console.log(
-        `  [skip] packages/compiler/src/codegen/use_registry.rs already has a tuple for '${name}'`,
-      )
-    }
+    console.log(
+      `  [handoff] register '${name}' in the standalone aihu-compiler repository's published ` +
+        'auto-import registry before releasing the matching compiler version.',
+    )
   }
 
   // 7. manual checklist
@@ -760,9 +742,8 @@ function main(): void {
     console.log(
       `\n  Scaffolding ${names.length} composables together: ${names.join(', ')}` +
         (family ? ` (family: ${family})` : '') +
-        `.\n  This is intentional — every USE_COMPOSABLES edit is a Rust source change and ` +
-        `check:compiler-binary-bump reads the COMMITTED diff. One wave = one PR = one batched ` +
-        `registry commit = one 5-platform binary bump.\n`,
+        `.\n  Root-owned artifacts land together; coordinate the standalone compiler ` +
+        `registry handoff shown for each auto-import family before publishing.\n`,
     )
   }
 

@@ -66,11 +66,10 @@
  *          declaration in the source must ride the census (present, well-formed
  *          under the runtime's own `normalizeGovernedData`, type + preview
  *          tokens agreeing with the source). The committed artifacts are
- *          byte-pinned to the compiler by the Rust golden suite; the agent-meta
- *          leg (manifest ≡ marker ≡ route.json) lives in
- *          `extract_vocabulary.rs`'s `fan_out_three_artifacts_agree_*` tests —
- *          this check asserts those pins still EXIST, so no leg of the fan-out
- *          can be silently deleted. HONEST SCOPE: `data:` fans out to
+ *          produced by the standalone compiler release; the root repository
+ *          verifies the released package and committed sidecars as a consumer.
+ *          The agent-meta leg (manifest ≡ marker ≡ route.json) is checked by
+ *          the standalone compiler repository. HONEST SCOPE: `data:` fans out to
  *          `.route.json` (+ the type sidecar) only — the marker and agent-meta
  *          do not carry it, so `data:` agreement is source ≡ census, not
  *          three-way.
@@ -826,37 +825,60 @@ function routeArtifactEntries(base = ROOT): RouteArtifactEntry[] {
 }
 
 /**
- * The legs of the fan-out this script cannot re-derive live (no Rust binary
- * on a plain checkout) are PINNED elsewhere; assert the pins still exist so
- * deleting one is a DA-f2 finding, not a silent coverage loss:
- *  - agent-meta ≡ marker ≡ route.json — `fan_out_three_artifacts_agree_*`;
- *  - committed artifacts ≡ compiler output — the gx_data golden assertions.
+ * The root repository consumes compiler output through the published package.
+ * Keep that boundary explicit: the standalone compiler owns Rust source and
+ * golden tests, while this check proves the consumer has the released artifact
+ * and no stale in-tree compiler checkout that could mask a bad dependency.
  */
-function daF2RustLegFindings(base = ROOT): Finding[] {
+function daF2CompilerArtifactFindings(base = ROOT): Finding[] {
   const findings: Finding[] = []
-  const legs: ReadonlyArray<[string, string, string]> = [
-    [
-      'packages/compiler/tests/extract_vocabulary.rs',
-      'fan_out_three_artifacts_agree_declared',
-      'the agent-meta three-artifact agreement tests',
-    ],
-    [
-      'packages/compiler/tests/gx_data.rs',
-      '04-governed-data.route.json',
-      'the golden pin binding the committed census to compiler output',
-    ],
-  ]
-  for (const [rel, needle, what] of legs) {
-    const abs = join(base, rel)
-    if (!existsSync(abs) || !readFileSync(abs, 'utf8').includes(needle)) {
-      findings.push({
-        where: rel,
-        rule: 'DA-f2',
-        message:
-          `${what} (\`${needle}\`) is GONE — this check's reliance on the committed ` +
-          'artifacts is no longer sound; the fan-out can drift undetected.',
-      })
-    }
+  const sourcePath = join(base, 'packages/compiler')
+  if (existsSync(sourcePath)) {
+    findings.push({
+      where: 'packages/compiler',
+      rule: 'DA-f2',
+      message:
+        'the root checkout still contains compiler source; compiler ownership belongs to ' +
+        'the standalone aihu-compiler repository.',
+    })
+  }
+
+  const manifestPath = join(base, 'node_modules/@aihu/compiler/package.json')
+  if (!existsSync(manifestPath)) {
+    findings.push({
+      where: 'node_modules/@aihu/compiler/package.json',
+      rule: 'DA-f2',
+      message:
+        'the published @aihu/compiler consumer artifact is missing; reinstall the locked ' +
+        'dependency before trusting the sidecar agreement.',
+    })
+    return findings
+  }
+
+  let manifest: { name?: unknown; version?: unknown }
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as typeof manifest
+  } catch {
+    findings.push({
+      where: 'node_modules/@aihu/compiler/package.json',
+      rule: 'DA-f2',
+      message: 'the published @aihu/compiler package manifest is not valid JSON.',
+    })
+    return findings
+  }
+  if (manifest.name !== '@aihu/compiler' || typeof manifest.version !== 'string') {
+    findings.push({
+      where: 'node_modules/@aihu/compiler/package.json',
+      rule: 'DA-f2',
+      message: 'the installed compiler artifact has no valid @aihu/compiler name/version.',
+    })
+  }
+  if (!existsSync(join(base, 'node_modules/@aihu/compiler/dist/index.d.ts'))) {
+    findings.push({
+      where: 'node_modules/@aihu/compiler/dist/index.d.ts',
+      rule: 'DA-f2',
+      message: 'the installed @aihu/compiler artifact is missing its public type entrypoint.',
+    })
   }
   return findings
 }
@@ -1355,7 +1377,7 @@ for (const e of artifactEntries) {
   )
 }
 for (const f of await daF2Findings(artifactEntries)) findings.push(f)
-for (const f of daF2RustLegFindings()) findings.push(f)
+for (const f of daF2CompilerArtifactFindings()) findings.push(f)
 
 // DA-g — the shadow-page census over the same corpus. INFORMATIONAL: a page's
 // shadow mode is never a finding by itself (`$shadow` is pure encapsulation;

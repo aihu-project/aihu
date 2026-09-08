@@ -2,7 +2,7 @@
  * `@aihu/agent-server` — opaque-ID reconciliation (T1 ↔ T2).
  *
  * GOLDEN VECTORS: the expected hashes below were emitted by the COMPILER's own
- * `__agentDispatcher` output (packages/compiler `opaque_member_id`), captured in
+ * `__agentDispatcher` output (`opaque_member_id` from the standalone compiler), captured in
  * the T1 review. If this test fails, the TS mirror (`opaque-id.ts`) has drifted
  * from the Rust emit — the server would then forward an id the browser
  * dispatcher can't find, and every bridged call would silently 404. Keep them

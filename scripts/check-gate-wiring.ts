@@ -170,6 +170,14 @@ const NEGATIVE_FIXTURES: Record<string, Fixture> = {
       env: { MOON_GRAPH_ROOT: 'scripts/fixtures/moon-graph/should-not-flag' },
     },
   },
+  'check:lockfile-platform-pins': {
+    cmd: ['bun', 'scripts/check-lockfile-platform-pins.ts'],
+    env: { LOCKFILE_PINS_ROOT: 'scripts/fixtures/lockfile-platform-pins/should-flag' },
+    green: {
+      cmd: ['bun', 'scripts/check-lockfile-platform-pins.ts'],
+      env: { LOCKFILE_PINS_ROOT: 'scripts/fixtures/lockfile-platform-pins/should-not-flag' },
+    },
+  },
   // FEL-342 — the LSP composable-registry generator's --check mode. Same
   // env-override shape as check:moon-graph: point it at a 2-entry fixture
   // `USE_COMPOSABLES` and a hand-written "committed" output missing one
@@ -198,50 +206,6 @@ const NEGATIVE_FIXTURES: Record<string, Fixture> = {
   // "Rust source changed, no platform bumped", green is a complete bump
   // (every platform of the one family this package ships, plus the host
   // manifest's optionalDependencies repoint).
-  // GATE A — platform versions are GENERATED (stamp-platform-versions.ts, run
-  // by release:version), so this proves the invariant rather than the edit.
-  // PLATFORM_SYNC_ROOT repoints the scan at a fixture tree: `should-flag` has
-  // platform manifests + pins stuck at 0.1.54 under a 1.3.0 host (the exact
-  // pre-lockstep drift), `should-not-flag` has them at 1.3.0.
-  // Every platform pin must be RESOLVED in bun.lock. Red is a lock still
-  // holding the OLD version while the manifest pins a new one -- the exact
-  // shape bun leaves behind when the pinned version is unpublished, and the
-  // state that took main red for every PR twice (#783, #794).
-  'check:lockfile-platform-pins': {
-    cmd: ['bun', 'scripts/check-lockfile-platform-pins.ts'],
-    env: { LOCKFILE_PINS_ROOT: 'scripts/fixtures/lockfile-platform-pins/should-flag' },
-    green: {
-      cmd: ['bun', 'scripts/check-lockfile-platform-pins.ts'],
-      env: { LOCKFILE_PINS_ROOT: 'scripts/fixtures/lockfile-platform-pins/should-not-flag' },
-    },
-  },
-  'check:platform-version-sync': {
-    cmd: ['bun', 'scripts/stamp-platform-versions.ts', '--check', '--host', 'compiler'],
-    env: { PLATFORM_SYNC_ROOT: 'scripts/fixtures/platform-version-sync/should-flag' },
-    green: {
-      cmd: ['bun', 'scripts/stamp-platform-versions.ts', '--check', '--host', 'compiler'],
-      env: { PLATFORM_SYNC_ROOT: 'scripts/fixtures/platform-version-sync/should-not-flag' },
-    },
-  },
-  // GATE B — the replacement for check:compiler-binary-bump's accidental
-  // "somebody thought about shipping this" proxy. Red is Rust source changed
-  // with an empty changeset dir; green is the same diff with a changeset naming
-  // @aihu/compiler. CHANGED_FILES supplies a synthetic diff so no git state is
-  // needed; CHANGESET_DIR points at the two fixture dirs.
-  'check:native-changeset': {
-    cmd: ['bun', 'scripts/check-native-changeset.ts'],
-    env: {
-      CHANGED_FILES: 'packages/compiler/src/lower.rs',
-      CHANGESET_DIR: 'scripts/fixtures/native-changeset/without',
-    },
-    green: {
-      cmd: ['bun', 'scripts/check-native-changeset.ts'],
-      env: {
-        CHANGED_FILES: 'packages/compiler/src/lower.rs',
-        CHANGESET_DIR: 'scripts/fixtures/native-changeset/with',
-      },
-    },
-  },
   'check:css-engine-binary-bump': {
     cmd: ['bun', 'scripts/check-css-engine-binary-bump.ts'],
     env: { CHANGED_FILES: 'packages/css-engine/crates/aihu-css-core/src/ast.rs' },

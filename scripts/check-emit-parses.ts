@@ -71,7 +71,7 @@ const failures: Array<{ file: string; stage: string; detail: string }> = []
 
 /**
  * The define-name this file is actually registered under, mirroring the Vite
- * plugin (`packages/compiler/js/index.ts`: `_isLayoutFile` / `_layoutTag`).
+ * plugin's layout classification (`_isLayoutFile` / `_layoutTag`).
  *
  * A layout SFC never registers under its bare stem — `src/layouts/app.aihu`
  * is registered as `aihu-layout-app`, because `app` has no hyphen and could

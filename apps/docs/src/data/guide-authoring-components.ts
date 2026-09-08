@@ -7,7 +7,7 @@
  * rewritten below into the CURRENT prefix-less wrapper-intrinsic dialect
  * (`state()`, `prop()`, `derived()`, `action()`, `resource()`, `effect()`,
  * `onMount()`/`onDispose()`), confirmed against
- * packages/compiler/src/parser/state_wrappers.rs and the state-model
+ * the standalone compiler state-wrapper parser and the state-model
  * fixtures (weather-new.aihu, counter-new.aihu). Notably `type:` is no
  * longer a `prop` config key — the type now comes from `prop<T>(...)`'s
  * generic — and `expose` is a string (`'read'` / `'read write'`), not an

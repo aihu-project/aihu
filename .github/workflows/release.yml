@@ -1,8 +1,8 @@
-name: Release aihu-compile binaries
+name: Release Aihu packages
 
-# Cross-compile the aihu-compile Rust binary for all supported platforms,
-# build the WASM bundle for browser playground use, then publish a GitHub
-# Release with all binaries (+ WASM bundle + SHA256 sidecars) attached as assets.
+# Publish the Aihu packages and native server/CSS assets, then create a GitHub
+# Release with the native assets attached. The standalone aihu-compiler
+# repository owns compiler binaries and its release workflow.
 #
 # Triggers:
 #   - push of any tag matching `v*` (real release)
@@ -11,8 +11,7 @@ name: Release aihu-compile binaries
 #     unless the input parses as an actual `v*` tag).
 #   - manual workflow_dispatch with `canary: true` — CANARY SNAPSHOT release:
 #     every publish job first runs `changeset version --snapshot canary`
-#     (+ scripts/stamp-platform-versions.ts for the native platform packages),
-#     producing `0.0.0-canary-<shortsha>` versions, then publishes to the
+##     producing `0.0.0-canary-<shortsha>` versions, then publishes to the
 #     `canary` npm dist-tag so `latest` (and every plain `npm install`) is
 #     UNAFFECTED. Consumers pin with `npm install @aihu/app@canary` or the
 #     exact snapshot version. `dry_run` defaults to TRUE: the default canary
@@ -25,21 +24,9 @@ name: Release aihu-compile binaries
 #     are ephemeral (never committed); no GitHub Release and no git tag is
 #     created for canaries.
 #
-# Consumed by:
-#   - NOT by a compiler postinstall script. This comment used to name
-#     `packages/compiler/js/postinstall.ts` as the consumer that fetched
-#     `releases/latest/download/<asset>` and verified the SHA256. That file no
-#     longer exists and `packages/compiler` declares no `postinstall` script;
-#     the binary now reaches consumers exclusively through the
-#     `@aihu/compiler-<platform>` optionalDependencies, resolved by
-#     `packages/compiler/js/resolve-binary.ts` — which performs no network
-#     fetch at all. The per-platform `aihu-compile-*` assets and their .sha256
-#     sidecars are therefore published for out-of-band/manual verification and
-#     as a human-fetchable escape hatch, not for an automated install path.
-#   - apps/docs/ playground (arch-1 §3.5 + arch-4 §4.6) — FALLBACK ONLY since
-#     #491: scripts/build-wasm-bundle.ts builds the WASM from the workspace
-#     compiler and fetches `releases/latest/download/aihu-compile-wasm.tar.gz`
-#     only when the wasm toolchain is unavailable.
+# Compiler binaries and WASM artifacts are released by the standalone
+# aihu-compiler repository. This workflow owns only the root server/CSS native
+# lanes and packages that consume the published compiler.
 "on":
   push:
     tags:
@@ -79,45 +66,14 @@ env:
 jobs:
   # Lockfile integrity, checked ONCE and checked EARLY.
   #
-  # FEL-RELEASE-FROZEN-LOCK. `v0.4.62` published every platform binary and zero
-  # JS packages, dying in `publish-packages` on:
+  # FEL-RELEASE-FROZEN-LOCK. Check the committed lockfile before any native
+  # platform publish can change registry resolution. A frozen install here
+  # catches manifest/lock drift while publish-packages uses a plain install
+  # after the platform jobs have completed.
   #
-  #   error: lockfile had changes, but lockfile is frozen
-  #
-  # The release had poisoned its own install. The platform pins LEAD their
-  # published versions, so when `bun.lock` was last refreshed
-  # `@aihu/compiler-darwin-arm64@0.1.54` did not exist on npm; bun cannot
-  # resolve an optionalDependency that isn't published, so it OMITS the entry
-  # from the lock entirely. The four platform-publish jobs then pushed exactly
-  # those versions to npm — and `publish-packages`, which `needs:` all four,
-  # installed afterwards, resolved optionalDependencies the lock had never
-  # heard of, wanted to add them, and was refused.
-  #
-  # Reproduced deterministically rather than inferred: delete one platform
-  # entry from `bun.lock` and `bun install --frozen-lockfile` emits that exact
-  # error, while a plain `bun install` succeeds and re-adds it.
-  #
-  # `plan-a.yml`'s `AIHU_COMPILER_NATIVE: '0'` comment already predicted the
-  # consumer-side half of this — "the platform pins currently lead their
-  # published versions, so bun drops the unresolvable optionalDependency…
-  # That protection disappears the moment those versions publish." Nobody
-  # traced it back into this workflow's own job graph.
-  #
-  # The fix is not to stop checking. It is to check where the answer is still
-  # meaningful: this job has NO `needs:`, so it runs before any job in this
-  # workflow can mutate the registry, and `publish-packages` gates on it. The
-  # install inside `publish-packages` is now a plain `bun install`, because its
-  # purpose is to materialize node_modules for build/pack, not to gate
-  # integrity — see the comment there.
-  #
-  # NOTE the four `bun install --frozen-lockfile --ignore-scripts` calls in the
-  # publish-*-native jobs are deliberately left alone: each sits inside a
-  # `Snapshot version (canary)` step gated on
-  # `github.event_name == 'workflow_dispatch' && inputs.canary`, so none of
-  # them runs on a `v*` tag push. In canary mode they are also correct — they
-  # install against the committed lock BEFORE `changeset version --snapshot`
-  # rewrites versions, and a canary publishes `0.0.0-canary-<sha>`, which never
-  # makes a committed `0.1.x` pin newly resolvable.
+  # The root server/CSS platform packages are synchronized by the release
+  # workflow before their canary/stable publish. The compiler package and its
+  # binaries are owned by the standalone aihu-compiler repository.
   lockfile-integrity:
     name: Lockfile integrity
     runs-on: ubuntu-latest
@@ -137,8 +93,8 @@ jobs:
         # them here would just be a slower way to get the same boolean.
         run: bun install --frozen-lockfile --ignore-scripts
 
-  # `build` (CLI cross-compile), the three native-addon build/publish families
-  # (@aihu/server, @aihu/css-engine, @aihu/compiler's napi addon), and their
+  # Native-addon build/publish families (@aihu/server and @aihu/css-engine)
+  # and their
   # platform-package publishes all live in release-platforms.yml now — see
   # the `platforms` job below and that file's own header comment for why
   # `workflow_call` (same run, artifacts stay visible) rather than a second
@@ -155,85 +111,17 @@ jobs:
       dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
     secrets: inherit
 
-  build-wasm:
-    name: Build aihu-compile-wasm bundle
-    runs-on: ubuntu-22.04
-    # Longest observed run of this job is ~3 min; without a bound a hang
-    # inherits GitHub's 360 min default and stalls the release for six hours.
-    timeout-minutes: 30
-    # WASM bundle for browser-side compilation in the homepage playground
-    # (Directive 1 + arch-4 §4.6). Output is a tar.gz of the wasm-pack `pkg-wasm/`
-    # directory so consumers receive the full glue (.wasm + .js + .d.ts + package.json).
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Install Rust toolchain (wasm32)
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # stable @ 2024-10-25
-        with:
-          toolchain: "1.95.0"
-          targets: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Build WASM bundle
-        run: |
-          cd packages/compiler
-          wasm-pack build --target web --out-dir pkg-wasm
-          ls -la pkg-wasm/
-
-      - name: Stage WASM bundle
-        run: |
-          mkdir -p artifact
-          tar -czf artifact/aihu-compile-wasm.tar.gz -C packages/compiler pkg-wasm
-          # SHA256 sidecar
-          sha256sum artifact/aihu-compile-wasm.tar.gz | awk '{print $1}' > artifact/aihu-compile-wasm.tar.gz.sha256
-          # Size gate — W2 (advanced-js-template-expressions) turned the old
-          # non-fatal warning into a HARD assert: embedding oxc_parser spends
-          # a deliberate chunk of the budget (see packages/compiler/WASM.md
-          # for the measured numbers), so regressions past 500 KB gzip must
-          # fail the build, not warn (arch-4 §4.6 / Directive 1).
-          raw=$(stat -c %s artifact/aihu-compile-wasm.tar.gz)
-          gz_wasm=$(gzip -9 -c packages/compiler/pkg-wasm/aihu_compiler_bg.wasm | wc -c)
-          echo "Tar.gz bundle size: $raw bytes"
-          echo "Raw .wasm gzipped:  $gz_wasm bytes (budget <500KB = 512000)"
-          if [ "$gz_wasm" -gt 512000 ]; then
-            echo "::error::WASM gzipped size $gz_wasm exceeds the 500KB budget (arch-4 §4.6 / WASM.md)"
-            exit 1
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: aihu-compile-wasm
-          path: |
-            artifact/aihu-compile-wasm.tar.gz
-            artifact/aihu-compile-wasm.tar.gz.sha256
-          if-no-files-found: error
-          retention-days: 7
-
   release:
     name: Publish GitHub Release
-    # Downloads EVERY run artifact (no `name:` filter, below) regardless of
-    # which job produced it, so it must wait on every job that uploads one —
-    # not just build/build-wasm. Missing build-native/build-css-native/
-    # build-compiler-napi here let this job start while they were still
-    # running, racing the artifact set the flatten step now asserts is
-    # complete. `platforms` is a workflow_call job: depending on it waits for
-    # EVERY job inside release-platforms.yml (build, build-native,
-    # build-css-native, build-compiler-napi, and the publish-* jobs), same as
-    # depending on all four individually did before the split — and because
-    # workflow_call runs in the SAME run, this job's un-filtered
-    # download-artifact below still sees everything those jobs uploaded.
-    needs: [platforms, build-wasm]
+    # Wait for all native server/CSS jobs before flattening their release assets.
+    # `platforms` is a workflow_call job, so this covers every job inside
+    # release-platforms.yml.
+    needs: [platforms]
     runs-on: ubuntu-22.04
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
-    # Only create a Release when triggered by an actual tag push. The
-    # workflow_dispatch dry-run path stops after build/build-wasm; binaries
-    # are available as workflow artifacts only.
+    # Only create a Release when triggered by an actual tag push.
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download all artifacts
@@ -254,8 +142,7 @@ jobs:
           # download-artifact@v4 (no `name:` filter, above) lays every run's
           # artifacts out as artifacts/<artifact-name>/<original-basename> —
           # the <artifact-name> segment is unique per upload-artifact step
-          # (aihu-compile-<platform>, aihu-compile-wasm, native-<platform>,
-          # css-native-<platform>, compiler-napi-<platform>), but not every
+          # (native-<platform>, css-native-<platform>), but not every
           # basename is: every css-native-<platform> artifact (except win32,
           # which is the differently-named aihu-css-compile.exe) contains a
           # file literally named aihu-css-compile. A bare
@@ -263,11 +150,8 @@ jobs:
           # write wins, no error — which is exactly how the css binary in a
           # past Release ended up advertising a nondeterministic platform.
           #
-          # Fix: copy under the plain basename when nothing has claimed it
-          # yet (preserves today's exact asset names for aihu-compile-wasm.*
-          # and aihu-compile-<platform>.* — both are consumed by a hardcoded
-          # `releases/latest/download/<name>` URL elsewhere in this repo, so
-          # THOSE must never move). Only on an actual collision, fall back to
+          # Fix: copy under the plain basename when nothing has claimed it yet.
+          # On an actual collision, fall back to
           # an artifact-directory-qualified name, so a second file with the
           # same basename still ships instead of silently vanishing.
           while IFS= read -r f; do
@@ -299,7 +183,7 @@ jobs:
             exit 1
           fi
           # Sanity count: one asset per upload-artifact step is expected at
-          # minimum (some, like aihu-compile-<platform>, upload 2 — binary +
+           # minimum (some native jobs upload 2 — binary +
           # .sha256). A run with fewer files than artifact directories means
           # something silently produced nothing, not that everything is fine.
           artifact_dirs=$(find artifacts -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
@@ -322,10 +206,9 @@ jobs:
   #
   # Mirrors the publish-native pattern: triggered only by an actual tag push,
   # authenticates to npm with the repository's trusted-publisher OIDC policy,
-  # then runs after compiler binaries (`build`) and the
-  # @aihu/server-* native packages (`build-native` + `publish-native`) so that
-  # by the time these JS packages reach npm their declared
-  # `optionalDependencies` already resolve.
+  # then runs after the server/CSS native builds and stable-tag publications so
+  # declared `optionalDependencies` resolve. Canary runs publish root JS
+  # packages with their last stable native pins and do not publish natives.
   #
   # Uses `bun publish --workspaces` because Bun rewrites `workspace:*` deps to
   # actual versions automatically. Changesets has versioned the packages on
@@ -338,13 +221,10 @@ jobs:
     # --frozen-lockfile check this job used to perform itself. Keeping it in
     # `needs:` means a genuine lock/manifest mismatch still blocks the publish
     # instead of merely reporting red beside it. See that job's comment.
-    # `platforms` collapses the old build/build-native/publish-native/
-    # build-css-native/publish-css-native/publish-compiler-native/
-    # build-compiler-napi/publish-compiler-napi list — depending on the
-    # workflow_call job waits for every job it contains, in both directions
-    # (build succeeds AND its publish succeeds) exactly as the explicit list
-    # did.
-    needs: [lockfile-integrity, platforms, build-wasm]
+    # `platforms` waits for both root native lanes before package publishing.
+    # The standalone aihu-compiler repository releases @aihu/compiler and its
+    # platform binaries independently.
+    needs: [lockfile-integrity, platforms]
     runs-on: ubuntu-22.04
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
@@ -383,8 +263,8 @@ jobs:
           auto-install: true
 
       - name: Install workspace
-        # NOT --frozen-lockfile, deliberately. This job `needs:` all four
-        # platform-publish jobs, so by the time it runs those platform versions
+        # NOT --frozen-lockfile, deliberately. This job `needs:` the root
+        # server/CSS platform-publish jobs, so by the time it runs those versions
         # exist on npm — versions that were UNRESOLVABLE when bun.lock was last
         # refreshed and are therefore absent from it. A frozen install resolves
         # them, wants to add them, and hard-fails. That is not hypothetical: it
@@ -402,11 +282,9 @@ jobs:
         run: bun install
 
       - name: Snapshot version (canary)
-        # Ephemeral 0.0.0-canary-<sha> versions, identical to the ones the
-        # publish-*-native jobs computed (deterministic {tag}-{commit} template
-        # from the same SHA). Re-run `bun install` afterwards so bun.lock
-        # matches the bumped versions before packing — publish-all.sh's
-        # workspace:* rewrite reads lock-resolved versions.
+        # Ephemeral 0.0.0-canary-<sha> versions for root JavaScript packages.
+        # Server/CSS native families keep their independently released stable
+        # pins; native canary publication is disabled in release-platforms.yml.
         if: github.event_name == 'workflow_dispatch' && inputs.canary
         env:
           HUSKY: '0'
@@ -416,32 +294,7 @@ jobs:
         run: |
           bun scripts/canary-catchall-changeset.ts
           bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot
           bun install
-
-      - name: Download compiler binaries
-        # The compiler's `build` job produced the freshly-built per-platform
-        # aihu-compile binaries as artifacts. Stage the host platform's binary
-        # so the `bun run build` step below (which compiles .aihu sources via
-        # the workspace `target/` dev fallback OR this staged bin) can exec it.
-        uses: actions/download-artifact@v8
-        with:
-          path: native-artifacts
-
-      - name: Stage compiler bin (linux-x64 host)
-        run: |
-          mkdir -p packages/compiler/bin
-          if [ -f native-artifacts/aihu-compile-linux-x64/aihu-compile-linux-x64 ]; then
-            cp native-artifacts/aihu-compile-linux-x64/aihu-compile-linux-x64 packages/compiler/bin/aihu-compile
-            chmod 0755 packages/compiler/bin/aihu-compile
-          fi
-          # This staged bin is ONLY for build-time compile steps in this job.
-          # It does NOT affect what gets packed: the published @aihu/compiler
-          # tarball's `bin` target is the committed ESM shim
-          # (bin/aihu-compile.mjs), and `files` lists only that .mjs — never the
-          # native binary. The per-platform native binaries are published
-          # separately by the publish-compiler-native job above and resolved at
-          # runtime via the @aihu/compiler-<platform> optionalDependencies.
 
       - name: Build all packages
         run: bun run build

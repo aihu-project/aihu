@@ -40,7 +40,7 @@ on:
   # The cli/create-aihu/templates trio was the original list, and it had a
   # structural blind spot: it names the packages that WRITE a scaffold and none
   # of the packages a scaffold DEPENDS ON. Three real defects shipped through
-  # that gap — un-stripped TypeScript on vite 8 (`packages/compiler`), a
+  # that gap — un-stripped TypeScript on vite 8, a
   # module-scope top-level await that deadlocked the built Worker
   # (`packages/app`), and an SSR response that was a bare fragment
   # (`packages/app` + `packages/server`). Every one of them is a first-run
@@ -58,7 +58,6 @@ on:
       # Packages a scaffolded app runs. A change here can break `bun run build`
       # in a fresh consumer tree while every in-repo test stays green, because
       # the repo's own node_modules layout is not the one a consumer installs.
-      - 'packages/compiler/**'
       - 'packages/app/**'
       - 'packages/router/**'
       - 'packages/server/**'

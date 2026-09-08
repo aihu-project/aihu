@@ -12,12 +12,9 @@
  *
  * The platform packages under `packages/<host>/{npm,npm-native}/<platform>/`
  * are NOT workspace members — the root `workspaces` glob is `packages/*`, which
- * does not match nested dirs — so changesets never versions them. Historically
- * they were bumped BY HAND: 23 files for a single compiler change (5 CLI
- * manifests + 5 napi manifests + 10 `optionalDependencies` pins + a
- * sync-readme regen). That toil was real, and it was mostly wasted: npm has
- * cli-family 0.1.45/46/47/50 while main reached 0.1.54, so 0.1.48/49/51/52/53
- * were each hand-edited across 11 files and never published.
+ * does not match nested dirs — so changesets never versions them. This script
+ * keeps the remaining server and CSS-engine platform manifests synchronized
+ * with their host versions and optional dependency pins during releases.
  *
  * ── MODES ────────────────────────────────────────────────────────────────────
  *
@@ -44,13 +41,11 @@ import { join } from 'node:path'
 const ROOT = process.env.PLATFORM_SYNC_ROOT ?? join(import.meta.dir, '..')
 
 /**
- * Each host maps to the platform-package dirs it owns. The compiler ships TWO
- * native surfaces — the CLI binary packages (`npm/`) and the napi addon
- * packages (`npm-native/`) — and both must ride the same version. Enumerated,
- * not globbed: a new native surface should be a deliberate edit here.
+ * Each remaining root-owned host maps to the platform-package dirs it owns.
+ * Enumerated, not globbed: a new native surface should be a deliberate edit
+ * here. Compiler platform packages are synchronized by aihu-compiler.
  */
 const HOSTS: Array<{ host: string; npmDirs: string[] }> = [
-  { host: 'compiler', npmDirs: ['npm', 'npm-native'] },
   { host: 'server', npmDirs: ['npm'] },
   { host: 'css-engine', npmDirs: ['npm'] },
 ]

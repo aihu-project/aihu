@@ -1,7 +1,7 @@
 /**
  * Test fixture for `scripts/check-server-binary-bump.ts`.
  *
- * See tests/check-native-changeset.test.ts for the fuller FEL-414
+ * See scripts/lib/native-binary-bump.ts for the shared FEL-414
  * background this class of guard exists to prevent. This package has only
  * one platform-binary family (the napi-rs SSR renderer addon).
  */
@@ -33,7 +33,7 @@ describe('server binary bump guard', () => {
     expect(isServerRustSource('packages/server/src-native/src/lib.rs')).toBe(true)
     expect(isServerRustSource('packages/server/src-native/Cargo.toml')).toBe(true)
     expect(isServerRustSource('packages/server/src/index.ts')).toBe(false)
-    expect(isServerRustSource('packages/compiler/src-native/src/lib.rs')).toBe(false)
+    expect(isServerRustSource('packages/runtime/src-native/src/lib.rs')).toBe(false)
   })
 
   it('recognizes platform manifests', () => {

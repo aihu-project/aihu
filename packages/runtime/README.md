@@ -82,7 +82,7 @@ bun add @aihu/runtime
 
 - [Phase 4 spec (runtime)](../../.team/phase-4/spec-runtime.md)
 - [@aihu/arbor](https://github.com/aihu-project/aihu-dom)
-- [@aihu/compiler](../compiler)
+- [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
 - [Aihu framework root](../../README.md)
 
 <sub><i>Auto-generated against `@aihu/runtime@6.1.0`.</i></sub>

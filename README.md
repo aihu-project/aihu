@@ -267,7 +267,7 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 - **Reactive runtime core (sized, ships to client):** [`@aihu/context`](./packages/context), [`@aihu/runtime`](./packages/runtime).
 - **Meta-framework — server, routing, data & adapters:** [`@aihu-plugin/data`](./packages/plugin-data), [`@aihu-plugin/drizzle`](./packages/plugin-drizzle), [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare), [`@aihu/adapter-vercel`](./packages/adapter-vercel), [`@aihu/app`](./packages/app), [`@aihu/auth`](./packages/auth), [`@aihu/magna`](./packages/magna), [`@aihu/router`](./packages/router), [`@aihu/scraping`](./packages/scraping), [`@aihu/server`](./packages/server).
 - **Agent surface (built in, governed):** [`@aihu-plugin/agent-readiness`](./packages/plugin-agent-readiness), [`@aihu/agent`](./packages/agent), [`@aihu/agent-a2a`](./packages/agent-a2a), [`@aihu/agent-acp`](./packages/agent-acp), [`@aihu/agent-server`](./packages/agent-server), [`@aihu/agent-service`](./packages/agent-service), [`@aihu/ai`](./packages/ai), [`@aihu/mcp`](./packages/mcp), [`@aihu/seo`](./packages/seo).
-- **Compiler & toolchain (build-time):** [`@aihu/cli`](./packages/cli), [`@aihu/compiler`](./packages/compiler), [`@aihu/css-engine`](./packages/css-engine), [`@aihu/language-server`](./packages/language-server), [`@aihu/tsc`](./packages/tsc), [`create-aihu`](./packages/create-aihu).
+- **Compiler & toolchain (build-time):** [`@aihu/cli`](./packages/cli), [`@aihu/css-engine`](./packages/css-engine), [`@aihu/language-server`](./packages/language-server), [`@aihu/tsc`](./packages/tsc), [`create-aihu`](./packages/create-aihu).
 - **Plugin substrate, editor & templates:** [`@aihu/plugin`](./packages/plugin), [`@aihu/templates-cf-team`](./packages/templates/cf-team), [`vscode-aihu`](./packages/vscode-aihu).
 - **UI, styling & content rendering:** [`@aihu-plugin/kindly-note`](./packages/plugin-kindly-note), [`@aihu/primitives`](./packages/primitives), [`@aihu/ui`](./packages/ui).
 - **State & rich-content capabilities:** [`@aihu/editor`](./packages/editor), [`@aihu/store`](./packages/store), [`@aihu/use`](./packages/use).
@@ -299,12 +299,6 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/app`](./packages/app) | `10.0.0` | Top-level app integration — wires runtime, router, and adapters into a Vite app. |
 | [`@aihu/auth`](./packages/auth) | `6.0.0` | JWT scope checks, ScopeSignal, and server middleware for aihu auth. |
 | [`@aihu/cli`](./packages/cli) | `1.3.0` | Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands. |
-| [`@aihu/compiler`](./packages/compiler) | `1.3.0` | Single File Component (.aihu) compiler — Rust binary + JS glue. |
-| [`@aihu/compiler-native-darwin-arm64`](./packages/compiler/npm-native/darwin-arm64) | `1.3.0` | aihu compiler native addon (napi) — darwin-arm64 platform binary. |
-| [`@aihu/compiler-native-darwin-x64`](./packages/compiler/npm-native/darwin-x64) | `1.3.0` | aihu compiler native addon (napi) — darwin-x64 platform binary. |
-| [`@aihu/compiler-native-linux-arm64-gnu`](./packages/compiler/npm-native/linux-arm64-gnu) | `1.3.0` | aihu compiler native addon (napi) — linux-arm64-gnu platform binary. |
-| [`@aihu/compiler-native-linux-x64-gnu`](./packages/compiler/npm-native/linux-x64-gnu) | `1.3.0` | aihu compiler native addon (napi) — linux-x64-gnu platform binary. |
-| [`@aihu/compiler-native-win32-x64-msvc`](./packages/compiler/npm-native/win32-x64-msvc) | `1.3.0` | aihu compiler native addon (napi) — win32-x64-msvc platform binary. |
 | [`@aihu/context`](./packages/context) | `0.2.0` | Async-context-friendly request/SSR context primitives for aihu. |
 | [`@aihu/css-engine`](./packages/css-engine) | `0.6.1` | aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output. |
 | [`@aihu/data`](./packages/_moved/data) | `2.0.5` | [MOVED] This package has moved to @aihu-plugin/data. |

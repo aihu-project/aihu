@@ -392,8 +392,8 @@ function discoverPackages(): PkgInfo[] {
         rel.includes('/dist/') ||
         rel.includes('/fixtures/') ||
         rel.includes('/legacy-snapshot.golden/') ||
-        // wasm-pack build output (gitignored): scripts/build-wasm-bundle.ts
-        // generates pkg-wasm/package.json locally; it is a build artifact,
+        // wasm-pack build output (gitignored) generates pkg-wasm/package.json
+        // locally; it is a build artifact,
         // not a workspace package, and CI (no local wasm build) would flag
         // any README/inventory row derived from it as drift (#491).
         rel.includes('/pkg-wasm/')
@@ -497,7 +497,7 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
     seeAlso: [
       { label: 'Phase 4 spec (runtime)', href: '../../.team/phase-4/spec-runtime.md' },
       { label: '@aihu/arbor', href: 'https://github.com/aihu-project/aihu-dom' },
-      { label: '@aihu/compiler', href: '../compiler' },
+      { label: '@aihu/compiler', href: 'https://github.com/aihu-project/aihu-compiler' },
     ],
   },
   '@aihu/context': {
@@ -656,7 +656,7 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
     label: 'Toolchain — `aihu` / `create-aihu` CLI',
     seeAlso: [
       { label: 'docs/cli.md', href: '../../docs/cli.md' },
-      { label: '@aihu/compiler', href: '../compiler' },
+      { label: '@aihu/compiler', href: 'https://github.com/aihu-project/aihu-compiler' },
     ],
   },
   'create-aihu': {
@@ -675,7 +675,7 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
         label: 'CSS Engine + Primitives design spec',
         href: '../../docs/superpowers/specs/2026-05-10-aihu-css-engine-and-primitives-design.md',
       },
-      { label: '@aihu/compiler', href: '../compiler' },
+      { label: '@aihu/compiler', href: 'https://github.com/aihu-project/aihu-compiler' },
     ],
   },
   // Tier E — held private
@@ -763,7 +763,7 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
     tier: 'D',
     label: 'Toolchain — `aihu-tsc` type-checker for .aihu Single-File Components',
     seeAlso: [
-      { label: '@aihu/compiler', href: '../compiler' },
+      { label: '@aihu/compiler', href: 'https://github.com/aihu-project/aihu-compiler' },
       { label: '@aihu/language-server', href: '../language-server' },
     ],
   },
@@ -772,7 +772,7 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
     label: 'Toolchain — cross-editor Language Server for .aihu SFCs',
     seeAlso: [
       { label: '@aihu/tsc', href: '../tsc' },
-      { label: '@aihu/compiler', href: '../compiler' },
+      { label: '@aihu/compiler', href: 'https://github.com/aihu-project/aihu-compiler' },
       { label: 'vscode-aihu', href: '../vscode-aihu' },
     ],
   },

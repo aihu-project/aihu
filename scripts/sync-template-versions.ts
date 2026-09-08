@@ -32,10 +32,10 @@
  *
  * ## Why the version can lead the registry, and why that is correct
  *
- * Run on this repo today, `@aihu/compiler` is `1.2.2` in-tree and `1.2.0` on
- * npm, so the emitted `^1.2.2` is momentarily unsatisfiable. That is not a
- * defect of this script — it is the release pipeline's normal state, the same
- * one `check-pins-published.ts` documents for platform binaries. The templates
+ * Run on this repo today, the standalone `@aihu/compiler` release may lead the
+ * npm registry briefly, so its emitted range can be momentarily unsatisfiable.
+ * That is not a defect of this script — it is the release pipeline's normal
+ * state, the same one `check-pins-published.ts` documents for platform binaries. The templates
  * that carry these ranges ship INSIDE `@aihu/cli` / `@aihu/templates-*`, which
  * are published by the very release that publishes the versions named here
  * (`release.yml` orders the publishes). A user only ever runs a *published*
@@ -107,7 +107,12 @@ const THIRD_PARTY_RANGES: Readonly<Record<string, string>> = {
  * their ranges from the root manifest so the scaffold stays aligned with the
  * consumer graph without pretending they are local workspaces.
  */
-const EXTERNAL_AIHU_PACKAGES = ['@aihu/arbor', '@aihu/reactive', '@aihu/signals'] as const
+const EXTERNAL_AIHU_PACKAGES = [
+  '@aihu/arbor',
+  '@aihu/compiler',
+  '@aihu/reactive',
+  '@aihu/signals',
+] as const
 
 function externalAihuRanges(): Record<string, string> {
   const rootManifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as {

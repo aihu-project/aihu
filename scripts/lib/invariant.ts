@@ -170,8 +170,8 @@ export const AGENT_SURFACE_GLOBS: readonly string[] = [
  *
  * - `packages/primitives/**` — its "kept in sync" comments are about DOM /
  *   attribute reflection and CSS state hooks, not the agent surface.
- * - `packages/compiler/**` — ~20 "mirrors" comments are internal codegen
- *   invariants and Rust↔Rust parity notes.
+ * - standalone compiler artifacts — codegen invariants are owned and tested in
+ *   the aihu-compiler repository, not this package graph.
  * - `dist/**`, tests — build output and fixtures are not source of truth.
  *   Direct counter to "the test supplies the thing that does not exist."
  */

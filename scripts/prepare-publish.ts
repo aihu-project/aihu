@@ -31,7 +31,7 @@ const TIER_A = ['signals', 'arbor', 'runtime', 'context', 'data']
 // at runtime. A held plugin would break consumer install of server.
 const TIER_B = ['router', 'server', 'app', 'adapter-cloudflare', 'adapter-vercel', 'plugin']
 const TIER_C = ['agent', 'agent-service', 'agent-readiness', 'agent-a2a', 'agent-acp']
-const TIER_D = ['compiler', 'cli']
+const TIER_D = ['cli']
 const PUBLISH = new Set([...TIER_A, ...TIER_B, ...TIER_C, ...TIER_D])
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -52,7 +52,6 @@ const DESCRIPTIONS: Record<string, string> = {
   'agent-a2a':
     'A2A (Agent2Agent) protocol bindings (spec v1.0.1, JSON-RPC) for @aihu/agent-service.',
   'agent-acp': 'DEPRECATED — use @aihu/agent-a2a (ACP merged into A2A, Aug 2025).',
-  compiler: 'Single File Component (.aihu) compiler — Rust binary + JS glue.',
   cli: 'Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.',
   plugin: 'Plugin substrate shared by @aihu/server and the meta-framework — runtime hook surface.',
 }
@@ -135,8 +134,7 @@ function ensurePackage(dir: string): { changed: boolean; readmeMissing: boolean 
     changed = true
   }
 
-  // 10. files — ensure dist, README.md, LICENSE present (preserve compiler's
-  //     extra entries like js/postinstall.ts, bin)
+  // 10. files — ensure dist, README.md, and LICENSE are included
   const filesSet = new Set(pkg.files ?? ['dist'])
   for (const f of ['dist', 'README.md', 'LICENSE']) filesSet.add(f)
   pkg.files = [...filesSet]

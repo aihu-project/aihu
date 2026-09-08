@@ -13,10 +13,9 @@
  *   - the COMPILED CENSUS row of the governed conformance fixture —
  *     `bench/compiler-conformance/route/04-governed-data.route.json`, read
  *     verbatim (pattern, `extract`, `data`). The census is byte-pinned to the
- *     compiler by the Rust golden suite (`packages/compiler/tests/gx_data.rs`
- *     asserts `emit()` output equals this file), so probing the committed
- *     artifact IS probing the compiler's fan-out without requiring the Rust
- *     binary on a plain checkout.
+ *     standalone compiler's release tests, so probing the committed artifact
+ *     is probing the compiler's fan-out without requiring compiler source in
+ *     this checkout.
  *   - a route MODULE mirroring the compiled server artifact's semantic shape:
  *     `default` is a component factory accepting `{ route: { params, data } }`
  *     (the P4 integration seam), with the entitled-only `senses` content

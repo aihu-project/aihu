@@ -17,25 +17,13 @@ const SCOPES = ['examples', 'cookbook', 'bench', 'apps', 'packages', 'tests']
 /** Declared-legacy paths: allowed to contain old forms (they test them). */
 const EXCLUDES = [
   'bench/compiler-conformance/v1-rejections/',
-  'packages/compiler/tests/codemods/',
-  'packages/compiler/js/codemods/',
   'packages/cli/tests/migrate.test.ts',
   'packages/cli/src/commands/migrate.ts',
-  'packages/compiler/tests/v1_rejections.rs',
-  // The @template extractor keeps skipping retired block tails so C601/C602
-  // can be reported precisely; these tests exercise exactly that.
-  'packages/compiler/tests/template_parse.rs',
-  // Retirement-diagnostic sources/tests name the old forms in messages.
-  'packages/compiler/src/',
   // Guide prose documents the retired forms in its from-columns.
   'apps/docs/src/data/guide-migration.ts',
   'apps/docs/src/data/guide-routing-layouts.ts',
-  // The playground's compiler WASM is a BUILD ARTIFACT (staged by prebuild
-  // from packages/compiler). The retired spellings inside it are the
-  // compiler's own C60x diagnostic strings — the same reason
-  // `packages/compiler/src/` and the `aihu-compile` binary are excluded
-  // above. Before the docs cutover this file lived outside the scanned tree;
-  // it is inside `apps/` now, so it needs the exclusion its source already has.
+  // The playground's compiler WASM is a BUILD ARTIFACT. Retired spellings
+  // inside it are diagnostic strings from the published compiler package.
   'apps/docs/public/wasm/',
   // AI-guidance files name the wrong forms explicitly (recognize-and-avoid).
   'AGENTS.md',

@@ -2,7 +2,7 @@
  * Regression suite for a CodeQL js/polynomial-redos alert surfaced against
  * `applyHeadToHtml` (`packages/app/src/head-apply.ts`) during a full-diff
  * release review — not part of the earlier ReDoS hardening pass in this same
- * effort, which touched `packages/compiler/js/index.ts` and
+ * effort, which touched the standalone compiler plugin and
  * `packages/router/src/{server,vite-plugin}.ts` but never this file.
  *
  * Two things matter, same as the compiler/router passes:

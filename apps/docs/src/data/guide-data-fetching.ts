@@ -10,7 +10,7 @@
  * 1. The `resource()` 3-state shape. The old doc (and, it turns out,
  *    guide-authoring-components.ts's own resource() section) describes
  *    `{ pending, value, error }`. The actual sidecar type and runtime
- *    (packages/compiler/src/codegen/sidecar_ts.rs, packages/runtime/src/
+ *    (the standalone compiler sidecar emitter, packages/runtime/src/
  *    resource.ts) are `{ loading, data, error, refetch() }`. Documented
  *    correctly here; the authoring-components mismatch is a pre-existing
  *    issue in already-shipped content, out of scope for this port.

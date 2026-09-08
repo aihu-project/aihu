@@ -1,9 +1,0 @@
----
-source: tests/signal_resolve.rs
-expression: "resolve_signals(\"const [count, setCount] = signal(0)\")"
----
-SignalMap(
-    {
-        "count": "setCount",
-    },
-)

@@ -2,7 +2,7 @@
  * `@aihu/agent-server` — opaque action ID (T1 ↔ T2 reconciliation).
  *
  * Mirrors the compiler's `opaque_member_id` in
- * `packages/compiler/src/codegen/emit.rs`: FNV-1a-64 over `"<tag>:<member>"`,
+ * the standalone compiler emitter: FNV-1a-64 over `"<tag>:<member>"`,
  * rendered as `a_` + a 16-char zero-padded lowercase hex string.
  *
  * This MUST stay byte-identical to the Rust emit. The server forwards this id

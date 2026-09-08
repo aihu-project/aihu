@@ -52,6 +52,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
+import { pairedDeclarationTarget } from './gen-api-targets.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url)) // apps/docs/scripts
 const APP = resolve(HERE, '..') // apps/docs
@@ -90,7 +91,24 @@ function documentable(): InvEntry[] {
       d.includes('/templates/')
     )
   }
-  return all.filter((e) => !excluded(e)).sort((a, b) => a.name.localeCompare(b.name))
+  const result = all.filter((e) => !excluded(e))
+  // The compiler is deliberately owned by the standalone aihu-compiler
+  // repository. Keep its API page in the root docs by extracting the locked
+  // published package from node_modules, rather than reaching into deleted
+  // compiler source.
+  const compilerManifest = join(REPO, 'node_modules/@aihu/compiler/package.json')
+  if (existsSync(compilerManifest) && !result.some((e) => e.name === '@aihu/compiler')) {
+    const manifest = JSON.parse(readFileSync(compilerManifest, 'utf8')) as {
+      name: string
+      version: string
+    }
+    result.push({
+      name: manifest.name,
+      version: manifest.version,
+      dir: 'node_modules/@aihu/compiler',
+    })
+  }
+  return result.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /** '@aihu/signals' → 'signals'; '@aihu-plugin/data' → 'plugin-data'; 'create-aihu' → 'create-aihu'. */
@@ -440,6 +458,11 @@ function entryFiles(dir: string): string[] {
   const files: string[] = []
   for (const t of targets) {
     if (!/\.(ts|js)$/.test(t)) continue
+    // When a package exports both a typed declaration and its runtime JS,
+    // parse the declaration only. The JS file is often minified and would
+    // overwrite the typed signature and JSDoc collected from the .d.ts.
+    const declarationTarget = pairedDeclarationTarget(t, targets)
+    if (declarationTarget && existsSync(resolve(dir, declarationTarget))) continue
     const srcFile = t
       .replace('/dist/', '/src/')
       .replace(/\.d\.ts$/, '.ts')

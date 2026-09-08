@@ -18,7 +18,7 @@
  *     status note is dropped; the binary ships.
  *
  * Verified against packages/css-engine/crates/aihu-css-core/src/light_scope.rs
- * and packages/compiler/js/index.ts (the shadowMode precedence chain).
+ * and the standalone compiler plugin (the shadowMode precedence chain).
  */
 export const STYLING = `# Styling
 

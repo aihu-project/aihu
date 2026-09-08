@@ -43,7 +43,6 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 #     listed AFTER their new-home counterparts so the dep ref resolves at
 #     publish time.
 PKGS=(
-  "compiler"           # compiler releases before every package that imports it.
   "use"                # @aihu/use — SSR-safe composables; peer-deps @aihu/signals
   "runtime"
   "agent"
@@ -72,11 +71,11 @@ PKGS=(
                        # can now dev/build/typecheck across all 4 package managers).
                        # Unset `private` alongside restoring this entry — see
                        # docs/lessons for the removal history.
-  "css-engine"        # build-time CSS engine; depends on @aihu/compiler (must follow it)
+  "css-engine"        # build-time CSS engine; consumes the published compiler
   "primitives"        # headless UI primitives; depends on css-engine + signals + arbor (must follow them)
   "ui"                # @aihu/ui styled-recipe registry; aihu add resolves it from npm (must follow primitives)
-  "language-server"   # @aihu/language-server LSP; depends on @aihu/compiler (must follow it)
-  "tsc"               # @aihu/tsc — `aihu-tsc`; depends on @aihu/compiler (must follow it).
+  "language-server"   # @aihu/language-server LSP; consumes the published compiler
+  "tsc"               # @aihu/tsc — `aihu-tsc`; consumes the published compiler
   "plugin-drizzle"    # @aihu-plugin/drizzle; depends on @aihu/server + @aihu-plugin/data (must follow them)
   "plugin-kindly-note" # @aihu-plugin/kindly-note; depends on @aihu/signals (must follow it)
   "editor"             # @aihu/editor — depends on @aihu/signals only (must follow it). Public +

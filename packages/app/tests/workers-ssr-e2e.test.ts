@@ -20,7 +20,7 @@
  *
  * ## Why a subprocess
  *
- * Same reason as `packages/compiler/tests/vite-build-utility-css.e2e.test.ts`:
+ * Same reason as the standalone compiler's vite utility-CSS e2e test:
  * vitest's runtime intercepts `await import('vite')` in a way that breaks the
  * compiler plugin's TS-strip. A spawned `vite build` is the exact execution
  * context a consumer's `bun run build` has, which is the contract under test.
@@ -41,7 +41,8 @@
  * feature." Every prerequisite below is either satisfied or a red bar. In
  * particular the package `dist/`s are REBUILT rather than assumed: `@aihu/app`,
  * `@aihu/router` and `@aihu/adapter-cloudflare` are consumed through their
- * `exports` (i.e. `dist/`), the repo's own CI runs `bun run test` BEFORE
+ * `exports` (i.e. `dist/`); the standalone `@aihu/compiler` is consumed from
+ * its published artifact. The repo's own CI runs `bun run test` BEFORE
  * `bun run build`, and `packages/router/dist/plugin.js` has previously shipped
  * without an export its `src` had. A stale dist would make this file validate
  * the last release instead of this change.
@@ -65,7 +66,7 @@ const FIXTURE = resolve(__dirname, 'fixtures/workers-ssr')
  * whether THAT module can be imported without a DOM. A stale
  * `packages/primitives/dist/` would test the last release's answer.
  */
-const REBUILD = ['compiler', 'router', 'server', 'app', 'adapter-cloudflare', 'primitives'] as const
+const REBUILD = ['router', 'server', 'app', 'adapter-cloudflare', 'primitives'] as const
 
 type Variant = 'main' | 'control' | 'outlet' | 'poison'
 
@@ -558,8 +559,8 @@ describe('output: ssr produces a deployable, rendering Worker', () => {
     //      does — the WHOLE request threw. Hence `status === 200` below: it is
     //      the assertion, not a formality.
     //
-    //   2. `@aihu/compiler`. `$extends` was also excluded from the options-form
-    //      SSR-entry gate, so even with an import-safe base the module emitted
+    //   2. The published `@aihu/compiler` output. `$extends` was also excluded
+    //      from the options-form SSR-entry gate, so even with an import-safe base the module emitted
     //      a bare, ungated `defineElement(...)` at module scope
     //      (`ReferenceError: customElements is not defined`) and exported no
     //      `__ssr` at all. Each fix alone still fails — verified by reverting

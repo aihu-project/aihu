@@ -8,7 +8,7 @@
  * `expose` (`'read'` / `'read write'`), matching
  * apps/docs/src/data/guide-authoring-components.ts and
  * guide-agent-discovery.ts, and confirmed against
- * packages/compiler/src/parser/state_wrappers.rs and the
+ * the standalone compiler state-wrapper parser and the
  * weather-new.aihu/counter-new.aihu state-model fixtures.
  *
  * Additional corrections, each confirmed directly against source before
@@ -21,7 +21,7 @@
  * - `@aihu/agent-acp`'s old doc said "frozen at 0.1.x"; the shipped package
  *   is 0.2.0 (still deprecated, same two routes, no new features) — fixed.
  * - The `<tag>.agent-manifest.json` sidecar filename in the old doc is
- *   still exactly correct (packages/compiler/src/bin/main.rs,
+ *   still exactly correct (the standalone compiler binary,
  *   packages/plugin-agent-readiness/src/agent-manifest-sidecar.ts) — no
  *   change needed there, despite guide-agent-discovery.ts elsewhere calling
  *   the sidecar `.mcp.json` (that's a pre-existing inaccuracy in already-
