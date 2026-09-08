@@ -19,7 +19,7 @@
         "@aihu/agent-service": "workspace:*",
         "@aihu/app": "workspace:*",
         "@aihu/arbor": "^4.1.2",
-        "@aihu/compiler": "^1.3.3",
+        "@aihu/compiler": "^1.3.4",
         "@aihu/context": "workspace:*",
         "@aihu/plugin": "workspace:*",
         "@aihu/router": "workspace:*",
@@ -46,16 +46,16 @@
         "vitest": "^3.2.6",
       },
       "optionalDependencies": {
-        "@aihu/compiler-darwin-arm64": "1.3.3",
-        "@aihu/compiler-darwin-x64": "1.3.3",
-        "@aihu/compiler-linux-arm64-gnu": "1.3.3",
-        "@aihu/compiler-linux-x64-gnu": "1.3.3",
-        "@aihu/compiler-native-darwin-arm64": "1.3.3",
-        "@aihu/compiler-native-darwin-x64": "1.3.3",
-        "@aihu/compiler-native-linux-arm64-gnu": "1.3.3",
-        "@aihu/compiler-native-linux-x64-gnu": "1.3.3",
-        "@aihu/compiler-native-win32-x64-msvc": "1.3.3",
-        "@aihu/compiler-win32-x64-msvc": "1.3.3",
+        "@aihu/compiler-darwin-arm64": "1.3.4",
+        "@aihu/compiler-darwin-x64": "1.3.4",
+        "@aihu/compiler-linux-arm64-gnu": "1.3.4",
+        "@aihu/compiler-linux-x64-gnu": "1.3.4",
+        "@aihu/compiler-native-darwin-arm64": "1.3.4",
+        "@aihu/compiler-native-darwin-x64": "1.3.4",
+        "@aihu/compiler-native-linux-arm64-gnu": "1.3.4",
+        "@aihu/compiler-native-linux-x64-gnu": "1.3.4",
+        "@aihu/compiler-native-win32-x64-msvc": "1.3.4",
+        "@aihu/compiler-win32-x64-msvc": "1.3.4",
       },
     },
     "apps/docs": {
@@ -968,29 +968,29 @@
 
     "@aihu/cli": ["@aihu/cli@workspace:packages/cli"],
 
-    "@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+    "@aihu/compiler": ["@aihu/compiler@1.3.4", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.4", "@aihu/compiler-darwin-x64": "1.3.4", "@aihu/compiler-linux-arm64-gnu": "1.3.4", "@aihu/compiler-linux-x64-gnu": "1.3.4", "@aihu/compiler-native-darwin-arm64": "1.3.4", "@aihu/compiler-native-darwin-x64": "1.3.4", "@aihu/compiler-native-linux-arm64-gnu": "1.3.4", "@aihu/compiler-native-linux-x64-gnu": "1.3.4", "@aihu/compiler-native-win32-x64-msvc": "1.3.4", "@aihu/compiler-win32-x64-msvc": "1.3.4" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-WEo9uWgyEkW7d7C3ti3ZwCjNzV1mDmXVP9kzXZkDz7OwGplnR8mq7TnDU/8wkEI+6aAq3ydQNG5EP70XOZU42w=="],
 
-    "@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+    "@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-H7pM2ARtHNyE1/pYgS6Oa/oKZ5tL034qi2s94d5BEMGOpcOS0prG3PtDVLndOjMgsOgTesIBsvhcq/YDhulJNA=="],
 
-    "@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+    "@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.4", "", { "os": "darwin", "cpu": "x64" }, "sha512-Q7OrPBJ7qvt8j5IuINiUyJAEJ6ksimmnz0FaRhfwTYzLHbx/YIbCVIdm3Q3R8pvJvvK+p7laui+HmaDla2/UNA=="],
 
-    "@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+    "@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.4", "", { "os": "linux", "cpu": "arm64" }, "sha512-D1S3QI2v6SuyXqs1f9pnJK+fWEqZ1mir2KGU2aSerxfh5yPJzbI9M7tb1ZE/qfEvjncLA/S4yhUsKoonRELb3g=="],
 
-    "@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+    "@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.4", "", { "os": "linux", "cpu": "x64" }, "sha512-lSmk+th54V8M709q0Op3BqkwJbS9xstmW2ZSseEnFjeicwC5PmRJBdDTE6EzvszFh+eOnLV7RyZw8toZKeZNEQ=="],
 
-    "@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+    "@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-E1BfvCXPGlC4ebcxJh56saDfo+jnE6F6K1L3MZ41ENaQKexJyuz0pJpstPuimA7lC34sCuWX4VcTKpaQ9y4lMQ=="],
 
-    "@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+    "@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.4", "", { "os": "darwin", "cpu": "x64" }, "sha512-tsVZoXcnwRnQ149kRYL7sgh+krcWyp8ovk/UgMMB5SwtjETrr9q9PacyFlRVjMgLQf1litjTXYRVjcPM92f0Vw=="],
 
-    "@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+    "@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.4", "", { "os": "linux", "cpu": "arm64" }, "sha512-B7lHprmZGAmgIQ5fMUFhoUy2HF+Q8aWBk4pQkxKvHzbVipUTzRjSX2BHQ5mAxH4geRVaFa16rYLn/4e3yAPP8Q=="],
 
-    "@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+    "@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.4", "", { "os": "linux", "cpu": "x64" }, "sha512-OVYKybuj6umNofn2l+6E61DhWhK1SDIgJgOG1sTErurDja3l1lLL1xmiiczmQW/2dwa7Kc0aO9DXfsednhrD3Q=="],
 
-    "@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+    "@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.4", "", { "os": "win32", "cpu": "x64" }, "sha512-vftKDUgYSyAcFbDOt84F3GSQJHEGS1WVy5otiG0aPtYUS6TD1TeM9Ao72m7euCt4/qPQppNe0oxalqzLBOtn+A=="],
 
     "@aihu/compiler-wasm": ["@aihu/compiler-wasm@1.3.3", "", {}, "sha512-ip25EgM7o8/dTaLnG3vVKMrD717ER8WmAJQhtEq/zrJfhCMW/W2Q8j0M5TdrGBdjy8YKWN9s/mSKT1npoTYuqw=="],
 
-    "@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+    "@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.4", "", { "os": "win32", "cpu": "x64" }, "sha512-jV9B53N9va9QMunDJXYZgppYANc5tpx7qweVsa46i3mBZ0U53J2PWjchUHGe71TZ8TBdedHI/QRDMisl6R68XQ=="],
 
     "@aihu/context": ["@aihu/context@workspace:packages/context"],
 
@@ -3692,29 +3692,83 @@
 
     "zod-to-json-schema": ["zod-to-json-schema@3.25.2", "", { "peerDependencies": { "zod": "^3.25.28 || ^4" } }, "sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA=="],
 
+    "@aihu/app/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/cookbook/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/css-engine/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/editor/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/example-agent-driven-demo/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
+    "@aihu/example-agent-durable-room/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/example-agent-durable-room/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
 
     "@aihu/example-agent-hub/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
     "@aihu/example-blog-loader/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
+    "@aihu/example-blog-router/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/example-blog-router/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
 
     "@aihu/example-cf-adapter/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
+    "@aihu/example-color-theme/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/example-css-engine-utility/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
 
     "@aihu/example-hacker-news/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
+    "@aihu/example-layouts/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/example-layouts/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
+
+    "@aihu/example-live-counter/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
 
     "@aihu/example-plugin-demo/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
+    "@aihu/example-primitives-showcase/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-storefront/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/example-storefront/vite": ["vite@6.4.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.4.4", "picomatch": "^4.0.2", "postcss": "^8.5.3", "rollup": "^4.34.9", "tinyglobby": "^0.2.13" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0", "jiti": ">=1.21.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A=="],
 
+    "@aihu/example-temperature-converter/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-timer/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/example-weather-card/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/language-server/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "@aihu/magna/rolldown": ["rolldown@1.0.3", "", { "dependencies": { "@oxc-project/types": "=0.133.0", "@rolldown/pluginutils": "^1.0.0" }, "optionalDependencies": { "@rolldown/binding-android-arm64": "1.0.3", "@rolldown/binding-darwin-arm64": "1.0.3", "@rolldown/binding-darwin-x64": "1.0.3", "@rolldown/binding-freebsd-x64": "1.0.3", "@rolldown/binding-linux-arm-gnueabihf": "1.0.3", "@rolldown/binding-linux-arm64-gnu": "1.0.3", "@rolldown/binding-linux-arm64-musl": "1.0.3", "@rolldown/binding-linux-ppc64-gnu": "1.0.3", "@rolldown/binding-linux-s390x-gnu": "1.0.3", "@rolldown/binding-linux-x64-gnu": "1.0.3", "@rolldown/binding-linux-x64-musl": "1.0.3", "@rolldown/binding-openharmony-arm64": "1.0.3", "@rolldown/binding-wasm32-wasi": "1.0.3", "@rolldown/binding-win32-arm64-msvc": "1.0.3", "@rolldown/binding-win32-x64-msvc": "1.0.3" }, "bin": { "rolldown": "./bin/cli.mjs" } }, "sha512-i00lAJ2ks1BYr7rjNjKC7BcqAS7nVfiT3QX1SI5aY+AFHblCmaUf9OE9dbdzDvW6dJxbi2ZCZiy9v3CcwOiX3g=="],
+
+    "@aihu/mcp/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "@aihu/tsc/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
 
     "@asamuzakjp/css-color/lru-cache": ["lru-cache@10.4.3", "", {}, "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="],
 
@@ -3846,7 +3900,13 @@
 
     "accepts/mime-types": ["mime-types@3.0.2", "", { "dependencies": { "mime-db": "^1.54.0" } }, "sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A=="],
 
+    "aihu-docs/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
     "aihu-docs/rolldown": ["rolldown@1.0.3", "", { "dependencies": { "@oxc-project/types": "=0.133.0", "@rolldown/pluginutils": "^1.0.0" }, "optionalDependencies": { "@rolldown/binding-android-arm64": "1.0.3", "@rolldown/binding-darwin-arm64": "1.0.3", "@rolldown/binding-darwin-x64": "1.0.3", "@rolldown/binding-freebsd-x64": "1.0.3", "@rolldown/binding-linux-arm-gnueabihf": "1.0.3", "@rolldown/binding-linux-arm64-gnu": "1.0.3", "@rolldown/binding-linux-arm64-musl": "1.0.3", "@rolldown/binding-linux-ppc64-gnu": "1.0.3", "@rolldown/binding-linux-s390x-gnu": "1.0.3", "@rolldown/binding-linux-x64-gnu": "1.0.3", "@rolldown/binding-linux-x64-musl": "1.0.3", "@rolldown/binding-openharmony-arm64": "1.0.3", "@rolldown/binding-wasm32-wasi": "1.0.3", "@rolldown/binding-win32-arm64-msvc": "1.0.3", "@rolldown/binding-win32-x64-msvc": "1.0.3" }, "bin": { "rolldown": "./bin/cli.mjs" } }, "sha512-i00lAJ2ks1BYr7rjNjKC7BcqAS7nVfiT3QX1SI5aY+AFHblCmaUf9OE9dbdzDvW6dJxbi2ZCZiy9v3CcwOiX3g=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
+
+    "aihu-storybook/@aihu/compiler": ["@aihu/compiler@1.3.3", "", { "optionalDependencies": { "@aihu/compiler-darwin-arm64": "1.3.3", "@aihu/compiler-darwin-x64": "1.3.3", "@aihu/compiler-linux-arm64-gnu": "1.3.3", "@aihu/compiler-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-darwin-arm64": "1.3.3", "@aihu/compiler-native-darwin-x64": "1.3.3", "@aihu/compiler-native-linux-arm64-gnu": "1.3.3", "@aihu/compiler-native-linux-x64-gnu": "1.3.3", "@aihu/compiler-native-win32-x64-msvc": "1.3.3", "@aihu/compiler-win32-x64-msvc": "1.3.3" }, "peerDependencies": { "@aihu/css-engine": ">=0.6.1", "vite": ">=5.0.0" }, "optionalPeers": ["@aihu/css-engine", "vite"], "bin": { "aihu-compile": "bin/aihu-compile.mjs" } }, "sha512-zSDTOEAjjKu4I+e93zLtVBfzjSLDGkXi7xoY/0cIQmuhRKzj/fC6TLO3crO7u3tW5ymPmNr2oUzZL0OMKSU+nQ=="],
 
     "anymatch/picomatch": ["picomatch@2.3.2", "", {}, "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="],
 
@@ -4112,17 +4172,157 @@
 
     "youch/cookie": ["cookie@1.1.1", "", {}, "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ=="],
 
+    "@aihu/app/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/app/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/cookbook/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/css-engine/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/editor/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-agent-driven-demo/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "@aihu/example-agent-driven-demo/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "@aihu/example-agent-driven-demo/vite/postcss": ["postcss@8.5.14", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg=="],
 
     "@aihu/example-agent-driven-demo/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
 
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-agent-durable-room/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "@aihu/example-agent-durable-room/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "@aihu/example-agent-durable-room/vite/postcss": ["postcss@8.5.14", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg=="],
 
     "@aihu/example-agent-durable-room/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-agent-hub/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "@aihu/example-agent-hub/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
@@ -4136,11 +4336,51 @@
 
     "@aihu/example-blog-loader/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
 
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-blog-router/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "@aihu/example-blog-router/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "@aihu/example-blog-router/vite/postcss": ["postcss@8.5.14", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg=="],
 
     "@aihu/example-blog-router/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-cf-adapter/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "@aihu/example-cf-adapter/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
@@ -4148,11 +4388,111 @@
 
     "@aihu/example-cf-adapter/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
 
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-color-theme/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-css-engine-demo/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-css-engine-utility/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "@aihu/example-css-engine-utility/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "@aihu/example-css-engine-utility/vite/postcss": ["postcss@8.5.14", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg=="],
 
     "@aihu/example-css-engine-utility/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-currency-converter/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-hacker-news/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "@aihu/example-hacker-news/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
@@ -4160,11 +4500,51 @@
 
     "@aihu/example-hacker-news/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
 
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-layouts/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "@aihu/example-layouts/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "@aihu/example-layouts/vite/postcss": ["postcss@8.5.14", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg=="],
 
     "@aihu/example-layouts/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-live-counter/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "@aihu/example-plugin-demo/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
@@ -4172,11 +4552,191 @@
 
     "@aihu/example-plugin-demo/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
 
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-primitives-showcase/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-realtime-scores/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-ssg-site/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-storefront/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "@aihu/example-storefront/vite/esbuild": ["esbuild@0.25.12", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.25.12", "@esbuild/android-arm": "0.25.12", "@esbuild/android-arm64": "0.25.12", "@esbuild/android-x64": "0.25.12", "@esbuild/darwin-arm64": "0.25.12", "@esbuild/darwin-x64": "0.25.12", "@esbuild/freebsd-arm64": "0.25.12", "@esbuild/freebsd-x64": "0.25.12", "@esbuild/linux-arm": "0.25.12", "@esbuild/linux-arm64": "0.25.12", "@esbuild/linux-ia32": "0.25.12", "@esbuild/linux-loong64": "0.25.12", "@esbuild/linux-mips64el": "0.25.12", "@esbuild/linux-ppc64": "0.25.12", "@esbuild/linux-riscv64": "0.25.12", "@esbuild/linux-s390x": "0.25.12", "@esbuild/linux-x64": "0.25.12", "@esbuild/netbsd-arm64": "0.25.12", "@esbuild/netbsd-x64": "0.25.12", "@esbuild/openbsd-arm64": "0.25.12", "@esbuild/openbsd-x64": "0.25.12", "@esbuild/openharmony-arm64": "0.25.12", "@esbuild/sunos-x64": "0.25.12", "@esbuild/win32-arm64": "0.25.12", "@esbuild/win32-ia32": "0.25.12", "@esbuild/win32-x64": "0.25.12" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="],
 
     "@aihu/example-storefront/vite/postcss": ["postcss@8.5.14", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg=="],
 
     "@aihu/example-storefront/vite/tinyglobby": ["tinyglobby@0.2.16", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-temperature-converter/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-timer/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-todo-mvc/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/example-weather-card/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/language-server/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "@aihu/magna/rolldown/@oxc-project/types": ["@oxc-project/types@0.133.0", "", {}, "sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA=="],
 
@@ -4209,6 +4769,46 @@
     "@aihu/magna/rolldown/@rolldown/binding-win32-arm64-msvc": ["@rolldown/binding-win32-arm64-msvc@1.0.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-gEdFFEN70A/jxb2svrWsN3aDL7OUtmvlOy+6fa2jxG8K0wQ1ZbdeLGnidov6Yu5/733dI5ySfzFlQ/cb0bSz1g=="],
 
     "@aihu/magna/rolldown/@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.0.3", "", { "os": "win32", "cpu": "x64" }, "sha512-eXB7CHuaQdqmJcc3koCNtNPmT/bj2gc999kUFgBxG8Ac0NdgXc4rkCHhqrgrhN3zddvvvrgzj1e90SuSfmyIXA=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/mcp/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "@aihu/tsc/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "@azure/identity/open/define-lazy-prop": ["define-lazy-prop@3.0.0", "", {}, "sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg=="],
 
@@ -4280,6 +4880,26 @@
 
     "accepts/mime-types/mime-db": ["mime-db@1.54.0", "", {}, "sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ=="],
 
+    "aihu-docs/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "aihu-docs/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
     "aihu-docs/rolldown/@oxc-project/types": ["@oxc-project/types@0.133.0", "", {}, "sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA=="],
 
     "aihu-docs/rolldown/@rolldown/binding-android-arm64": ["@rolldown/binding-android-arm64@1.0.3", "", { "os": "android", "cpu": "arm64" }, "sha512-454rs7jHngixp/NMxd5srYD57OnzSlZ/eFTETjORQHLwJG1lRtmNOJcBerZlfu4GjKqeq8aCCIQrMdHyhI51Hw=="],
@@ -4311,6 +4931,46 @@
     "aihu-docs/rolldown/@rolldown/binding-win32-arm64-msvc": ["@rolldown/binding-win32-arm64-msvc@1.0.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-gEdFFEN70A/jxb2svrWsN3aDL7OUtmvlOy+6fa2jxG8K0wQ1ZbdeLGnidov6Yu5/733dI5ySfzFlQ/cb0bSz1g=="],
 
     "aihu-docs/rolldown/@rolldown/binding-win32-x64-msvc": ["@rolldown/binding-win32-x64-msvc@1.0.3", "", { "os": "win32", "cpu": "x64" }, "sha512-eXB7CHuaQdqmJcc3koCNtNPmT/bj2gc999kUFgBxG8Ac0NdgXc4rkCHhqrgrhN3zddvvvrgzj1e90SuSfmyIXA=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "aihu-example-css-pluggability/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-darwin-arm64": ["@aihu/compiler-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-9BCnEz11CGtrT14yk0LiXywPLei9sLqbZNbX4JszLK2MvPptnq2d2gopbETH2d7XwvCJ+lMkBKN3FnqHIeM7JQ=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-darwin-x64": ["@aihu/compiler-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-TZDRRAV0VCZNkCw2uRxnl8z2Feauru4io4n/SADn/3mDf4uKV9Ow06LPwOQnbgb58hAmtE7SN1LoDv5cA4OAPw=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-linux-arm64-gnu": ["@aihu/compiler-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-sJ0WPEXOAxjIoX4mnpVt+jtY/6yUNPu6bKPSWdoKZutuU/N7LLfvIc/fmwl90Bx+4UwiclEEGXQgy4M4VUR07g=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-linux-x64-gnu": ["@aihu/compiler-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-kCKVOcbrLvgxfmEL+ePQHBv6loS3Lt182q4G4BglPFYpYrasJY4jOzwRH7tbSMb+r/kUmBQALnVgPMYQ5sNTCA=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-native-darwin-arm64": ["@aihu/compiler-native-darwin-arm64@1.3.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hXZmiCWLaTO8yCNV7SBhkaf7ODFgaSQsPbXhQVzA7CB8iTlJHzIAWIckbFHUuDBjihr9CKsV/BdSvmTqty+o3Q=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-native-darwin-x64": ["@aihu/compiler-native-darwin-x64@1.3.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-CmL6TG5NSi8UgrDSxRhudLVw7ugdty0j+PiSdQfPh1VJRqqIgMw+3o1lfUsJA+p6ReW4fqoXcm6q3X2n/FquFw=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-native-linux-arm64-gnu": ["@aihu/compiler-native-linux-arm64-gnu@1.3.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-DIBNWZxN6J3sPoXvmr9LOBtYYVRoREhgicv/4EBir4MtO9Cm0gEobzTyOlNsMmzQjZLU26NgT6nWIR+6iXveYg=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-native-linux-x64-gnu": ["@aihu/compiler-native-linux-x64-gnu@1.3.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Z57IXK7eOEbmfPDH8KM6L9J/iyYDpgPCglIYnYEa/W259Gbo+s8cxBch5jMw1++ktmKnyMl5gRQe6RqlEedhJw=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-native-win32-x64-msvc": ["@aihu/compiler-native-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-71YIuWKc+lqVxUYXX4R/J3N+0I4wpEu2P6vE76Pv1Dtl/rlFZC6LWoJFF7/jTfpb1jUmvdboU57PWSxn/AmEww=="],
+
+    "aihu-storybook/@aihu/compiler/@aihu/compiler-win32-x64-msvc": ["@aihu/compiler-win32-x64-msvc@1.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-va012Sr/Q4dG927Sio+LI//bFZLXyjplIrT7Ddv1Gr1qMSx6WxWXhXqgowFPDRBAaqfcJpIvd2+/umId0bCpGQ=="],
 
     "axios/https-proxy-agent/agent-base": ["agent-base@6.0.2", "", { "dependencies": { "debug": "4" } }, "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ=="],
 

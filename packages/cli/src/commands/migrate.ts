@@ -32,18 +32,18 @@
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
-// v1→v2 macro-vocabulary pass (#425). Relative source import — rolldown
-// bundles it into the CLI dist, so the published package stays self-contained.
-import { migrate as migrateMacrosV2 } from '../../../compiler/js/codemods/macro-simplification/migrate.ts'
+// v1→v2 macro-vocabulary pass (#425). The compiler package owns this codemod;
+// rolldown bundles the public entry point so the published CLI stays self-contained.
+import { migrate as migrateMacrosV2 } from '@aihu/compiler/codemods/macro-simplification'
 // #487 — the @state wrapper-model migration (state-model spec §7 waves 1+2):
 // `$`-macros → wrappers/statement calls/directives, signal tuples → `state()`
 // with call-site rewrites. Opt-in via `aihu migrate --state`.
-import { migrateStateWrappers } from '../../../compiler/js/codemods/state-wrapper/migrate.ts'
+import { migrateStateWrappers } from '@aihu/compiler/codemods/state-wrapper'
 // Template grammar v2 (the prefix-less template): the `$` attribute layer,
 // block tags, `<$…>` macro elements, and `{{…}}` all migrate to the naked
 // grammar as the FINAL pass — the v0→v1 passes above stay byte-identical and
 // keep producing v1 forms as their intermediate representation.
-import { migrateTemplateGrammar } from '../../../compiler/js/codemods/template-grammar-v2/migrate.ts'
+import { migrateTemplateGrammar } from '@aihu/compiler/codemods/template-grammar-v2'
 
 type BlockConversion = {
   readonly open: RegExp
