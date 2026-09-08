@@ -202,8 +202,8 @@ bun add @aihu/use
 
 **Peer dependencies:**
 
-- `@aihu/context` — `workspace:*`
-- `@aihu/router` — `workspace:*`
+- `@aihu/context` — `^0.2.0`
+- `@aihu/router` — `^0.5.0`
 - `jwt-decode` — `>=4`
 
 <sub><i>Auto-generated against `@aihu/use@2.0.0`.</i></sub>
