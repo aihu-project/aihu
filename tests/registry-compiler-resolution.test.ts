@@ -10,7 +10,7 @@ describe('published compiler boundary', () => {
     const manifest = JSON.parse(readFileSync(packageJson, 'utf8')) as { version: string }
 
     expect(packagePath).not.toContain('/packages/compiler/')
-    expect(manifest.version).toBe('1.3.2')
+    expect(manifest.version).toBe('1.3.3')
   })
 
   it('compiles a component through the released platform binary', () => {
