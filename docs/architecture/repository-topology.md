@@ -1,125 +1,103 @@
 # Aihu repository topology
 
-**Status:** Proposed migration · **Date:** 2026-09-06
+**Status:** Active migration · **Updated:** 2026-09-08
 
-The ordered implementation checklist lives in
+The ordered checklist and release gates live in
 [repository-extraction-task-list.md](./repository-extraction-task-list.md).
 
-## Goal
+## Architecture goal
 
-Repository boundaries should isolate build cost and release risk. A documentation
-or registry change should not build compiler, CSS engine, and server native
-artifacts. A provider change should prove compatibility with the framework
-contract without running every unrelated package check.
+Every opt-in capability has a package and repository boundary that matches its
+release and verification cost. Framework code remains compatible with alternate
+CSS, routing, state, data, and deployment providers. The root repository proves
+that published versions work together without rebuilding every source tree.
 
-The split is staged around dependency seams. Moving tightly coupled packages
-first would replace one monorepo build with synchronized cross-repository
-releases, which is slower and harder to recover.
+```text
+                         aihu (integration owner)
+                                  |
+       +--------------------------+--------------------------+
+       |                          |                          |
+   browser core               app/tooling              server/plugins
+       |                          |                          |
+   aihu-dom                  aihu-runtime               aihu-server
+   aihu-context              aihu-app                   aihu-auth
+   aihu-primitives           aihu-use                   aihu-agent
+   aihu-store                aihu-cli                   plugin repos
+   aihu-ui                   aihu-language              adapter repos
+   aihu-css                  aihu-vscode
+   aihu-router               aihu-compiler
+```
 
-## Target repositories
+The diagram shows contract families, not bundled installs. A consumer installs
+only the capabilities it selects.
 
-| Repository | Initial package scope | Checks owned by the repository |
+## Boundary rules
+
+- `aihu-dom` owns observation, change propagation, and DOM rendering primitives:
+  signals, Arbor, reactive trees, and the opt-in DOM facade.
+- `aihu-runtime` owns component definition and lifecycle behavior. It consumes
+  public DOM/context/primitives packages and exposes the explicit app bridge.
+- `aihu-app` owns the meta-framework integration layer. CSS, routing, state,
+  data, and deployment providers remain replaceable dependencies.
+- Provider repositories implement versioned capability contracts. A contract
+  fixture tests the official provider, an alternate provider, and absence of a
+  provider where absence is valid.
+- Closely related packages share a repository only when they release and fail
+  together. This is why the DOM and agent protocol families stay grouped while
+  Cloudflare and Vercel adapters do not.
+- Documentation, demos, native matrices, editor-host tests, and Lighthouse have
+  distinct owners and triggers.
+
+## Release and integration flow
+
+```text
+source commit
+    |
+    v
+package CI -> exact allowlisted tarball -> isolated consumer
+    |                                      |
+    +------------------- pass -------------+
+                           |
+                           v
+                OIDC release candidate
+                           |
+                           v
+                 root compatibility smoke
+                           |
+                           v
+                    stable npm release
+```
+
+No stable tag is created before the exact package artifact passes its own tests
+and the required downstream smoke tests. Cross-repository coordination uses
+published candidates instead of Git branches or local workspace links.
+
+## CI ownership
+
+| Work | Pull-request owner | Broader execution |
 | --- | --- | --- |
-| `aihu` | Runtime contracts, DOM composition, signals, context, arbor, app integration | Unit tests, type checks, provider conformance harness |
-| [`aihu-compiler`](https://github.com/aihu-project/aihu-compiler) | Compiler, native compiler packages | Compiler fixtures and native platform matrix |
-| `aihu-css` | Official CSS provider and native packages | CSS fixtures, Vite provider conformance, native platform matrix |
-| `aihu-router` | Official router provider | Routing fixtures, runtime provider conformance |
-| `aihu-server` | Server runtime, adapters, native packages | Server tests, adapter tests, native platform matrix |
-| `aihu-tooling` | CLI, create package, TypeScript integration, language server, editor extension | Scaffold matrix, editor protocol tests, CLI integration |
-| `aihu-ui` | Source-owned UI recipes and registry source | Recipe validation, accessibility checks, visual checks |
-| One repository per mature plugin | Data, Drizzle, agent readiness, and later providers | Package tests plus the relevant conformance suite |
+| Type/unit/package checks | package repository | every relevant PR |
+| Native platform matrix | compiler/CSS/server owner | release candidate, tag, schedule |
+| Scaffold matrix | `aihu-cli` | representative PR case; full candidate/schedule |
+| VS Code host/VSIX | `aihu-vscode` | extension PR, candidate, tag |
+| Provider deploy checks | individual adapter | adapter PR/candidate |
+| Docs Playwright | `aihu-docs` | affected docs/runtime inputs |
+| Lighthouse | `aihu-docs` | performance PR sample; full main/candidate/schedule |
+| Complete example matrix | `aihu-examples` | candidate and schedule |
+| Ecosystem compatibility | root `aihu` | candidate and schedule |
 
-Agent protocols may remain together initially because `agent-service`, A2A,
-ACP, and agent-server share a release graph. They can move to `aihu-agents` when
-their interfaces stop changing with the server runtime.
+This removes the current failure mode where a prose, demo, or leaf-package
+change pays for Rust/native builds, all examples, the docs site, browser tests,
+and Lighthouse.
 
-## DOM composition is independent of styling
+## Migration safety
 
-Functional DOM switching is a framework capability, not a feature of the
-official CSS engine. The runtime owns the `shadow` and `light` component modes,
-the mount target, slot projection, hydration, event surfaces, and the component
-scope identifier. This keeps a component's DOM behavior stable when an
-application replaces or declines the official CSS provider.
+A repository foundation is only the first step. Source remains in the root
+until the destination workflow is reviewed, npm trusted publishing is
+configured, the new version is published, and the root passes against that
+registry artifact. Root removal and CI simplification then land together, which
+keeps rollback to the prior published version straightforward.
 
-The public DOM-composition contract should expose the resolved component mode
-and a neutral style target. A CSS provider may compile styles for that target
-(for example a component sheet, a document sheet, scoped CSS, or server CSS),
-but it must not select the DOM mode or alter slot and hydration behavior. The
-compiler should produce mode and target metadata once, then pass it separately
-to the runtime and to the configured style adapter.
-
-This corrects a current coupling: the compiler uses `shadowMode` both to inject
-runtime options and to select the CSS-engine folding path. The migration must
-replace that branch with a DOM composition adapter plus a CSS-provider adapter.
-The progressive `position()` utility used by primitives is also DOM behavior;
-it should move to a core DOM utility rather than remain an implicit
-`@aihu/primitives` dependency on `@aihu/css-engine`.
-
-## Extraction status
-
-`aihu-project/aihu-compiler` now contains a standalone compiler source tree,
-its required fixtures, and compiler-only CI. It is a staged extraction: the
-monorepo remains the release source until the compiler repository has its own
-native platform release workflow and npm trusted-publisher configuration.
-Keeping publishing in one place during this step prevents an incomplete
-platform package release from changing what existing consumers install.
-
-## Extraction gates
-
-A package moves only after all of these are true:
-
-1. Its consumers import a public contract rather than the official
-   implementation.
-2. Its repository can build and test from published or release-candidate
-   dependencies.
-3. A conformance suite can test another implementation of the same capability.
-4. Its release does not require a lockstep release of an unrelated repository.
-5. Trusted publishing, provenance, ownership, and registry metadata are ready
-   for the new repository.
-
-Current blockers are concrete:
-
-- `@aihu/app` imports and peers directly on `@aihu/router`.
-- `@aihu/use` peers directly on `@aihu/router`.
-- `@aihu/primitives` depends directly on `@aihu/css-engine` for progressive
-  positioning.
-- `@aihu/router` depends directly on `@aihu/server`.
-- The compiler uses `shadowMode` to select both runtime DOM behavior and the
-  official CSS engine's style-emission path.
-
-These edges should be replaced with routing, DOM-composition, styling, and
-server capability contracts before those providers move.
-
-## CI model
-
-Each repository runs its own unit, type, build, and package checks on pull
-requests. Shared contract tests are versioned and reusable. Downstream
-integration runs at three deliberate points:
-
-- a small release-candidate smoke test before publishing;
-- a scheduled compatibility matrix across supported provider versions;
-- a full ecosystem test before changing a capability contract.
-
-Documentation, registry, and website changes do not trigger native platform
-matrices. Native provider repositories publish release candidates that the
-small integration matrix consumes. The central registry aggregates validated
-metadata from first-party repositories without rebuilding their packages.
-
-## Migration order
-
-1. Publish routing, styling, and server capability contracts with conformance
-   fixtures inside `aihu`. Establish the DOM-composition contract first and
-   move progressive positioning out of the CSS engine.
-2. Split compiler DOM metadata from CSS-provider style emission, then remove
-   the concrete dependency edges listed above.
-3. Add conformance fixtures that run each DOM mode with the official CSS
-   provider, an alternate provider, and no CSS provider. They must separately
-   cover slot projection, hydration, SSR output, and the chosen style target.
-4. Extract `aihu-compiler`, `aihu-css`, and `aihu-server` to eliminate the
-   largest native build matrices from routine framework checks.
-5. Extract `aihu-router`, `aihu-tooling`, and `aihu-ui` once their contract and
-   release inputs are stable.
-6. Move mature plugins individually as their ownership or release cadence
-   diverges.
-7. Open third-party registry contributions only after at least one alternative
-   provider passes the same conformance suite as the official provider.
+The current migration state and remaining waves are maintained in the task
+list. That file is the source of truth for progress; this file is the stable
+boundary model.
