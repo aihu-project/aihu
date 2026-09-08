@@ -219,22 +219,17 @@ function main(): void {
       )
       process.exit(1)
     }
-    // The gate-wiring fixture intentionally replaces the registry source and
-    // output paths. Its job is to prove the stale-file check fails closed; the
-    // real package contract check below applies only to the production paths.
-    if (!process.env.COMPOSABLE_REGISTRY_OUT) {
-      let existingContract = ''
-      try {
-        existingContract = readFileSync(CONTRACT_FILE, 'utf8')
-      } catch {
-        existingContract = ''
-      }
-      if (existingContract !== contract) {
-        console.error(
-          `[gen-composable-registry] ${basename(CONTRACT_FILE)} is stale — run: bun scripts/gen-composable-hover-registry.ts`,
-        )
-        process.exit(1)
-      }
+    let existingContract = ''
+    try {
+      existingContract = readFileSync(CONTRACT_FILE, 'utf8')
+    } catch {
+      existingContract = ''
+    }
+    if (existingContract !== contract) {
+      console.error(
+        `[gen-composable-registry] ${basename(CONTRACT_FILE)} is stale — run: bun scripts/gen-composable-hover-registry.ts`,
+      )
+      process.exit(1)
     }
     console.log('[gen-composable-registry] up to date')
     return
