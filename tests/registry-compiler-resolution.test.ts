@@ -1,6 +1,6 @@
 import { readFileSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
-import { transform } from '@aihu/compiler'
+import { resolveCompilerBinary, transform } from '@aihu/compiler'
 import { describe, expect, it } from 'vitest'
 
 describe('published compiler boundary', () => {
@@ -10,7 +10,8 @@ describe('published compiler boundary', () => {
     const manifest = JSON.parse(readFileSync(packageJson, 'utf8')) as { version: string }
 
     expect(packagePath).not.toContain('/packages/compiler/')
-    expect(manifest.version).toBe('1.3.4')
+    expect(manifest.version).toBe('1.3.5')
+    expect(typeof resolveCompilerBinary).toBe('function')
   })
 
   it('compiles a component through the released platform binary', () => {

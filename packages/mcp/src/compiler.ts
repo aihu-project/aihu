@@ -6,32 +6,11 @@
  * an array of AihuDiagnostic objects on failure, with errors and warnings split.
  */
 
+import { resolveCompilerBinary } from '@aihu/compiler'
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { basename, resolve } from 'node:path'
+import { basename } from 'node:path'
 
-const require = createRequire(import.meta.url)
-
-export function resolveBinPath(
-  env: Readonly<Record<string, string | undefined>> = process.env,
-  resolvePaths: (specifier: string) => readonly string[] | null = (specifier) =>
-    require.resolve.paths(specifier),
-  pathExists: (path: string) => boolean = existsSync,
-): string {
-  if (env.AIHU_COMPILE_BIN) {
-    return env.AIHU_COMPILE_BIN
-  }
-
-  for (const nodeModulesPath of resolvePaths('@aihu/compiler') ?? []) {
-    const candidate = resolve(nodeModulesPath, '@aihu/compiler/bin/aihu-compile.mjs')
-    if (pathExists(candidate)) return candidate
-  }
-
-  return 'aihu-compile'
-}
-
-const binPath = resolveBinPath()
+const binPath = resolveCompilerBinary()
 
 const TIMEOUT_MS = parseInt(process.env.AIHU_MCP_COMPILE_TIMEOUT_MS ?? '10000', 10)
 

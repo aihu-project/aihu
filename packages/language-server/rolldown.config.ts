@@ -1,12 +1,12 @@
 import { defineConfig } from 'rolldown'
 import { dts } from 'rolldown-plugin-dts'
 
-// Runtime deps + node builtins stay external. The vscode-languageserver packages
-// are declared dependencies and resolved from node_modules at runtime; node:
-// builtins must never be bundled. The migrate() codemod (relative import from
-// @aihu/compiler source) IS bundled so the server is self-contained.
+// Runtime deps, the compiler package, and node builtins stay external. The
+// installed @aihu/compiler package supplies the public codemod and resolver at
+// runtime; node: builtins must never be bundled.
 const external = [
   /^node:/,
+  '@aihu/compiler',
   'vscode-languageserver',
   'vscode-languageserver/node.js',
   'vscode-languageserver-textdocument',
