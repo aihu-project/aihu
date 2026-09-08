@@ -27,8 +27,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { type AihuCompilerPluginOptions, aihuCompilerPlugin } from '@aihu/compiler'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { type AihuCompilerPluginOptions, aihuCompilerPlugin } from '../../compiler/js/index.ts'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 import { aihuDep } from '../src/dep-versions.ts'
 import { appIndexAihu, appPackageJson, appViteConfig, scaffoldApp } from '../src/index.ts'
 
@@ -178,10 +179,7 @@ describe('scaffold css-engine · scaffoldApp() writes the right tree', () => {
 // `__style__`; for `light`, assert it routes to a virtual CSS import instead.
 
 const ext = process.platform === 'win32' ? '.exe' : ''
-const compilerBin = resolve(HERE, `../../compiler/bin/aihu-compile${ext}`)
-if (existsSync(compilerBin)) {
-  process.env.AIHU_COMPILE_BIN ??= compilerBin
-}
+process.env.AIHU_COMPILE_BIN ??= resolvePublishedCompilerBinary()
 const cssCoreBin =
   existsSync(resolve(HERE, `../../../target/release/aihu-css-compile${ext}`)) ||
   existsSync(resolve(HERE, `../../../target/debug/aihu-css-compile${ext}`))

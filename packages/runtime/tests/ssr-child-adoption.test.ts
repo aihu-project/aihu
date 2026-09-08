@@ -42,14 +42,15 @@
  * binary fail loudly instead of quietly.
  */
 
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mount } from '@aihu/arbor'
 import { hydrate } from '@aihu/arbor/hydrate'
+import { aihuCompilerPlugin } from '@aihu/compiler'
 import { signal } from '@aihu/signals'
 import { afterAll, describe, expect, it } from 'vitest'
-import { aihuCompilerPlugin } from '../../compiler/js/index.ts'
+import { resolvePublishedCompilerBinary } from '../../../scripts/lib/compiler-binary.ts'
 import { _setHydrate, _setMount, _setSignal } from '../src/define-component.ts'
 import type { SsrChildModule, SsrChildRenderOpts } from '../src/ssr-string.ts'
 
@@ -59,10 +60,7 @@ const repoRoot = resolve(__dirname, '../../..')
 // Pin the compile backend to the CLI binary (see the module docblock). Set
 // before the first `transform`, which is when the backend is resolved.
 process.env.AIHU_COMPILER_NATIVE = '0'
-const BIN = ['packages/compiler/bin/aihu-compile', 'target/release/aihu-compile']
-  .map((p) => join(repoRoot, p))
-  .find((p) => existsSync(p))
-if (BIN) process.env.AIHU_COMPILE_BIN ??= BIN
+process.env.AIHU_COMPILE_BIN ??= resolvePublishedCompilerBinary()
 
 const SCRATCH = join(__dirname, '.scratch-ssr-child-adoption')
 afterAll(() => {
@@ -210,13 +208,11 @@ function detachedFrom(html: string): HTMLElement {
   return el
 }
 
-const hasBinary = BIN !== undefined
-
 // ---------------------------------------------------------------------------
 // 1. Light-DOM child — the duplicate-host and double-stamp bugs
 // ---------------------------------------------------------------------------
 
-describe.skipIf(!hasBinary)('light-DOM child: real server bytes are ADOPTED, not rebuilt', () => {
+describe('light-DOM child: real server bytes are ADOPTED, not rebuilt', () => {
   const KID = `@template {\n  <nav><span>KID-CONTENT</span></nav>\n}\n`
   const PARENT = `@template {\n  <section><h1>PARENT</h1><x-lkid></x-lkid></section>\n}\n`
 
@@ -302,7 +298,7 @@ describe.skipIf(!hasBinary)('light-DOM child: real server bytes are ADOPTED, not
 // 2. Shadow child — declarative shadow root, adopted on upgrade
 // ---------------------------------------------------------------------------
 
-describe.skipIf(!hasBinary)('shadow child: the declarative root is adopted', () => {
+describe('shadow child: the declarative root is adopted', () => {
   const KID = `@template {\n  <nav><span>SHADOW-KID</span></nav>\n}\n\n@style {\n  nav { color: rebeccapurple; }\n}\n`
   const PARENT = `@template {\n  <section><h1>PARENT</h1><x-skid></x-skid></section>\n}\n`
 
@@ -377,7 +373,7 @@ describe.skipIf(!hasBinary)('shadow child: the declarative root is adopted', () 
  * So these two run the REAL upgrade path, and the control proves the effect is
  * live rather than absent.
  */
-describe.skipIf(!hasBinary)('html={…} on a child reference: the first-run skip', () => {
+describe('html={…} on a child reference: the first-run skip', () => {
   const KID = `@template {\n  <nav><span>KID-CONTENT</span></nav>\n}\n`
   const PARENT = `@state {
   const [h, setH] = signal('<b>FROM-HTML</b>')
@@ -466,61 +462,58 @@ describe.skipIf(!hasBinary)('html={…} on a child reference: the first-run skip
 // 3b. `raw` with written children — do both sides discard them?
 // ---------------------------------------------------------------------------
 
-describe.skipIf(!hasBinary)(
-  'raw on a child reference: both sides drop the written children',
-  () => {
-    const KID = `@template {\n  <nav><span>KID-CONTENT</span></nav>\n}\n`
-    const RAW = `@template {\n  <section><x-rkid raw><span>WRITTEN</span></x-rkid></section>\n}\n`
-    const PLAIN = `@template {\n  <section><x-rkid2><span>WRITTEN</span></x-rkid2></section>\n}\n`
+describe('raw on a child reference: both sides drop the written children', () => {
+  const KID = `@template {\n  <nav><span>KID-CONTENT</span></nav>\n}\n`
+  const RAW = `@template {\n  <section><x-rkid raw><span>WRITTEN</span></x-rkid></section>\n}\n`
+  const PLAIN = `@template {\n  <section><x-rkid2><span>WRITTEN</span></x-rkid2></section>\n}\n`
 
-    it('SERVER: `raw` still resolves the child, and the written children vanish', async () => {
-      const kid = await compile('x-rkid', KID)
-      const parent = await compile('x-rpar', RAW)
-      const html = parent.__ssrString({}, { hydratable: true, children: registry(kid) })
-      expectSchild(parent)
-      expect(html).toContain('KID-CONTENT')
-      expect(html).not.toContain('WRITTEN')
-    })
+  it('SERVER: `raw` still resolves the child, and the written children vanish', async () => {
+    const kid = await compile('x-rkid', KID)
+    const parent = await compile('x-rpar', RAW)
+    const html = parent.__ssrString({}, { hydratable: true, children: registry(kid) })
+    expectSchild(parent)
+    expect(html).toContain('KID-CONTENT')
+    expect(html).not.toContain('WRITTEN')
+  })
 
-    it('CLIENT: the lowered tree agrees — hydration adds no written children back', async () => {
-      const kid = await compile('x-rkid', KID)
-      const parent = await compile('x-rpar', RAW)
-      const html = parent.__ssrString({}, { hydratable: true, children: registry(kid) })
-      const container = detachedFrom(html)
-      const before = container.innerHTML
+  it('CLIENT: the lowered tree agrees — hydration adds no written children back', async () => {
+    const kid = await compile('x-rkid', KID)
+    const parent = await compile('x-rpar', RAW)
+    const html = parent.__ssrString({}, { hydratable: true, children: registry(kid) })
+    const container = detachedFrom(html)
+    const before = container.innerHTML
 
-      hydrate(parent.__ssr, container, {})
+    hydrate(parent.__ssr, container, {})
 
-      // If lowering kept `<span>WRITTEN</span>` the walker would materialize it
-      // INSIDE the adopted host, on top of the child's own server tree.
-      expect(container.innerHTML).toBe(before)
-      expect(container.textContent).not.toContain('WRITTEN')
-      expect(container.querySelectorAll('x-rkid')).toHaveLength(1)
-    })
+    // If lowering kept `<span>WRITTEN</span>` the walker would materialize it
+    // INSIDE the adopted host, on top of the child's own server tree.
+    expect(container.innerHTML).toBe(before)
+    expect(container.textContent).not.toContain('WRITTEN')
+    expect(container.querySelectorAll('x-rkid')).toHaveLength(1)
+  })
 
-    it('CONTROL: WITHOUT `raw` the same children block resolution on both sides', async () => {
-      // Proves the two assertions above are about `raw` and not about children
-      // being ignored generally.
-      const kid = await compile('x-rkid2', KID)
-      const parent = await compile('x-rpar2', PLAIN)
-      const html = parent.__ssrString({}, { hydratable: true, children: registry(kid) })
-      // Written children are slot content, and slot projection is unimplemented:
-      // the reference declines and the child is NOT rendered.
-      expect(html).not.toContain('KID-CONTENT')
-      expect(html).toContain('WRITTEN')
+  it('CONTROL: WITHOUT `raw` the same children block resolution on both sides', async () => {
+    // Proves the two assertions above are about `raw` and not about children
+    // being ignored generally.
+    const kid = await compile('x-rkid2', KID)
+    const parent = await compile('x-rpar2', PLAIN)
+    const html = parent.__ssrString({}, { hydratable: true, children: registry(kid) })
+    // Written children are slot content, and slot projection is unimplemented:
+    // the reference declines and the child is NOT rendered.
+    expect(html).not.toContain('KID-CONTENT')
+    expect(html).toContain('WRITTEN')
 
-      const container = detachedFrom(html)
-      hydrate(parent.__ssr, container, {})
-      expect(count(container.textContent ?? '', 'WRITTEN')).toBe(1)
-    })
-  },
-)
+    const container = detachedFrom(html)
+    hydrate(parent.__ssr, container, {})
+    expect(count(container.textContent ?? '', 'WRITTEN')).toBe(1)
+  })
+})
 
 // ---------------------------------------------------------------------------
 // 4. Nested — a child inside a child
 // ---------------------------------------------------------------------------
 
-describe.skipIf(!hasBinary)('nested children: each marked host owns its own key space', () => {
+describe('nested children: each marked host owns its own key space', () => {
   const GRAND = `@template {\n  <p>GRAND-CONTENT</p>\n}\n`
   const KID = `@template {\n  <div><span>KID-SPAN</span><x-ngrand></x-ngrand></div>\n}\n`
   const PARENT = `@template {\n  <section><h1>PARENT</h1><x-nkid></x-nkid></section>\n}\n`
@@ -662,7 +655,7 @@ describe.skipIf(!hasBinary)('nested children: each marked host owns its own key 
  * but nothing said so, and the property is one line of `hydrate.ts` away from
  * being lost. These pin it.
  */
-describe.skipIf(!hasBinary)('shadow child whose template starts with a text node', () => {
+describe('shadow child whose template starts with a text node', () => {
   const KID = `@state {
   const [w, setW] = signal('WORLD')
   ;(globalThis as any).__aihuTestSetW = setW
@@ -759,7 +752,7 @@ describe.skipIf(!hasBinary)('shadow child whose template starts with a text node
  * pipeline is the one `SsrOptions.wrapTag` puts on the host, which is also
  * where `define-element.ts` puts it on the client.
  */
-describe.skipIf(!hasBinary)('a child under a STRUCTURAL template root', () => {
+describe('a child under a STRUCTURAL template root', () => {
   const KID = `@template {\n  <nav><span>KID-CONTENT</span></nav>\n}\n`
   const PARENT = `@state {
   const [on, setOn] = signal(true)

@@ -10,35 +10,26 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { PRESETS } from '../apps/docs/playground/presets.ts'
 import { stripTs } from '../apps/docs/playground/strip-ts.ts'
+import { resolvePublishedCompilerBinary } from '../scripts/lib/compiler-binary.ts'
 
 const REPO_ROOT = resolve(__dirname, '..')
-const COMPILER =
-  process.env.AIHU_COMPILE_BIN ??
-  [
-    resolve(REPO_ROOT, 'target/release/aihu-compile'),
-    resolve(REPO_ROOT, 'target/debug/aihu-compile'),
-  ].find((p) => existsSync(p)) ??
-  ''
-
-const HAVE_COMPILER = COMPILER !== ''
+const COMPILER = process.env.AIHU_COMPILE_BIN ?? resolvePublishedCompilerBinary()
 
 describe('Issue #554 — Playground stripTs preview correctness', () => {
-  it.skipIf(!HAVE_COMPILER)(
-    'every playground preset compiles and stripTs output parses without SyntaxError',
-    () => {
-      for (const preset of PRESETS) {
-        const out = execFileSync(
-          COMPILER,
-          ['--stdin', '--tag', preset.id, '--path', `${preset.id}.aihu`, '--target', 'client'],
-          {
-            input: preset.source,
-            encoding: 'utf8',
-          },
-        )
-        const stripped = stripTs(out)
-        // Assert that stripped code parses as valid JavaScript without throwing a SyntaxError.
-        expect(() => {
-          new Function(`
+  it('every playground preset compiles and stripTs output parses without SyntaxError', () => {
+    for (const preset of PRESETS) {
+      const out = execFileSync(
+        COMPILER,
+        ['--stdin', '--tag', preset.id, '--path', `${preset.id}.aihu`, '--target', 'client'],
+        {
+          input: preset.source,
+          encoding: 'utf8',
+        },
+      )
+      const stripped = stripTs(out)
+      // Assert that stripped code parses as valid JavaScript without throwing a SyntaxError.
+      expect(() => {
+        new Function(`
           var _a = { branch: () => {}, leaf: () => {}, signal: () => ({}), computed: () => ({}), defineComponent: () => {}, defineElement: () => {}, _setMount: () => {}, _setSignal: () => {}, registerAgentMetadata: () => {}, _registerAgentServerBinding: () => {}, contextKey: () => {}, provide: () => {}, inject: () => {} };
           var branch=_a.branch,leaf=_a.leaf,mount=_a.mount,slot=_a.slot,when=_a.when,each=_a.each;
           var signal=_a.signal,computed=_a.computed,effect=_a.effect,batch=_a.batch;
@@ -48,31 +39,28 @@ describe('Issue #554 — Playground stripTs preview correctness', () => {
           var contextKey=_a.contextKey,provide=_a.provide,inject=_a.inject;
           ${stripped}
         `)
-        }, `Preset "${preset.id}" stripped JS failed to parse`).not.toThrow()
-      }
-    },
-  )
+      }, `Preset "${preset.id}" stripped JS failed to parse`).not.toThrow()
+    }
+  })
 
-  it.skipIf(!HAVE_COMPILER)(
-    'every cookbook recipe compiles and stripTs output parses cleanly',
-    () => {
-      const cookbookDir = resolve(REPO_ROOT, 'cookbook')
-      if (!existsSync(cookbookDir)) return
-      const files = readdirSync(cookbookDir).filter((f) => f.endsWith('.aihu'))
-      for (const file of files) {
-        const content = readFileSync(resolve(cookbookDir, file), 'utf8')
-        const tag = file.replace(/\.aihu$/, '')
-        const out = execFileSync(
-          COMPILER,
-          ['--stdin', '--tag', tag, '--path', file, '--target', 'client'],
-          {
-            input: content,
-            encoding: 'utf8',
-          },
-        )
-        const stripped = stripTs(out)
-        expect(() => {
-          new Function(`
+  it('every cookbook recipe compiles and stripTs output parses cleanly', () => {
+    const cookbookDir = resolve(REPO_ROOT, 'cookbook')
+    if (!existsSync(cookbookDir)) return
+    const files = readdirSync(cookbookDir).filter((f) => f.endsWith('.aihu'))
+    for (const file of files) {
+      const content = readFileSync(resolve(cookbookDir, file), 'utf8')
+      const tag = file.replace(/\.aihu$/, '')
+      const out = execFileSync(
+        COMPILER,
+        ['--stdin', '--tag', tag, '--path', file, '--target', 'client'],
+        {
+          input: content,
+          encoding: 'utf8',
+        },
+      )
+      const stripped = stripTs(out)
+      expect(() => {
+        new Function(`
           var _a = { branch: () => {}, leaf: () => {}, signal: () => ({}), computed: () => ({}), defineComponent: () => {}, defineElement: () => {}, _setMount: () => {}, _setSignal: () => {}, registerAgentMetadata: () => {}, _registerAgentServerBinding: () => {}, contextKey: () => {}, provide: () => {}, inject: () => {} };
           var branch=_a.branch,leaf=_a.leaf,mount=_a.mount,slot=_a.slot,when=_a.when,each=_a.each;
           var signal=_a.signal,computed=_a.computed,effect=_a.effect,batch=_a.batch;
@@ -82,8 +70,7 @@ describe('Issue #554 — Playground stripTs preview correctness', () => {
           var contextKey=_a.contextKey,provide=_a.provide,inject=_a.inject;
           ${stripped}
         `)
-        }, `Cookbook recipe "${file}" stripped JS failed to parse`).not.toThrow()
-      }
-    },
-  )
+      }, `Cookbook recipe "${file}" stripped JS failed to parse`).not.toThrow()
+    }
+  })
 })
