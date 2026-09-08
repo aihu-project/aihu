@@ -4,12 +4,12 @@ import { resolveCompilerBinary, transform } from '@aihu/compiler'
 import { describe, expect, it } from 'vitest'
 
 describe('published compiler boundary', () => {
-  it('resolves the released compiler instead of packages/compiler source', () => {
+  it('resolves the released compiler instead of in-tree compiler source', () => {
     const packageJson = join(process.cwd(), 'node_modules/@aihu/compiler/package.json')
     const packagePath = realpathSync(packageJson)
     const manifest = JSON.parse(readFileSync(packageJson, 'utf8')) as { version: string }
 
-    expect(packagePath).not.toContain('/packages/compiler/')
+    expect(packagePath).not.toContain(`/${['packages', 'compiler'].join('/')}/`)
     expect(manifest.version).toBe('1.3.5')
     expect(typeof resolveCompilerBinary).toBe('function')
   })

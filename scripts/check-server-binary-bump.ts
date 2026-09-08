@@ -6,7 +6,7 @@
  * One family — packages/server/npm/<platform> → @aihu/server-<platform> (the
  * napi-rs SSR renderer addon). Same shape as
  * scripts/check-css-engine-binary-bump.ts; see
- * scripts/check-native-changeset.ts for the FEL-414 history this class of
+ * the shared native-binary-bump helper for the FEL-414 history this class of
  * guard exists to prevent (a native binary silently going stale relative to
  * its own source, with only a runtime symptom — not a build failure — as the
  * tell).

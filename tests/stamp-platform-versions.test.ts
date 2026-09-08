@@ -28,24 +28,20 @@ const SCRIPT = resolve(
 
 let root: string
 
-/** Minimal but structurally faithful: a host with both native surfaces. */
+/** Minimal but structurally faithful: a host with a native platform surface. */
 function fixture(hostVersion: string, pinVersion: string, platVersion: string): void {
   const platforms = ['darwin-arm64', 'linux-x64-gnu']
   const optionalDependencies: Record<string, string> = {}
   for (const p of platforms) {
-    optionalDependencies[`@aihu/compiler-${p}`] = pinVersion
-    optionalDependencies[`@aihu/compiler-native-${p}`] = pinVersion
+    optionalDependencies[`@aihu/server-${p}`] = pinVersion
   }
-  const hostDir = join(root, 'packages', 'compiler')
+  const hostDir = join(root, 'packages', 'server')
   mkdirSync(hostDir, { recursive: true })
   writeFileSync(
     join(hostDir, 'package.json'),
-    `${JSON.stringify({ name: '@aihu/compiler', version: hostVersion, optionalDependencies }, null, 2)}\n`,
+    `${JSON.stringify({ name: '@aihu/server', version: hostVersion, optionalDependencies }, null, 2)}\n`,
   )
-  for (const [dir, prefix] of [
-    ['npm', '@aihu/compiler-'],
-    ['npm-native', '@aihu/compiler-native-'],
-  ] as const) {
+  for (const [dir, prefix] of [['npm', '@aihu/server-']] as const) {
     for (const p of platforms) {
       const d = join(hostDir, dir, p)
       mkdirSync(d, { recursive: true })
@@ -58,16 +54,16 @@ function fixture(hostVersion: string, pinVersion: string, platVersion: string): 
 }
 
 function run(...args: string[]): { code: number; out: string } {
-  const r = spawnSync('bun', [SCRIPT, '--host', 'compiler', ...args], {
+  const r = spawnSync('bun', [SCRIPT, '--host', 'server', ...args], {
     encoding: 'utf8',
     env: { ...process.env, PLATFORM_SYNC_ROOT: root },
   })
   return { code: r.status ?? -1, out: `${r.stdout}${r.stderr}` }
 }
 
-const hostPkg = () => JSON.parse(readFileSync(join(root, 'packages/compiler/package.json'), 'utf8'))
+const hostPkg = () => JSON.parse(readFileSync(join(root, 'packages/server/package.json'), 'utf8'))
 const platPkg = (dir: string, p: string) =>
-  JSON.parse(readFileSync(join(root, 'packages/compiler', dir, p, 'package.json'), 'utf8'))
+  JSON.parse(readFileSync(join(root, 'packages/server', dir, p, 'package.json'), 'utf8'))
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'aihu-platsync-'))
@@ -102,8 +98,8 @@ describe('stamp-platform-versions · --check', () => {
   it('fails when a pin names a platform package with no directory', () => {
     fixture('1.3.0', '1.3.0', '1.3.0')
     const pkg = hostPkg()
-    pkg.optionalDependencies['@aihu/compiler-solaris-sparc'] = '1.3.0'
-    writeFileSync(join(root, 'packages/compiler/package.json'), `${JSON.stringify(pkg, null, 2)}\n`)
+    pkg.optionalDependencies['@aihu/server-solaris-sparc'] = '1.3.0'
+    writeFileSync(join(root, 'packages/server/package.json'), `${JSON.stringify(pkg, null, 2)}\n`)
     const { code, out } = run('--check')
     expect(code).toBe(1)
     expect(out).toContain('no platform directory produces that package')
@@ -111,15 +107,9 @@ describe('stamp-platform-versions · --check', () => {
 
   it('NEVER writes — a verify run must not mutate the tree', () => {
     fixture('1.3.0', '0.1.54', '0.1.54')
-    const before = readFileSync(
-      join(root, 'packages/compiler/npm/darwin-arm64/package.json'),
-      'utf8',
-    )
+    const before = readFileSync(join(root, 'packages/server/npm/darwin-arm64/package.json'), 'utf8')
     run('--check')
-    const after = readFileSync(
-      join(root, 'packages/compiler/npm/darwin-arm64/package.json'),
-      'utf8',
-    )
+    const after = readFileSync(join(root, 'packages/server/npm/darwin-arm64/package.json'), 'utf8')
     expect(after).toBe(before)
   })
 })
@@ -130,7 +120,6 @@ describe('stamp-platform-versions · write mode', () => {
     const { code, out } = run()
     expect(code, out).toBe(0)
     expect(platPkg('npm', 'darwin-arm64').version).toBe('1.3.0')
-    expect(platPkg('npm-native', 'linux-x64-gnu').version).toBe('1.3.0')
     for (const v of Object.values(hostPkg().optionalDependencies as Record<string, string>)) {
       expect(v).toBe('1.3.0')
     }
@@ -139,9 +128,9 @@ describe('stamp-platform-versions · write mode', () => {
   it('is idempotent, and leaves --check green afterwards', () => {
     fixture('1.3.0', '0.1.54', '0.1.54')
     run()
-    const first = readFileSync(join(root, 'packages/compiler/package.json'), 'utf8')
+    const first = readFileSync(join(root, 'packages/server/package.json'), 'utf8')
     run()
-    expect(readFileSync(join(root, 'packages/compiler/package.json'), 'utf8')).toBe(first)
+    expect(readFileSync(join(root, 'packages/server/package.json'), 'utf8')).toBe(first)
     expect(run('--check').code).toBe(0)
   })
 })

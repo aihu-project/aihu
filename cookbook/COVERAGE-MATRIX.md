@@ -7,10 +7,10 @@ that exercises it **LIVE** (CI-built), and (b) the cookbook block that
 the Phase 2b cookbook backlog and the interop-annex backlog.
 
 Row universe is taken from the compiler, not from docs:
-- binding + statement intrinsics — `packages/compiler/src/parser/state_wrappers.rs`
+- binding + statement intrinsics — `the standalone compiler state-wrapper parser`
   (`BINDING_INTRINSICS` / `STATEMENT_INTRINSICS`), mirrored in
   `packages/mcp/scripts/cookbook-lib.ts` `CONSTRUCT_REGISTRY`.
-- template grammar — `packages/compiler/src/parser/directives.rs`
+- template grammar — `the standalone compiler directive parser`
   (`GRAMMAR_WORDS_EXPR` / `GRAMMAR_WORDS_BARE` / prefixes / `KNOWN_EVENT_MODIFIERS`).
 - GX / output modes — `docs/plans/governed-extractability/`, `packages/app/src/config.ts`.
 

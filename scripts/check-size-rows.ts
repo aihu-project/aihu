@@ -46,11 +46,14 @@ export const SERVER_SIDE = new Set<string>([
  */
 export const BUILD_DEV_ONLY = new Set<string>([
   '@aihu/plugin',
-  '@aihu/compiler',
   '@aihu/cli',
   '@aihu/adapter-cloudflare',
   '@aihu/adapter-vercel',
   '@aihu/css-engine',
+  // The compiler is published by aihu-compiler and runs only in the build
+  // toolchain; this classification remains for package-policy tests even
+  // though its source directory is outside this workspace.
+  '@aihu/compiler',
   '@aihu/language-server',
   // `aihu-tsc` is a CLI type-checker: it runs at build/dev time and nothing from
   // it is ever bundled into a browser app, so the dep-free browser-bundle thesis
@@ -175,8 +178,8 @@ export function checkPolicy(packages: PackageInfo[], rows: SizeLimitEntry[]): Ch
     }
 
     if (!pkg.hasIndexTs && pkg.classification !== 'source-distributed') {
-      // Packages without src/index.ts are out of scope — e.g. @aihu/compiler
-      // (Rust-backed, JS wrapper at js/index.ts). Skip silently.
+      // Packages without src/index.ts are out of scope when they do not ship a
+      // browser bundle. Skip silently.
       // EXCEPTION: source-distributed packages (e.g. @aihu/ui) deliberately
       // have no src/index.ts (they ship .aihu source, not a bundle) but MUST
       // still be asserted row-free — fall through so the forbidden-row guard

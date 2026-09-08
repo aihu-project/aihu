@@ -80,7 +80,7 @@ bun add @aihu/tsc
 <!-- BEGIN_AUTOGEN: see-also -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
-- [@aihu/compiler](../compiler)
+- [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
 - [@aihu/language-server](../language-server)
 - [Aihu framework root](../../README.md)
 

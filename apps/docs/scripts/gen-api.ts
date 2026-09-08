@@ -90,7 +90,24 @@ function documentable(): InvEntry[] {
       d.includes('/templates/')
     )
   }
-  return all.filter((e) => !excluded(e)).sort((a, b) => a.name.localeCompare(b.name))
+  const result = all.filter((e) => !excluded(e))
+  // The compiler is deliberately owned by the standalone aihu-compiler
+  // repository. Keep its API page in the root docs by extracting the locked
+  // published package from node_modules, rather than reaching into deleted
+  // compiler source.
+  const compilerManifest = join(REPO, 'node_modules/@aihu/compiler/package.json')
+  if (existsSync(compilerManifest) && !result.some((e) => e.name === '@aihu/compiler')) {
+    const manifest = JSON.parse(readFileSync(compilerManifest, 'utf8')) as {
+      name: string
+      version: string
+    }
+    result.push({
+      name: manifest.name,
+      version: manifest.version,
+      dir: 'node_modules/@aihu/compiler',
+    })
+  }
+  return result.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /** '@aihu/signals' → 'signals'; '@aihu-plugin/data' → 'plugin-data'; 'create-aihu' → 'create-aihu'. */

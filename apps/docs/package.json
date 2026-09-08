@@ -39,8 +39,8 @@
   },
   "devDependencies": {
     "@aihu-plugin/agent-readiness": "workspace:*",
-    "@aihu/compiler": "1.3.3",
-    "@aihu/compiler-wasm": "1.3.3",
+    "@aihu/compiler": "1.3.5",
+    "@aihu/compiler-wasm": "1.3.5",
     "@playwright/test": "1.59.1",
     "rolldown": "^1.0.0-rc.17",
     "vite": "^8.0.0"

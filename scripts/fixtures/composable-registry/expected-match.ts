@@ -2,8 +2,7 @@
  * packages/language-server/src/core/composable-registry.ts
  *
  * GENERATED — do not hand-edit. Source of truth:
- *   packages/compiler/src/codegen/use_registry.rs (names + specifiers)
- *   packages/use/src/<name>/index.ts (each composable's doc comment)
+ *   packages/use/src/<name>/index.ts (names, specifiers, and doc comments)
  *
  * Regenerate: bun scripts/gen-composable-hover-registry.ts
  * (FEL-342 / #427 follow-up — LSP composable-awareness)

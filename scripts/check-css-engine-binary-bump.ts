@@ -4,7 +4,8 @@
  * @aihu/css-engine's platform binary packages, or the fix never ships.
  *
  * One family — packages/css-engine/npm/<platform> → @aihu/css-engine-<platform>
- * (the aihu-css-compile CLI binary). Unlike @aihu/compiler this package ships
+ * (the aihu-css-compile CLI binary). Unlike the compiler package, which is
+ * released in its own repository, this package ships
  * no napi addon, so there is only one family to keep in lockstep; the general
  * rule (shared source, lockstep, host-pin repoint) lives in
  * scripts/lib/native-binary-bump.ts.
@@ -16,8 +17,8 @@
  * and silently degraded to a no-op fallback (utility-class CSS compilation
  * stopped working, with only a console warning as a symptom). This is the
  * exact FEL-414 failure shape @aihu/compiler's guard
- * (scripts/check-native-changeset.ts) already prevents — this file is the
- * same protection for aihu-css-core.
+ * (the former root compiler guard) already prevented — this file is the same
+ * protection for aihu-css-core.
  *
  * Usage:
  *   bun scripts/check-css-engine-binary-bump.ts            # diff vs origin/<base>

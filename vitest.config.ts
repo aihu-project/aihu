@@ -16,11 +16,7 @@ export default defineConfig({
     ],
     // Compiler-source tests run in aihu-compiler. This consumer workspace
     // exercises the published package through its integration suites.
-    exclude: [
-      '**/node_modules/**',
-      'packages/compiler/tests/**',
-      'packages/cli/tests/legacy-snapshot.test.ts',
-    ],
+    exclude: ['**/node_modules/**', 'packages/cli/tests/legacy-snapshot.test.ts'],
     // #445: a step that selects zero test files must FAIL, not exit 0. The
     // legacy-snapshot CI gate no-opped for weeks because the exclude above
     // defeated its explicit file filter and passWithNoTests let it exit 0

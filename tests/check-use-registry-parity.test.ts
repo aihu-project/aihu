@@ -514,7 +514,7 @@ describe('check-use-registry-parity', () => {
 // NOTE: deliberately no "against the real tree" test here reading the live
 // packages/use/src + manifests (unlike this file's synthetic-fixture tests
 // above, which is the established pattern — see check-size-rows.test.ts /
-// check-native-changeset.test.ts, both synthesized-data only). A
+// native binary tests, both synthesized-data only). A
 // hardcoded composable count pinned against the live filesystem would be
 // exactly one landing (or one sibling in-flight branch) away from a stale,
 // unrelated CI failure. `bun run check:use-registry-parity` IS the real-tree

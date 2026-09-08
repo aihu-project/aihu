@@ -18,16 +18,7 @@
  *      form) in packages/use/rolldown.config.ts `input`
  *   4. a `@aihu/use/<name>` (or `@aihu/use/<family>/<name>`) row in root
  *      .size-limit.json
- *   5. a `("<name>", "@aihu/use/<family>/<name>")` tuple in
- *      packages/compiler/src/codegen/use_registry.rs USE_COMPOSABLES —
- *      REQUIRED only when the owning family (or, for CORE, always) has
- *      `autoImport: true`; a member of an `autoImport: false` family MUST
- *      NOT have a tuple (injecting an auto-import for an optional-peer
- *      composable is a hard bundler resolution break in apps that lack the
- *      peer — verified against vite 8.0.16) — EXCEPT names in
- *      REGISTRY_EXEMPT (opt-out allowlist for CORE one-offs, one-line
- *      justification required per entry).
- *   6. a hand-written Tier-2 row in packages/use/tests/ssr-safety.test.ts —
+ *   5. a hand-written Tier-2 row in packages/use/tests/ssr-safety.test.ts —
  *      REQUIRED iff the composable's source references `isClient`
  *      (otherwise optional; nothing to assert either way).
  *
@@ -100,9 +91,7 @@ export function loadFamilies(familiesJsonSrc: string): Record<string, FamilyDef>
  * derived from its family's `autoImport` flag (see `registryRequirement`),
  * never hand-listed here.
  */
-export const REGISTRY_EXEMPT = new Set<string>([
-  // 'someName', // justification: ...
-])
+export const REGISTRY_EXEMPT = new Set<string>()
 
 // ---------- Per-source discovery / parsing ----------
 
@@ -321,7 +310,9 @@ export interface ParitySources {
   pkgExports: Set<string>
   rolldownInputs: Set<string>
   sizeRows: Set<string>
-  registry: Set<string>
+  /** Published compiler auto-import registry is checked in aihu-compiler.
+   * The root check intentionally validates only root-owned use artifacts. */
+  registry?: Set<string>
   /** Tier-2 ssr-safety.test.ts entry names. Optional so pre-existing
    * 6-source fixtures (no SSR touch point) keep passing unmodified. */
   ssrRows?: Set<string>
@@ -343,7 +334,6 @@ const SOURCE_LABELS: Record<Exclude<keyof ParitySources, 'dirs' | 'ssrRows'>, st
   pkgExports: 'package.json exports key (packages/use/package.json)',
   rolldownInputs: 'rolldown input (packages/use/rolldown.config.ts)',
   sizeRows: '.size-limit.json row',
-  registry: 'USE_COMPOSABLES tuple (packages/compiler/src/codegen/use_registry.rs)',
 }
 
 /**
@@ -365,7 +355,7 @@ export function checkParity(sources: ParitySources, options: ParityOptions = {})
     ...sources.pkgExports,
     ...sources.rolldownInputs,
     ...sources.sizeRows,
-    ...sources.registry,
+    ...(sources.registry ?? []),
     ...(sources.ssrRows ?? []),
   ])
 
@@ -393,14 +383,15 @@ export function checkParity(sources: ParitySources, options: ParityOptions = {})
     if (!sources.rolldownInputs.has(name)) missing.push(SOURCE_LABELS.rolldownInputs)
     if (!sources.sizeRows.has(name)) missing.push(SOURCE_LABELS.sizeRows)
 
-    if (registryRequired(name, families)) {
-      if (!sources.registry.has(name)) missing.push(SOURCE_LABELS.registry)
-    } else if (sources.registry.has(name)) {
-      errors.push(
-        `'${name}' has a USE_COMPOSABLES tuple but its family has autoImport: false (or the name ` +
-          `is otherwise not registry-eligible) — remove the tuple. Injecting an auto-import for an ` +
-          `optional-peer composable is a hard bundler resolution break in apps without the peer.`,
-      )
+    if (sources.registry) {
+      if (registryRequired(name, families) && !sources.registry.has(name)) {
+        missing.push('standalone compiler auto-import registry (USE_COMPOSABLES contract)')
+      } else if (!registryRequired(name, families) && sources.registry.has(name)) {
+        errors.push(
+          `'${name}' has an auto-import registry entry but its family has autoImport: false — ` +
+            'remove the entry in the standalone compiler registry.',
+        )
+      }
     }
 
     if (options.ssrRequired?.has(name) && sources.ssrRows) {
@@ -509,10 +500,6 @@ function main(): void {
   const sizeLimitRows = JSON.parse(
     readFileSync(join(repoRoot, '.size-limit.json'), 'utf8'),
   ) as Array<{ name: string }>
-  const useRegistryRs = readFileSync(
-    join(repoRoot, 'packages/compiler/src/codegen/use_registry.rs'),
-    'utf8',
-  )
   const ssrSafetyPath = join(useDir, 'tests/ssr-safety.test.ts')
   const ssrSafetySrc = existsSync(ssrSafetyPath) ? readFileSync(ssrSafetyPath, 'utf8') : ''
 
@@ -530,7 +517,6 @@ function main(): void {
   const sizeRows = new Set([...sizeRowsAll].filter((n) => !isAggregateName(n)))
 
   const barrel = parseBarrelExports(barrelSrc)
-  const registry = parseUseRegistryRs(useRegistryRs)
   const ssrRows = parseSsrSafetyEntries(ssrSafetySrc)
 
   // "Does this composable's own source reference isClient?" — read each
@@ -549,12 +535,10 @@ function main(): void {
     pkgExports,
     rolldownInputs: rolldownComposableInputs,
     sizeRows,
-    registry,
     ssrRows,
   }
 
   const result = checkParity(sources, { families, ssrRequired })
-  const registryTupleNameErrors = checkRegistryTupleNames(useRegistryRs)
 
   const orphanFamilyDirs = discoverOrphanFamilyDirs(useSrcDir, families)
   const orphanErrors = orphanFamilyDirs.map(
@@ -579,25 +563,19 @@ function main(): void {
   }
   const aggregateErrors = checkFamilyAggregates(families, memberCounts, aggregateSources)
 
-  const allErrors = [
-    ...result.errors,
-    ...registryTupleNameErrors,
-    ...orphanErrors,
-    ...aggregateErrors,
-  ]
+  const allErrors = [...result.errors, ...orphanErrors, ...aggregateErrors]
   const totalNames = new Set([
     ...sources.dirs,
     ...sources.barrel,
     ...sources.pkgExports,
     ...sources.rolldownInputs,
     ...sources.sizeRows,
-    ...sources.registry,
   ]).size
 
   console.log('\n  @aihu/use registry parity check (family-aware)')
   console.log(
-    `  ${totalNames} composable name(s) discovered across six companion registrations ` +
-      `(+ family aggregate invariants).\n`,
+    `  ${totalNames} composable name(s) discovered across five root-owned registrations ` +
+      `(+ family aggregate invariants; compiler auto-import registration is checked in aihu-compiler).\n`,
   )
 
   for (const e of allErrors) {

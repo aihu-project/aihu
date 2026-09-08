@@ -5,7 +5,7 @@
  * retired collection-form \`$prop:\`/\`$action:\` macros with object-form
  * \`expose: { read: true }\`; rewritten to the current wrapper intrinsics
  * (\`prop()\`/\`action()\` with string-form \`expose\`), matching
- * packages/compiler/tests/fixtures/state-model/weather-new.aihu. The
+ * the standalone compiler state-model fixture. The
  * per-name \`describe:\`/\`expose:\` metadata now lives directly on the
  * prop/action declaration, so the standalone \`@agent { $describe: ... }\`
  * block in that example is dropped — \`$describe\` at the \`@agent\` level is

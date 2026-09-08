@@ -1,7 +1,7 @@
 /**
  * Test fixture for `scripts/check-css-engine-binary-bump.ts`.
  *
- * See tests/check-native-changeset.test.ts for the fuller FEL-414
+ * See scripts/lib/native-binary-bump.ts for the shared FEL-414
  * background this class of guard exists to prevent. This package has only
  * one platform-binary family (no napi addon), so the lockstep/lone-family
  * cases collapse relative to the compiler's dual-family test suite.
@@ -35,7 +35,7 @@ describe('css-engine binary bump guard', () => {
     expect(isCssCoreRustSource('packages/css-engine/crates/aihu-css-core/tests/emit.rs')).toBe(
       false,
     )
-    expect(isCssCoreRustSource('packages/compiler/src/codegen/emit.rs')).toBe(false)
+    expect(isCssCoreRustSource('packages/runtime/src/emit.ts')).toBe(false)
   })
 
   it("recognizes build.rs and recipes/*.css — both include_str!'d into the binary", () => {
@@ -52,7 +52,7 @@ describe('css-engine binary bump guard', () => {
       false,
     )
     // build.rs/recipes/ from an unrelated crate must not false-positive.
-    expect(isCssCoreRustSource('packages/compiler/build.rs')).toBe(false)
+    expect(isCssCoreRustSource('packages/runtime/build.ts')).toBe(false)
   })
 
   it('recognizes platform manifests', () => {

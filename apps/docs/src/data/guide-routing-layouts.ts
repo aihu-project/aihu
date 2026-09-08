@@ -3,7 +3,7 @@
  * apps/docs/src/content/docs/guides/routing-layouts.md. Only one dialect fix
  * applied: the layout example's `<$slot />` (retired $-prefixed special
  * element) becomes `<slot />` — confirmed current in
- * packages/compiler/src/parser/template.rs (bare "slot", not "$slot") and in
+ * the standalone compiler template parser (bare "slot", not "$slot") and in
  * the shipped apps/docs/src/layouts/docs.aihu (`<outlet>`, unprefixed).
  * Everything else in this guide (file-based routing, @route fields,
  * viteRouterIntegration, middleware) carries over unchanged. Fenced code

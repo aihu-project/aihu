@@ -70,7 +70,7 @@ export const GRANULARITIES = ['block', 'recipe'] as const
 /**
  * Canonical construct IDs. Row universe follows the compiler, not the docs:
  * binding + statement intrinsics from
- * `packages/compiler/src/parser/state_wrappers.rs` (BINDING_INTRINSICS /
+ * `the standalone compiler state-wrapper parser` (BINDING_INTRINSICS /
  * STATEMENT_INTRINSICS), template vocabulary from the template-grammar-v2
  * surface. Kept as data so `check:coverage-manifest` (P1) can join the same
  * registry.

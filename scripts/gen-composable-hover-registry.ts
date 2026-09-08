@@ -1,12 +1,7 @@
 #!/usr/bin/env bun
 /**
  * `gen:composable-registry` — regenerate the LSP's `@aihu/use` completion +
- * hover table from the two things that are already the source of truth:
- *
- *   1. `packages/compiler/src/codegen/use_registry.rs` `USE_COMPOSABLES` —
- *      the (bare call name, module specifier) pairs the compiler
- *      auto-imports. This is the list of names the editor must offer.
- *   2. Each composable's own leading JSDoc in
+ * hover table from each composable's own leading JSDoc in
  *      `packages/use/src/<...specifier-tail>/index.ts` — the one-line
  *      description after the `` `name` — `` prefix, already hand-written and
  *      maintained per FEL-342's ask for "hover docs (signature + one-line
@@ -23,7 +18,7 @@
  * `packages/use/src` on disk, so this can't be read at the LSP's runtime).
  */
 import { spawnSync } from 'node:child_process'
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -33,9 +28,6 @@ const ROOT = resolve(__dirname, '..')
 // Overridable so check-gate-wiring.ts's negative-fixture proof can point this
 // at a fixture tree instead of the real repo (same shape as check-moon-graph.ts's
 // MOON_GRAPH_ROOT) — never set these by hand.
-const REGISTRY_RS = process.env.COMPOSABLE_REGISTRY_RS
-  ? resolve(ROOT, process.env.COMPOSABLE_REGISTRY_RS)
-  : join(ROOT, 'packages/compiler/src/codegen/use_registry.rs')
 const OUT_FILE = process.env.COMPOSABLE_REGISTRY_OUT
   ? resolve(ROOT, process.env.COMPOSABLE_REGISTRY_OUT)
   : join(ROOT, 'packages/language-server/src/core/composable-registry.ts')
@@ -50,19 +42,52 @@ interface ComposableEntry {
 }
 
 function parseRegistry(): { name: string; specifier: string }[] {
-  const src = readFileSync(REGISTRY_RS, 'utf8')
-  const start = src.indexOf('pub(crate) const USE_COMPOSABLES')
-  const end = src.indexOf('\n];', start)
-  if (start === -1 || end === -1) {
-    throw new Error('could not locate USE_COMPOSABLES in use_registry.rs')
+  // The legacy Rust registry override is retained for gate-wiring's tiny
+  // fixture pair. Production generation reads root-owned @aihu/use sources;
+  // the standalone compiler consumes the resulting published contract.
+  const legacyRegistry = process.env.COMPOSABLE_REGISTRY_RS
+    ? resolve(ROOT, process.env.COMPOSABLE_REGISTRY_RS)
+    : undefined
+  if (legacyRegistry && existsSync(legacyRegistry)) {
+    const text = readFileSync(legacyRegistry, 'utf8')
+    return [...text.matchAll(/\("([^"]+)",\s*"([^"]+)"\)/g)].map((match) => ({
+      name: match[1],
+      specifier: match[2],
+    }))
   }
-  const body = src.slice(start, end)
+  const srcRoot = resolve(USE_SRC_ROOT)
+  const familiesPath = join(ROOT, 'packages/use/families.json')
+  const families = existsSync(familiesPath)
+    ? ((
+        JSON.parse(readFileSync(familiesPath, 'utf8')) as {
+          families?: Record<string, { autoImport?: boolean }>
+        }
+      ).families ?? {})
+    : {}
   const entries: { name: string; specifier: string }[] = []
-  for (const m of body.matchAll(/\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)/g)) {
-    const name = m[1]
-    const specifier = m[2]
-    if (name && specifier) entries.push({ name, specifier })
+  const walk = (dir: string, tail: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name === 'shared') continue
+      const nextTail = tail ? `${tail}/${entry.name}` : entry.name
+      const index = join(dir, entry.name, 'index.ts')
+      if (existsSync(index)) {
+        // Only directories declared as families have aggregate indexes that
+        // are not composables. A root-level composable such as useMouse also
+        // has an index.ts and must be registered directly.
+        if (!tail && families[entry.name]) {
+          walk(join(dir, entry.name), nextTail)
+          continue
+        }
+        const family = tail ? tail.split('/')[0] : undefined
+        if (!family || families[family]?.autoImport === true) {
+          entries.push({ name: entry.name, specifier: `@aihu/use/${nextTail}` })
+        }
+        continue
+      }
+      walk(join(dir, entry.name), nextTail)
+    }
   }
+  walk(srcRoot, '')
   return entries
 }
 
@@ -127,8 +152,7 @@ function main(): void {
   lines.push(' * packages/language-server/src/core/composable-registry.ts')
   lines.push(' *')
   lines.push(' * GENERATED — do not hand-edit. Source of truth:')
-  lines.push(' *   packages/compiler/src/codegen/use_registry.rs (names + specifiers)')
-  lines.push(" *   packages/use/src/<name>/index.ts (each composable's doc comment)")
+  lines.push(' *   packages/use/src/<name>/index.ts (names, specifiers, and doc comments)')
   lines.push(' *')
   lines.push(' * Regenerate: bun scripts/gen-composable-hover-registry.ts')
   lines.push(' * (FEL-342 / #427 follow-up — LSP composable-awareness)')

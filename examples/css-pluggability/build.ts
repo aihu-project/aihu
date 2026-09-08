@@ -2,8 +2,8 @@
  * build.ts — example pipeline for compiling a CSS-pluggable aihu app.
  *
  * Runs three stages, none of which need Vite (Vite-on-Bun has a known
- * limitation with the @aihu/compiler workspace symlink — see
- * packages/compiler/js/index.ts JSDoc on aihuCompilerPlugin).
+ * limitation with compiler workspace symlinks; use the published
+ * `@aihu/compiler` package for this example.
  *
  *   1. Compile each .aihu SFC → .ts via `transform()`.
  *      For each compiled module, post-process the emitted defineElement

@@ -179,7 +179,7 @@ import { aihuCompiler } from '@aihu/compiler';
 
 export default defineConfig({ plugins: [aihuCompiler()] });`,
     extra:
-      '⚠ **Native binary required.** This package downloads a pre-built `aihu-compile` binary at install time via `js/postinstall.ts` (see [WASM.md](https://github.com/aihu-project/aihu/blob/main/packages/compiler/WASM.md)). Binaries are published per-platform from the `release.yml` workflow on every `v*` tag. SHA256-verified per arch-4 §4.3.',
+      '⚠ **Native binary required.** This package downloads a pre-built `aihu-compile` binary at install time via its published package entrypoint. Binaries are published per-platform by the standalone [aihu-compiler repository](https://github.com/aihu-project/aihu-compiler) and SHA256-verified per architecture.',
   },
   {
     name: 'cli',

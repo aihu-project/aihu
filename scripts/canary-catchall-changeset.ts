@@ -22,7 +22,7 @@
  *   - packages/_moved/* — frozen legacy-name stubs (@aihu/data,
  *     @aihu/agent-readiness at 1.x); a canary of a moved stub is meaningless.
  *   - the packages/<host>/npm/<platform> platform packages — not workspace
- *     members; they are synced separately by scripts/stamp-platform-versions.ts.
+ *     members; native platform packages are released with their owning package.
  *   - private packages and the .changeset/config.json `ignore` list.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'

@@ -4,7 +4,7 @@
  * The `<a>` boundary is emitted by the compiler as a runtime helper that
  * delegates to `@aihu/router` exports (`navigate`, `useRoute`,
  * `createPrefetcher`). These tests exercise the runtime exports directly —
- * the compiler emit is covered by `packages/compiler/tests/route_macros.rs`.
+ * compiler emission is covered by the standalone aihu-compiler repository.
  *
  * Acceptance (§7): "Renders <a> with correct href; click triggers SPA
  * navigation; aria-current='page' on active match; prefetch='hover'

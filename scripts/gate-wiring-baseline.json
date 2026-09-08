@@ -37,7 +37,7 @@
     "      packages/cli/src/templates-tooling.ts:135   a warning string telling",
     "                                                  users NOT to use those forms",
     "      apps/docs/src/data/guide-routing-layouts.ts:4  comment",
-    "      packages/compiler/tests/slot-fallback-drive.test.ts describe/it strings",
+    "      standalone compiler slot-fallback-drive test describe/it strings",
     "    This is the THIRD instance of one class — a regex over raw source cannot",
     "    tell CODE from TEXT ABOUT CODE — after #681 (dep-check, comment-blind) and",
     "    #689 (check-moon-graph, template-literal-blind). check-grammar-v2 greps",

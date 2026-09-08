@@ -45,7 +45,6 @@ name: Deploy aihu-docs
       - 'packages/runtime/**'
       - 'packages/store/**'
       - 'packages/context/**'
-      - 'packages/compiler/**'
       - 'packages/css-engine/**'
       - 'packages/plugin-agent-readiness/**'
       # Version-bearing manifests: a `chore(release): version packages` merge
@@ -64,7 +63,6 @@ name: Deploy aihu-docs
       - 'packages/runtime/**'
       - 'packages/store/**'
       - 'packages/context/**'
-      - 'packages/compiler/**'
       - 'packages/css-engine/**'
       - 'packages/plugin-agent-readiness/**'
       - 'packages/*/package.json'

@@ -12,7 +12,7 @@
  * that is above this slice's authority.
  *
  * Mirrors the compiler's `opaque_member_id` in
- * `packages/compiler/src/codegen/emit.rs` — this MUST stay byte-identical to
+ * the standalone compiler emitter — this MUST stay byte-identical to
  * the Rust emit, and is kept in sync with it by golden vectors.
  */
 

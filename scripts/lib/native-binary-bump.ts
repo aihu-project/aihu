@@ -4,14 +4,10 @@
  * Shared core for the "native binary bump" CI guards: a change to a package's
  * Rust source MUST bump the platform binary packages, or the fix never ships.
  *
- * Extracted from scripts/check-native-changeset.ts (FEL-414) so the same
- * proven rule set — lockstep bumps across every platform of every affected
- * family, plus the host manifest's optionalDependencies pins repointed —
- * applies to every native-binary package in the monorepo, not just the
- * compiler. See scripts/check-native-changeset.ts for the FEL-414 history
- * this was originally hardened against (a partial bump of ONE family passing
- * the old, looser check, stranding @aihu/compiler-native-* on npm at 0.1.0
- * through nine CLI bumps).
+ * This shared rule set applies to every native-binary package in the monorepo:
+ * lockstep bumps across every platform of every affected family, plus the host
+ * manifest's optionalDependencies pins repointed. It was hardened after a
+ * partial bump of one family passed the old, looser check.
  *
  * A package with native binaries defines a `BumpCheckerConfig` (its platform
  * families, host manifest path, and source-file predicates) and gets a fully
@@ -212,7 +208,7 @@ export function createBumpChecker<F extends FamilyKey>(
     lines.push(
       'release.yml skips any platform version already on npm. Any manifest left',
       'unbumped is silently not published and consumers keep loading the stale',
-      'artifact — see scripts/check-native-changeset.ts for the FEL-414 history',
+      'artifact — see this helper for the FEL-414 history',
       'this rule was hardened against.',
       '',
       'Fix: bump every manifest listed above (all platforms of every required',

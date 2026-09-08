@@ -264,7 +264,7 @@ bun add @aihu/css-engine
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
 - [CSS Engine + Primitives design spec](../../docs/superpowers/specs/2026-05-10-aihu-css-engine-and-primitives-design.md)
-- [@aihu/compiler](../compiler)
+- [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
 - [Aihu framework root](../../README.md)
 
 <sub><i>Auto-generated against `@aihu/css-engine@0.6.1`.</i></sub>

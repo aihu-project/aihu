@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "packages/compiler",
     "packages/css-engine/crates/aihu-css-core",
     "packages/swarm",
 ]
@@ -11,10 +10,6 @@ members = [
 # break `cargo build` for the native binaries.
 exclude = [
     "packages/server/src-native",
-    # napi-rs in-process compiler addon — same standalone treatment: its own
-    # O3 release profile (the workspace profile is wasm-size-tuned Oz +
-    # panic="abort", which napi unwinding must not inherit).
-    "packages/compiler/src-native",
 ]
 
 [workspace.package]
@@ -22,15 +17,8 @@ edition = "2021"
 license = "MIT"
 repository = "https://github.com/aihu-project/aihu"
 
-# W2 (advanced-js-template-expressions): size-optimized release profile so the
-# aihu-compiler cdylib + oxc_parser fit the <500 KB-gzip wasm budget
-# (packages/compiler/WASM.md, arch-4 §4.6 / Directive 1). Measured numbers live
-# in WASM.md. Cargo profiles cannot be scoped per-target, so this applies to
-# the native `aihu-compile` release binary too — acceptable: compile latency
-# has ~100x headroom against the <200 ms p50 target, and LTO + 1 CGU claw most
-# of the O3→Oz delta back. NOTE: `panic = "abort"` means `cargo test --release`
-# cannot run (tests need unwinding); tests build under the dev/test profile,
-# which is untouched.
+# CSS engine release profile. The SFC compiler and its WASM/native release
+# profiles are owned by the standalone aihu-compiler repository.
 [profile.release]
 opt-level = "z"
 lto = true

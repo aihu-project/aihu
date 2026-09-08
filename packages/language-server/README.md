@@ -111,7 +111,7 @@ bun add @aihu/language-server
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
 - [@aihu/tsc](../tsc)
-- [@aihu/compiler](../compiler)
+- [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
 - [vscode-aihu](../vscode-aihu)
 - [Aihu framework root](../../README.md)
 

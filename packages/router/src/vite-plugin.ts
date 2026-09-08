@@ -106,7 +106,7 @@ export interface LayoutMap {
  * the tag through this helper, so the two sides can never drift.
  *
  * KEEP IN SYNC: the `@aihu/compiler` Vite plugin derives the same tag when it
- * compiles a file under the layouts dir (`packages/compiler/js/index.ts`).
+ * compiles a file under the layouts dir in the standalone compiler package.
  */
 export function layoutTagFor(name: string): string {
   return `aihu-layout-${name.toLowerCase()}`
@@ -121,7 +121,7 @@ export function layoutTagFor(name: string): string {
  * lowercase (acronym boundary); the result is lowercased.
  *
  * KEEP IN SYNC with `@aihu/compiler` `kebabComponentTag`
- * (`packages/compiler/js/index.ts`) and the Rust normalizer (`tags.rs`).
+ * (the standalone compiler's JS and Rust normalizers).
  * The router deliberately does not depend on `@aihu/compiler` (same precedent
  * as `layoutTagFor` above), so this is a local copy of the algorithm.
  */
@@ -294,13 +294,13 @@ const SAFE_MODULE_PATH = /^[^"'\\\n\r\u2028\u2029]+$/
  *
  * `@meta { name }` is DELIBERATELY NOT CONSULTED. This function used to prefer
  * it over both other sources, and that was a bug rather than a feature: the
- * compiler never applies it. `@meta`'s parsed form (`SfcMeta` in
- * `packages/compiler/src/types.rs`) has no `name` field at all — the block
+ * compiler never applies it. `@meta`'s parsed form has no `name` field at all —
+ * the block
  * carries recipe-catalog data (`variants`/`slots`/`dependencies`/
  * `registryDependencies`) and the convention that it must not redefine the
  * component name is written down as R-META-COEXIST, asserted by
- * `packages/compiler/tests/meta_block.rs` and restated at three points in the
- * Rust source. So `defineElement` — and therefore `__aihu_tag__`, and
+ * the standalone compiler's metadata tests and source invariants. So
+ * `defineElement` — and therefore `__aihu_tag__`, and
  * therefore what the browser actually registers — resolves
  * `@route { name }` → file stem, and an SFC declaring `@meta { name: "x-y" }`
  * in `x-plain.aihu` still emits `defineElement('x-plain', …)`.
@@ -411,8 +411,8 @@ export function scanComponents(
  * deduped, and sorted (deterministic output). Build-time only.
  *
  * KEEP IN SYNC with the Rust compiler's classification + collection:
- * `is_component_tag` (`packages/compiler/src/tags.rs`) and
- * `collect_component_tags` (`packages/compiler/src/codegen/emit.rs`). Like
+ * `is_component_tag` and `collect_component_tags` in the standalone compiler.
+ * Like
  * `componentTagFor` above, this is a deliberate router-side mirror so the
  * router keeps zero compiler dependency.
  */

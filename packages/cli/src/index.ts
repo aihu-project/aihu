@@ -241,7 +241,7 @@ export function appPackageJson(
  * name and summary but NO `## Components` section, even though the scaffolded
  * page declares `$action` entries. The cause is not in this file — a client
  * target strips `registerAgentMetadata` by design (`elide_agent`,
- * `packages/compiler/src/codegen/emit.rs:206`), so the generator faithfully
+ * the standalone compiler emitter, so the generator faithfully
  * renders an empty registry. Tracked as FEL-434; when that emission lands this
  * document fills in with no change here.
  *

@@ -9,11 +9,10 @@ name: Build and publish platform native packages
 # docs/plans/2026-08-10-platforms-before-pins.md §2.2 for the asset-loss
 # mechanism that rules that shape out.
 #
-# Builds the aihu-compile CLI binaries (`build`) plus the three native addon
-# families (@aihu/server, @aihu/css-engine, @aihu/compiler's napi addon) and
-# publishes all four @aihu/*-<platform> optionalDependency package sets to
-# npm. The build-* jobs always run, so the GitHub Release always has fresh
-# binaries; the publish-* jobs only run on a real tag push or a canary
+# Builds the two root-owned native addon families (@aihu/server and
+# @aihu/css-engine) and publishes their @aihu/*-<platform> optionalDependency
+# package sets to npm. The build-* jobs always run, so the GitHub Release always
+# has fresh binaries; the publish-* jobs only run on a real tag push or a canary
 # workflow_dispatch — gated by `inputs.is_release`, computed by the caller.
 #
 # Called from:
@@ -52,157 +51,6 @@ env:
   RUSTUP_TOOLCHAIN: "1.95.0"
 
 jobs:
-  build:
-    name: Build ${{ matrix.asset }}
-    runs-on: ${{ matrix.runner }}
-    # Longest observed run of this job is ~3 min; without a bound a hang
-    # inherits GitHub's 360 min default and stalls the release for six hours.
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-14
-            target: aarch64-apple-darwin
-            asset: aihu-compile-darwin-arm64
-            ext: ''
-            use_cross: false
-          # x86_64 darwin built on macos-14 (Apple Silicon) via cross-target.
-          # macos-13 reached end-of-life 2025-12-04 and was removed from GitHub's
-          # hosted-runner pool — jobs requesting `runs-on: macos-13` queue forever.
-          # rustup adds the x86_64-apple-darwin stdlib on demand and cargo builds
-          # for the requested target; no QEMU/cross needed (LLVM cross-compiles
-          # natively for darwin on darwin hosts).
-          - runner: macos-14
-            target: x86_64-apple-darwin
-            asset: aihu-compile-darwin-x64
-            ext: ''
-            use_cross: false
-          - runner: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            asset: aihu-compile-linux-x64
-            ext: ''
-            use_cross: false
-          - runner: ubuntu-22.04
-            target: aarch64-unknown-linux-gnu
-            asset: aihu-compile-linux-arm64
-            ext: ''
-            use_cross: true
-          - runner: windows-2022
-            target: x86_64-pc-windows-msvc
-            asset: aihu-compile-windows-x64.exe
-            ext: '.exe'
-            use_cross: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # stable @ 2024-10-25
-        with:
-          toolchain: "1.95.0"
-          targets: ${{ matrix.target }}
-
-      - name: Install cross (aarch64-linux only)
-        if: matrix.use_cross == true
-        # cross v0.2.5 (2023-02-04) — latest stable tag; uses its committed
-        # Cargo.lock (--locked) so thiserror stays on v1, avoiding the v1/v2
-        # conflict that caused the previous git-rev pin (4090beca) to fail.
-        # Commit: 88f49ff79e777bef6d3564531636ee4d3cc2f8d2
-        run: cargo install cross --git https://github.com/cross-rs/cross --tag v0.2.5 --locked
-
-      - name: Build release binary (cargo)
-        if: matrix.use_cross == false
-        run: cargo build --release --target ${{ matrix.target }} --manifest-path packages/compiler/Cargo.toml
-
-      - name: Build release binary (cross)
-        if: matrix.use_cross == true
-        run: cross build --release --target ${{ matrix.target }} --manifest-path packages/compiler/Cargo.toml
-
-      - name: Stage asset (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -p artifact
-          # Workspace-root target/ — `packages/compiler` is a member of the root
-          # Cargo workspace, so cargo emits to ./target, not packages/compiler/target.
-          cp target/${{ matrix.target }}/release/aihu-compile artifact/${{ matrix.asset }}
-          chmod 0755 artifact/${{ matrix.asset }}
-          # SHA256 sidecar, for out-of-band verification of the Release asset.
-          #
-          # macOS runners ship `shasum`, NOT `sha256sum`, and the darwin targets
-          # in this matrix build on macOS. The previous one-liner
-          #
-          #   sha256sum "$asset" | awk '{print $1}' > "$asset.sha256"
-          #
-          # failed there in the quietest possible way. A pipeline's exit status
-          # is its LAST command's, so `awk` returning 0 meant `set -e` never
-          # fired on the missing `sha256sum`; the redirect still created the
-          # sidecar, empty; `if-no-files-found: error` saw a file and was
-          # satisfied; and the flatten step below skipped it as empty. Result:
-          # every darwin release shipped with no checksum while CI stayed green.
-          # v0.4.61 is the release where that was finally noticed.
-          #
-          # So: pick the tool that exists, keep the digest out of a pipeline's
-          # exit status, and assert it is non-empty before writing.
-          asset="artifact/${{ matrix.asset }}"
-          if command -v sha256sum >/dev/null 2>&1; then
-            digest="$(sha256sum "$asset" | awk '{print $1}')"
-          elif command -v shasum >/dev/null 2>&1; then
-            digest="$(shasum -a 256 "$asset" | awk '{print $1}')"
-          else
-            echo "::error::neither sha256sum nor shasum is available on $(uname -s) — cannot checksum ${{ matrix.asset }}"
-            exit 1
-          fi
-          if [ -z "$digest" ]; then
-            echo "::error::computed an empty SHA256 for ${{ matrix.asset }}"
-            exit 1
-          fi
-          # No trailing newline, matching the Windows step's -NoNewline.
-          printf '%s' "$digest" > "$asset.sha256"
-          echo "Generated SHA256: $digest"
-
-      - name: Stage asset (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path artifact | Out-Null
-          # Workspace-root target/ — see the Unix stage step above.
-          Copy-Item -Path "target/${{ matrix.target }}/release/aihu-compile.exe" -Destination "artifact/${{ matrix.asset }}"
-          # SHA256 sidecar, for out-of-band verification (see the header note —
-          # there is no postinstall consumer). PowerShell's Get-FileHash has no
-          # equivalent of the Unix side's missing-tool trap.
-          $hash = (Get-FileHash -Algorithm SHA256 "artifact/${{ matrix.asset }}").Hash.ToLower()
-          $hash | Out-File -FilePath "artifact/${{ matrix.asset }}.sha256" -Encoding ascii -NoNewline
-          Write-Host "Generated SHA256: $hash"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.asset }}
-          path: |
-            artifact/${{ matrix.asset }}
-            artifact/${{ matrix.asset }}.sha256
-          if-no-files-found: error
-          retention-days: 7
-
-  # ---------------------------------------------------------------------------
-  # @aihu/server native renderer (napi-rs Rust addon).
-  #
-  # Parity-gate paths (AC-15, spec-server-native.md §4.4): the parity gate
-  # triggers on PRs touching
-  #   - packages/server/src/ssr.ts
-  #   - packages/server/src-native/**
-  # The build-native job below builds the addon for the runner's platform; the
-  # parity test (packages/server/tests/native-parity.test.ts) then runs against
-  # the freshly-built binary. No env-var gate is needed — on a supported
-  # platform a missing binary throws via the loader (AC-9, spec §5.1), so CI
-  # without the addon is automatically a hard fail. The PR-time enforcement
-  # lives in the per-PR CI workflow's `check` job (.github/workflows/plan-a.yml
-  # — its `bun run test` step picks this up like any other *.test.ts file,
-  # with no dedicated named step) or moon's local CI gate; this release
-  # workflow builds and publishes the per-platform .node binaries that ship as
-  # @aihu/server-<platform> packages.
-  # ---------------------------------------------------------------------------
   build-native:
     name: Build native ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
@@ -307,9 +155,8 @@ jobs:
       - name: Snapshot version (canary)
         # Ephemeral 0.0.0-canary-<sha> versions — computed identically in every
         # canary publish job from the same SHA (snapshot.prereleaseTemplate is
-        # "{tag}-{commit}"). stamp-platform-versions.ts then syncs the non-
-        # workspace packages/*/npm/* platform packages + host optionalDependencies
-        # pins to the same snapshot version.
+        # "{tag}-{commit}"). stamp-platform-versions.ts then synchronizes the
+        # remaining server/CSS platform manifests and host pins.
         if: inputs.canary
         env:
           HUSKY: '0'
@@ -320,7 +167,7 @@ jobs:
           bun install --frozen-lockfile --ignore-scripts
           bun scripts/canary-catchall-changeset.ts
           bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot
+          bun scripts/stamp-platform-versions.ts --require-snapshot --host server,css-engine
 
       - name: Download all native artifacts
         uses: actions/download-artifact@v8
@@ -343,7 +190,7 @@ jobs:
             node_file=$(ls native-artifacts/native-$platform/*.node 2>/dev/null || true)
             # HARD FAIL, not silent skip: a missing binary here would publish
             # an empty platform package and brick install resolution for that
-            # platform (see publish-compiler-native's comment on why this
+            # platform (see publish-native's comment on why this
             # loop's OWN prior silent-skip shape was the anti-pattern).
             if [ -z "$node_file" ]; then
               echo "::error::no .node artifact for $platform (expected native-artifacts/native-$platform/*.node)"
@@ -492,7 +339,6 @@ jobs:
           bun install --frozen-lockfile --ignore-scripts
           bun scripts/canary-catchall-changeset.ts
           bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot
 
       - name: Download all css-native artifacts
         uses: actions/download-artifact@v8
@@ -516,7 +362,7 @@ jobs:
             bin_file=$(ls css-native-artifacts/css-native-$platform/aihu-css-compile* 2>/dev/null || true)
             # HARD FAIL, not silent skip: a missing binary here would publish
             # an empty platform package and brick install resolution for that
-            # platform (see publish-compiler-native's comment on why this
+            # platform (see publish-css-native's comment on why this
             # loop's OWN prior silent-skip shape was the anti-pattern).
             if [ -z "$bin_file" ]; then
               echo "::error::no css binary artifact for $platform (expected css-native-artifacts/css-native-$platform/aihu-css-compile*)"
@@ -534,324 +380,6 @@ jobs:
               win32-*) ;;
               *) chmod 0755 "$dest" ;;
             esac
-            # Final guard: the staged file must be non-empty before publish.
-            if [ ! -s "$dest" ]; then
-              echo "::error::staged binary is empty: $dest (platform $platform)"
-              exit 1
-            fi
-            pkg_name=$(node -p "require('./$dir/package.json').name")
-            pkg_version=$(node -p "require('./$dir/package.json').version")
-            # Idempotency: skip if this version is already on npm (re-run / retag).
-            existing=$(npm view "${pkg_name}@${pkg_version}" version 2>/dev/null || true)
-            if [ -n "$existing" ]; then
-              echo "${pkg_name}@${pkg_version} already published — skipping"
-              continue
-            fi
-            ( cd "$dir" && npm publish --access public $NPM_EXTRA )
-          done
-
-  # ---------------------------------------------------------------------------
-  # @aihu/compiler native CLI binary (aihu-compile, from the aihu-compile crate).
-  # Like @aihu/css-engine, the compiler invokes the binary as a CLI SUBPROCESS —
-  # the per-platform packages ship a raw executable, and resolveCompilerBinary()
-  # (packages/compiler/js/resolve-binary.ts) + the bin shim
-  # (packages/compiler/bin/aihu-compile.mjs) resolve its path via the
-  # optionalDependency package. REUSES the existing `build` job's 5
-  # aihu-compile-<platform> artifacts (no new build job). The dev/monorepo path
-  # uses the workspace `target/` fallback.
-  #
-  # IMPORTANT: artifact names differ from npm dir names — they are mapped
-  # EXPLICITLY below. A missing binary for any of the 5 dirs is a HARD FAIL: a
-  # silent skip would publish an empty platform package and brick install
-  # resolution for that platform. (publish-native, publish-css-native, and
-  # publish-compiler-napi originally silent-skipped instead — fixed to match
-  # this job's shape once the pattern was noticed; see their own comments.)
-  # ---------------------------------------------------------------------------
-  publish-compiler-native:
-    name: Publish @aihu/compiler-* platform packages
-    needs: build
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      id-token: write
-    # Longest observed run of this job is ~3 min; without a bound a hang
-    # inherits GitHub's 360 min default and stalls the release for six hours.
-    timeout-minutes: 20
-    # Tag push (stable) OR canary workflow_dispatch (see publish-native).
-    if: inputs.is_release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
-
-      - name: Setup Bun (canary)
-        if: inputs.canary
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Snapshot version (canary)
-        # See publish-native's snapshot step — identical, deterministic per SHA.
-        if: inputs.canary
-        env:
-          HUSKY: '0'
-          # @changesets/changelog-github requires a token even for snapshot
-          # changelog assembly.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bun install --frozen-lockfile --ignore-scripts
-          bun scripts/canary-catchall-changeset.ts
-          bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot
-
-      - name: Download all compiler binary artifacts
-        uses: actions/download-artifact@v8
-        with:
-          path: compiler-artifacts
-
-      - name: Stage and publish each platform package (idempotent, hard-fail)
-        env:
-          CANARY: ${{ inputs.canary && '1' || '' }}
-          CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
-        run: |
-          set -euo pipefail
-          # Canary dist-tag / dry-run flags (see publish-native).
-          NPM_EXTRA=""
-          if [ -n "${CANARY:-}" ]; then NPM_EXTRA="--tag canary"; fi
-          if [ -n "${CANARY_DRY_RUN:-}" ]; then NPM_EXTRA="$NPM_EXTRA --dry-run"; fi
-          # Explicit npm-dir → (build artifact name, dest file) map. The `build`
-          # job uploads artifacts named aihu-compile-<asset>; download-artifact@v4
-          # places each under compiler-artifacts/<artifact-name>/<artifact-name>.
-          # Dest file is aihu-compile (or aihu-compile.exe on win32) to match the
-          # platform package's `files` entry and the resolver's binFile.
-          declare -A ARTIFACT=(
-            [darwin-arm64]="aihu-compile-darwin-arm64"
-            [darwin-x64]="aihu-compile-darwin-x64"
-            [linux-x64-gnu]="aihu-compile-linux-x64"
-            [linux-arm64-gnu]="aihu-compile-linux-arm64"
-            [win32-x64-msvc]="aihu-compile-windows-x64.exe"
-          )
-          for dir in packages/compiler/npm/*/; do
-            platform=$(basename "$dir")
-            artifact="${ARTIFACT[$platform]:-}"
-            if [ -z "$artifact" ]; then
-              echo "::error::no artifact mapping for platform dir $platform"
-              exit 1
-            fi
-            src="compiler-artifacts/$artifact/$artifact"
-            if [ ! -f "$src" ]; then
-              echo "::error::expected compiler binary artifact not found: $src (platform $platform)"
-              exit 1
-            fi
-            case "$platform" in
-              win32-*) dest="$dir/aihu-compile.exe" ;;
-              *)       dest="$dir/aihu-compile" ;;
-            esac
-            cp "$src" "$dest"
-            # Restore +x lost in actions/download-artifact@v8 (does NOT preserve
-            # POSIX mode bits). Skip win32 — NTFS has no exec bit and we run on
-            # Linux. Without this the published tarball ships aihu-compile as
-            # -rw-r--r-- and Bun consumers (postinstall blocked for untrusted
-            # deps) cannot fix it, so resolveCompilerBinary()'s isUsableExecutable
-            # X_OK check rejects it.
-            case "$platform" in
-              win32-*) ;;
-              *) chmod 0755 "$dest" ;;
-            esac
-            # Final guard: the staged file must be non-empty before publish.
-            if [ ! -s "$dest" ]; then
-              echo "::error::staged binary is empty: $dest (platform $platform)"
-              exit 1
-            fi
-            pkg_name=$(node -p "require('./$dir/package.json').name")
-            pkg_version=$(node -p "require('./$dir/package.json').version")
-            # Idempotency: skip if this version is already on npm (re-run / retag).
-            existing=$(npm view "${pkg_name}@${pkg_version}" version 2>/dev/null || true)
-            if [ -n "$existing" ]; then
-              echo "${pkg_name}@${pkg_version} already published — skipping"
-              continue
-            fi
-            ( cd "$dir" && npm publish --access public $NPM_EXTRA )
-          done
-
-  # ---------------------------------------------------------------------------
-  # @aihu/compiler native ADDON (napi-rs, packages/compiler/src-native) — the
-  # in-process compile fast path. Mirrors the @aihu/server build-native /
-  # publish-native pattern: per-platform .node cdylibs shipped as
-  # @aihu/compiler-native-<platform> optionalDependency packages
-  # (packages/compiler/npm-native/<platform>/), loaded by
-  # packages/compiler/js/native.ts. The CLI binary lanes above are UNCHANGED —
-  # the addon is an additional backend, and the spawn path remains the
-  # universal fallback. Same 5 platforms as the CLI matrix; linux-arm64 uses
-  # `cross` like the CLI build (napi cdylibs cross-compile cleanly under it).
-  # ---------------------------------------------------------------------------
-  build-compiler-napi:
-    name: Build compiler addon ${{ matrix.platform }}
-    runs-on: ${{ matrix.runner }}
-    # Longest observed run of this job is ~3 min; without a bound a hang
-    # inherits GitHub's 360 min default and stalls the release for six hours.
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-14
-            target: aarch64-apple-darwin
-            platform: darwin-arm64
-            node-file: aihu-compiler-native.darwin-arm64.node
-            cdylib: libaihu_compiler_native.dylib
-            use_cross: false
-          # x86_64 darwin: cross-target on macos-14 (macos-13 EOL'd 2025-12-04);
-          # LLVM cross-compiles darwin-on-darwin natively.
-          - runner: macos-14
-            target: x86_64-apple-darwin
-            platform: darwin-x64
-            node-file: aihu-compiler-native.darwin-x64.node
-            cdylib: libaihu_compiler_native.dylib
-            use_cross: false
-          - runner: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            platform: linux-x64-gnu
-            node-file: aihu-compiler-native.linux-x64-gnu.node
-            cdylib: libaihu_compiler_native.so
-            use_cross: false
-          - runner: ubuntu-22.04
-            target: aarch64-unknown-linux-gnu
-            platform: linux-arm64-gnu
-            node-file: aihu-compiler-native.linux-arm64-gnu.node
-            cdylib: libaihu_compiler_native.so
-            use_cross: true
-          - runner: windows-2022
-            target: x86_64-pc-windows-msvc
-            platform: win32-x64-msvc
-            node-file: aihu-compiler-native.win32-x64-msvc.node
-            cdylib: aihu_compiler_native.dll
-            use_cross: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # stable @ 2024-10-25
-        with:
-          toolchain: "1.95.0"
-          targets: ${{ matrix.target }}
-
-      - name: Install cross (aarch64-linux only)
-        if: matrix.use_cross == true
-        # Same pin as the CLI `build` job — cross v0.2.5, --locked.
-        run: cargo install cross --git https://github.com/cross-rs/cross --tag v0.2.5 --locked
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-
-      - name: Build release cdylib (cargo)
-        if: matrix.use_cross == false
-        run: cargo build --release --target ${{ matrix.target }} --manifest-path packages/compiler/src-native/Cargo.toml
-
-      - name: Build release cdylib (cross)
-        if: matrix.use_cross == true
-        run: cross build --release --target ${{ matrix.target }} --manifest-path packages/compiler/src-native/Cargo.toml
-
-      - name: Stage .node file (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          # src-native is EXCLUDED from the root workspace, so cargo emits to
-          # packages/compiler/src-native/target/, not ./target.
-          cp packages/compiler/src-native/target/${{ matrix.target }}/release/${{ matrix.cdylib }} ${{ matrix.node-file }}
-
-      - name: Stage .node file (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Copy-Item -Path "packages/compiler/src-native/target/${{ matrix.target }}/release/${{ matrix.cdylib }}" -Destination "${{ matrix.node-file }}"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: compiler-napi-${{ matrix.platform }}
-          path: ${{ matrix.node-file }}
-          if-no-files-found: error
-          retention-days: 7
-
-  publish-compiler-napi:
-    name: Publish @aihu/compiler-native-* platform packages
-    needs: build-compiler-napi
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      id-token: write
-    # Longest observed run of this job is ~3 min; without a bound a hang
-    # inherits GitHub's 360 min default and stalls the release for six hours.
-    timeout-minutes: 20
-    # Tag push (stable) OR canary workflow_dispatch (see publish-native).
-    if: inputs.is_release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
-
-      - name: Setup Bun (canary)
-        if: inputs.canary
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Snapshot version (canary)
-        # See publish-native's snapshot step — identical, deterministic per SHA.
-        if: inputs.canary
-        env:
-          HUSKY: '0'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bun install --frozen-lockfile --ignore-scripts
-          bun scripts/canary-catchall-changeset.ts
-          bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot
-
-      - name: Download all compiler addon artifacts
-        uses: actions/download-artifact@v8
-        with:
-          path: compiler-napi-artifacts
-
-      - name: Stage and publish each platform package (idempotent)
-        env:
-          CANARY: ${{ inputs.canary && '1' || '' }}
-          CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
-        run: |
-          set -euo pipefail
-          NPM_EXTRA=""
-          if [ -n "${CANARY:-}" ]; then NPM_EXTRA="--tag canary"; fi
-          if [ -n "${CANARY_DRY_RUN:-}" ]; then NPM_EXTRA="$NPM_EXTRA --dry-run"; fi
-          for dir in packages/compiler/npm-native/*/; do
-            platform=$(basename "$dir")
-            node_file=$(ls compiler-napi-artifacts/compiler-napi-$platform/*.node 2>/dev/null || true)
-            # HARD FAIL, not silent skip: a missing binary here would publish
-            # an empty platform package and brick install resolution for that
-            # platform — this is the exact FEL-414 shape (napi addon stranded
-            # on npm at 0.1.0 through nine CLI bumps) a silent skip caused.
-            if [ -z "$node_file" ]; then
-              echo "::error::no .node artifact for $platform (expected compiler-napi-artifacts/compiler-napi-$platform/*.node)"
-              exit 1
-            fi
-            dest="$dir/$(basename "$node_file")"
-            cp "$node_file" "$dest"
-            # No chmod: .node files are dlopen()'d, not exec()'d (see the
-            # publish-native NOTE — do not change without re-verifying dlopen).
             # Final guard: the staged file must be non-empty before publish.
             if [ ! -s "$dest" ]; then
               echo "::error::staged binary is empty: $dest (platform $platform)"

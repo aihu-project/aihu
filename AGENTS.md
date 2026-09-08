@@ -20,8 +20,10 @@ bun run bench                # benchmark suite (cellx, dynamic-deps, etc.)
 
 - **bun** — runtime, package manager
 - **vitest** — test runner
-- Rust SFC compiler (`packages/compiler`) — v1 shipped; emits vanilla JS,
-  a type-check sidecar for `tsc`/the editor, and SSR/route metadata
+- Published SFC compiler (`@aihu/compiler`, released by the standalone
+  `aihu-project/aihu-compiler` repository) emits vanilla JS, a type-check
+  sidecar for `tsc`/the editor, and SSR/route metadata. This repository tests
+  the released artifact as a consumer and does not own compiler source.
 - Workspace packages under `packages/`:
   - `@aihu/signals` — push-based signals/computeds/effects (≤ 1.7 kB gz)
   - `@aihu/arbor` — `branch`/`leaf`/`mount` DOM primitives
@@ -61,48 +63,6 @@ so agents read real library code instead of guessing at an API.
   usually not the version pinned here.
 - Vendored trees are pruned to what aihu actually compiles against, not
   full upstream mirrors. A missing crate is intentional, not damage.
-
-### `repos/oxc` — oxc @ 0.139.0
-
-`packages/compiler` pins seven oxc crates EXACT (`=0.139.0`) because
-oxc's AST churns between minors. **Read `repos/oxc` before changing
-anything under `packages/compiler/src/expr/`** — it is the source of
-truth for AST node shapes, visitor hooks, and `ScopeFlags`/`ScopeId`
-semantics at the pinned version. Treat pretrained oxc knowledge as
-version-skewed until checked against this tree.
-
-Pruned to the dependency closure of those seven crates (14 crates,
-~7.7 MB of 109 MB upstream). `oxc_index` is a crates.io dependency, not
-a monorepo member, so it is absent by design.
-
-Updating (rare — the pin moves deliberately, all seven in lockstep):
-
-```bash
-git subtree pull --prefix=repos/oxc \
-  https://github.com/oxc-project/oxc.git crates_vX.Y.Z --squash
-```
-
-Expect conflicts on paths the prune removed; resolve with `git rm`.
-
-`repos/oxc/Cargo.toml` declares its own `[workspace]` — that is what keeps
-it out of the root workspace without an `exclude` entry (contrast
-`packages/*/src-native`, which need one). Its `members` glob still lists
-`apps/*`, `napi/*` and `tasks/*`, all removed by the prune, so **`cargo`
-run from inside `repos/oxc` fails**. That is expected. Root-level
-`cargo build` / `cargo metadata` never read it and are unaffected;
-`.vscode/settings.json` sets `rust-analyzer.files.excludeDirs` so the
-editor doesn't adopt it as a second linked project either.
-
-Before the next `subtree pull`, confirm the split point is still
-discoverable — `git subtree` finds it by line-scanning commit messages,
-so it survives a squash-merge, but verify rather than assume:
-
-```bash
-git log --grep="^git-subtree-dir: repos/oxc/*\$" --pretty=format:'%h %s' | head -1
-```
-
-An empty result means the trailers were lost and the pull must be redone
-as a fresh `subtree add`.
 
 ## gstack
 

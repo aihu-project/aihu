@@ -41,8 +41,9 @@ contract that the auto-fold path is wired correctly end-to-end.
 ## See also
 
 - [`packages/css-engine`](../../packages/css-engine) — the engine itself.
-- [`packages/compiler/js/index.ts`](../../packages/compiler/js/index.ts) —
-  the `_maybeCompileUtilityCss` + `_foldCssEngineStyles` hook.
+- [`@aihu/compiler`](https://github.com/aihu-project/aihu-compiler) — the
+  compiler plugin that provides the `_maybeCompileUtilityCss` +
+  `_foldCssEngineStyles` hook.
 - [`examples/css-engine-demo`](../css-engine-demo) — older example that
   manually invokes `compile()` against a hand-rolled class list and
   bypasses `viteAihuPlugin`. Kept for the `cn()` + progressive runtime

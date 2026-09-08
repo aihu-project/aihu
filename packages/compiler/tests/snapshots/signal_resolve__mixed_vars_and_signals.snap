@@ -1,9 +1,0 @@
----
-source: tests/signal_resolve.rs
-expression: "resolve_signals(\"import { signal } from '@scribe/signals'\\nconst x = 1\\nconst [count, setCount] = signal(0)\\nconst increment = () => setCount(c => c + 1)\")"
----
-SignalMap(
-    {
-        "count": "setCount",
-    },
-)

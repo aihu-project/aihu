@@ -52,9 +52,8 @@ describe('CI gate honesty (#445)', () => {
     // Compiler-source tests moved to aihu-compiler with its release pipeline;
     // this root workspace intentionally excludes them instead of duplicating
     // their CI. Every other excluded test remains a root-owned gate.
-    const standaloneOwned = new Set(['packages/compiler/tests/**'])
     const excludedFiles = (rootTest.exclude ?? []).filter(
-      (entry) => !entry.includes('node_modules') && !standaloneOwned.has(entry),
+      (entry) => !entry.includes('node_modules'),
     )
     expect(excludedFiles.length).toBeGreaterThan(0)
     const planA = readFileSync(new URL('../.github/workflows/plan-a.yml', import.meta.url), 'utf8')

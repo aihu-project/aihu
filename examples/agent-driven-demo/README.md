@@ -28,7 +28,7 @@ This package is **private** (an example, not published) and adds **no
 ## Primary acceptance — the automated proof
 
 The load-bearing artifact is the passing integration test. It compiles the REAL
-component with the REAL compiler binary (`--target client`), evaluates that exact
+component with the published `@aihu/compiler` binary (`--target client`), evaluates that exact
 output, mounts the custom element in jsdom, runs the real `createBridgeClient`
 over a real `ws` socket against a real `createAgentServer`, and an external
 `callTool` drives it. It asserts: the compiled component's signal changed, the
@@ -44,9 +44,9 @@ bun run test
 ```
 
 > The test's `globalSetup` (`tests/compile-fixture.ts`) shells out to the
-> compiler binary at `packages/compiler/bin/aihu-compile`. Build it first if it
-> is stale: `cargo build --release` in `packages/compiler`, then copy the binary
-> to `packages/compiler/bin/aihu-compile`.
+> platform binary installed by the published `@aihu/compiler` package. Run
+> `bun install` from the repository root if the matching optional dependency
+> is missing.
 
 ## Run the live demo
 

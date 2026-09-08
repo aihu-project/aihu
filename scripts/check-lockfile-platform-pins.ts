@@ -37,8 +37,8 @@
  * ── SCOPE ────────────────────────────────────────────────────────────────────
  *
  * Checks the two native hosts still released by this repository. Compiler
- * platform pins are released from aihu-compiler; its source tree remains here
- * temporarily only while extraction follow-up work lands.
+ * platform pins are released from aihu-compiler and are intentionally outside
+ * this check.
  *
  * Usage:
  *   bun scripts/check-lockfile-platform-pins.ts

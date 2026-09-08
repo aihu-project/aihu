@@ -1,7 +1,0 @@
----
-source: tests/signal_resolve.rs
-expression: "resolve_signals(\"\")"
----
-SignalMap(
-    {},
-)

@@ -12,7 +12,6 @@
 compiler:
   - changed-files:
       - any-glob-to-any-file:
-          - "packages/compiler/**"
 
 css-engine:
   - changed-files:

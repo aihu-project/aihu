@@ -142,7 +142,7 @@ function registerComponents(tags: readonly string[] | undefined): Promise<unknow
     .map((load) => load())
 }
 // F1: publish the registrar for compiler-emitted code. The nested `<outlet>`
-// boundary (`createOutletBoundary` in packages/compiler/src/codegen/emit.rs) is
+// boundary (`createOutletBoundary` in the standalone compiler) is
 // emitted JS with no build-graph import, so it cannot import
 // virtual:aihu-components itself — instead it calls this global optional-chained
 // (`globalThis.__aihuRegisterRouteComponents?.(m.route)`) to load a route's

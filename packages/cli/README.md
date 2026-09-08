@@ -95,7 +95,7 @@ bun add -g @aihu/cli
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
 - [docs/cli.md](../../docs/cli.md)
-- [@aihu/compiler](../compiler)
+- [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
 - [Aihu framework root](../../README.md)
 
 <sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
