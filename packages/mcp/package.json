@@ -28,7 +28,7 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "@aihu/compiler": "^1.3.3",
+    "@aihu/compiler": "^1.3.5",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "description": "MCP server for aihu — exposes aihu_example and aihu_validate tools via stdio transport.",

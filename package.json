@@ -100,7 +100,7 @@
     "@aihu/agent-service": "workspace:*",
     "@aihu/app": "workspace:*",
     "@aihu/arbor": "^4.1.2",
-    "@aihu/compiler": "^1.3.4",
+    "@aihu/compiler": "^1.3.5",
     "@aihu/context": "workspace:*",
     "@aihu/plugin": "workspace:*",
     "@aihu/router": "workspace:*",

@@ -12,11 +12,10 @@
  * onto protocol `Diagnostic` objects. Keeping the parse logic here is the clean
  * seam for a future `@volar/language-core` virtual-code adoption (arch-4 §2.7).
  */
+
 import { type ExecFileOptionsWithStringEncoding, execFile } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
+import { resolveCompilerBinary } from '@aihu/compiler'
 
 const execFileAsync = promisify(execFile)
 
@@ -25,33 +24,7 @@ const execFileAsync = promisify(execFile)
 // the call site stays type-safe while feeding source on stdin.
 type ExecFileStdinOptions = ExecFileOptionsWithStringEncoding & { input: string }
 
-const ext = process.platform === 'win32' ? '.exe' : ''
-// Resolve the aihu-compile binary. The module's on-disk depth is NOT stable:
-// rolldown flattens dist/core/diagnostics.js into dist/bin.js (one level
-// shallower), so a single hardcoded relative climb over/undershoots depending
-// on whether we run bundled (dist/bin.js), unbundled (dist/core/diagnostics.js),
-// or from source (src/core/diagnostics.ts under vitest). Probe a candidate list
-// and take the first that exists; AIHU_COMPILE_BIN wins outright.
-function resolveCompileBin(): string {
-  if (process.env.AIHU_COMPILE_BIN) return process.env.AIHU_COMPILE_BIN
-  const here = dirname(fileURLToPath(import.meta.url))
-  // A non-empty tuple, so the `candidates[0]` fallback below is a `string` and not
-  // `string | undefined` under `noUncheckedIndexedAccess`.
-  const candidates: [string, ...string[]] = [
-    // staged sibling package bin (packages/compiler/bin) — bundled dist/bin.js
-    resolve(here, `../../compiler/bin/aihu-compile${ext}`),
-    // …same, from unbundled dist/core/ or src/core/ (one level deeper)
-    resolve(here, `../../../compiler/bin/aihu-compile${ext}`),
-    // from-source cargo output at the workspace root, both build profiles,
-    // for each of the depths above (mirrors bin/aihu-compile.mjs's fallback)
-    resolve(here, `../../../target/release/aihu-compile${ext}`),
-    resolve(here, `../../../target/debug/aihu-compile${ext}`),
-    resolve(here, `../../../../target/release/aihu-compile${ext}`),
-    resolve(here, `../../../../target/debug/aihu-compile${ext}`),
-  ]
-  return candidates.find((c) => existsSync(c)) ?? candidates[0]
-}
-const binPath: string = resolveCompileBin()
+const binPath = resolveCompilerBinary()
 
 /**
  * The raw JSON shape emitted by the Rust binary with --machine-errors.

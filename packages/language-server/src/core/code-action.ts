@@ -10,11 +10,9 @@
  * `WorkspaceEdit`/`CodeAction`. This keeps the codemod bridge a clean seam for a
  * future Volar code-action provider.
  *
- * The migrate() codemod is internal monorepo source under @aihu/compiler (not a
- * public package export); imported via the workspace-relative path the same way
- * the original embedded server did.
+ * The migrate() codemod is loaded from the public @aihu/compiler package export.
  */
-import { migrate } from '../../../compiler/js/codemods/macro-simplification/migrate.ts'
+import { migrate } from '@aihu/compiler/codemods/macro-simplification'
 
 /** Compiler diagnostic codes whose QuickFix is the v2 macro migration codemod. */
 export const MIGRATE_CODES = new Set(['C440', 'C441', 'C442', 'C443', 'C444'])
