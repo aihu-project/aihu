@@ -55,10 +55,8 @@ its first post-split npm publication.
 - [x] `aihu-ui` — `@aihu/ui`
 - [x] `aihu-plugin-data` — `@aihu-plugin/data`
 - [x] `aihu-plugin-drizzle` — `@aihu-plugin/drizzle`
+- [x] `aihu-plugin-kindly-note` — `@aihu-plugin/kindly-note`
 - [x] `aihu-seo` — compatibility package extraction
-
-`aihu-plugin-kindly-note` is prepared locally and becomes complete when its
-review fixes, organization repository, and hosted CI are finished.
 
 ## Wave 1 — make existing repositories publishable
 
