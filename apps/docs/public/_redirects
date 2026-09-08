@@ -22,7 +22,7 @@
 # A splat rather than 22 literal rules. Confirmed that all 22 slugs apps/docs
 # published (adapter-cloudflare, adapter-vercel, agent-a2a, agent-acp,
 # agent-server, ai, auth, cli, context, editor, language-server, magna, mcp,
-# plugin-drizzle, plugin-kindly-note, reactive, scraping, seo, store, tsc, ui,
+# plugin-drizzle, plugin-kindly-note, reactive, seo, store, tsc, ui,
 # use) exist under /api/. This app publishes 40 api pages, so the splat also
 # catches any old deep link to a package the old site never had a page for —
 # which lands on a real page rather than a 404.

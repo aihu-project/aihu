@@ -812,10 +812,6 @@
         "@aihu/signals": "^0.5.1",
       },
     },
-    "packages/scraping": {
-      "name": "@aihu/scraping",
-      "version": "0.2.0",
-    },
     "packages/seo": {
       "name": "@aihu/seo",
       "version": "1.0.5",
@@ -1061,8 +1057,6 @@
     "@aihu/router": ["@aihu/router@workspace:packages/router"],
 
     "@aihu/runtime": ["@aihu/runtime@workspace:packages/runtime"],
-
-    "@aihu/scraping": ["@aihu/scraping@workspace:packages/scraping"],
 
     "@aihu/seo": ["@aihu/seo@workspace:packages/seo"],
 

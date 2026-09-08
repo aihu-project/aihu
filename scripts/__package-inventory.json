@@ -192,12 +192,6 @@
     "isPlatform": false
   },
   {
-    "name": "@aihu/scraping",
-    "version": "0.2.0",
-    "dir": "packages/scraping",
-    "isPlatform": false
-  },
-  {
     "name": "@aihu/seo",
     "version": "1.0.5",
     "dir": "packages/seo",

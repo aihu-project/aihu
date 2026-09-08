@@ -723,14 +723,6 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
       { label: '@aihu/server', href: '../server' },
     ],
   },
-  '@aihu/scraping': {
-    tier: 'B',
-    label: 'Meta-framework — sliding-window rate limiter + bot-detection middleware',
-    seeAlso: [
-      { label: '@aihu/agent-service', href: '../agent-service' },
-      { label: '@aihu/server', href: '../server' },
-    ],
-  },
   '@aihu-plugin/drizzle': {
     tier: 'B',
     label: 'Meta-framework — Drizzle ORM data adapter (typed resources + loaders)',

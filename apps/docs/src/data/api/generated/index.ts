@@ -349,19 +349,6 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     agent: true,
   },
   {
-    name: '@aihu/scraping',
-    slug: 'scraping',
-    tier: 'Compiler & tooling',
-    version: '0.2.0',
-    tagline:
-      'O(1) sliding-window rate limiter and bot-detection middleware for aihu agent services.',
-    note: '',
-    exportCount: 6,
-    valueCount: 3,
-    typeCount: 3,
-    agent: true,
-  },
-  {
     name: '@aihu/seo',
     slug: 'seo',
     tier: 'App & routing',
