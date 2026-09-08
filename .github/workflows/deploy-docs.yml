@@ -117,37 +117,17 @@ jobs:
         with:
           auto-install: true
 
-      # aihu-compile (the .aihu SFC compiler) is a native Rust binary, needed
-      # here for the vite-plugin compiler pass.
-      #
-      # The docs app also carries the in-browser WASM playground (/playground,
-      # ported from apps/docs), whose `prebuild` builds the compiler to
-      # wasm32-unknown-unknown from THIS checkout via scripts/build-wasm-bundle.ts
-      # — so this job needs the same wasm32 target + wasm-pack that
-      # deploy-docs.yml installs. Building from the checkout rather than fetching
-      # a release is deliberate: a released bundle lags the workspace grammar and
-      # every preset then fails to compile with C306 (#491).
-      #
-      # This is not optional-with-a-soft-landing in CI: apps/docs/scripts/
-      # stage-wasm.ts passes --strict whenever $CI is set, so a missing toolchain
-      # fails the deploy here instead of silently shipping a playground that
-      # cannot compile anything.
-      - name: Install Rust toolchain (+ wasm32 for the playground bundle)
+      # The published @aihu/compiler package supplies the SFC compiler used by
+      # the Vite plugin. The playground likewise stages the version-pinned
+      # @aihu/compiler-wasm package, so this deploy no longer builds compiler
+      # source or installs wasm-pack. Rust remains for css-engine below.
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
           toolchain: "1.95.0" # sync with rust-toolchain.toml
-          targets: wasm32-unknown-unknown
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Cache Rust build (deps only; aihu-compile always rebuilds)
+      - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
-
-      - name: Build compiler binary
-        run: cargo build --release --manifest-path packages/compiler/Cargo.toml
-        env:
-          CARGO_TERM_COLOR: always
 
       # aihu-css-compile (the css-engine's native CSS compiler) is the SECOND
       # native binary this job needs, and unlike aihu-compile above it was never
@@ -175,14 +155,6 @@ jobs:
         env:
           CARGO_TERM_COLOR: always
 
-      - name: Stage compiler binary
-        run: |
-          mkdir -p packages/compiler/bin
-          # packages/compiler is a root-workspace member, so the binary lands in
-          # the workspace-root target/, not packages/compiler/target/.
-          cp target/release/aihu-compile packages/compiler/bin/aihu-compile
-          chmod 0755 packages/compiler/bin/aihu-compile
-
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -193,15 +165,12 @@ jobs:
         env:
           AIHU_SKIP_POSTINSTALL: "1"
 
-      # Builds every packages/* project (moon run :build) in dependency order:
-      # compiler → css-engine/arbor/runtime/signals/... → server/router → app.
+      # Builds every remaining packages/* project (moon run :build) in
+      # dependency order. Compiler consumers resolve the published package.
       # The docs app's own build only compiles ITS OWN .aihu/.ts sources; it never
       # rebuilds its @aihu/* workspace deps.
       - name: Build workspace packages
         run: bun run build
-        env:
-          # See the note on the docs build step below — same reason.
-          AIHU_COMPILE_BIN: ${{ github.workspace }}/packages/compiler/bin/aihu-compile
 
       # Doc-coverage gate. The retired apps/docs shipped an existence-only
       # check (does a page file exist); this is a DRIFT check — gen-api.ts re-derives every documentable package's
@@ -220,21 +189,10 @@ jobs:
       - name: Build docs
         # prebuild (gen:css + gen:preview + gen:wasm) then vite build → dist.
         # public/ is copied into dist/ by vite as static assets — that covers
-        # both the agent-discovery surface (ai.txt, agents.json, openapi.json,
-        # .well-known/*) and the two playground artifacts the prebuild stages
-        # there (wasm/ and aihu-preview-bundle.js), which is why the playground
-        # needs no custom vite plugin.
+        # both the agent-discovery surface and the published compiler WASM
+        # staged under wasm/ for the playground.
         run: bun run build
         working-directory: apps/docs
-        env:
-          # WITHOUT this, the two steps above ("Build compiler binary" / "Stage
-          # compiler binary") are dead weight. packages/compiler/js/envelope.ts
-          # gates on `AIHU_COMPILER_NATIVE === '0' || AIHU_COMPILE_BIN` — an
-          # `||` — so with neither set it loads the PUBLISHED napi addon
-          # in-process and never spawns the binary this job just built. A
-          # compiler fix would then be invisible to its own CI. This is what hid
-          # the TDZ bug in apps/docs; deploy-docs.yml carries the same two hunks.
-          AIHU_COMPILE_BIN: ${{ github.workspace }}/packages/compiler/bin/aihu-compile
 
       # Redirect map — verified against the BUILT dist, before anything slower
       # runs (it needs only the emitted pages, and it is the cheapest gate here).
