@@ -15,18 +15,17 @@
  * before timing — a bench over diverging output would be meaningless.
  *
  * Run:  bun bench/ssr-string/bench.ts
- * (requires target/release/aihu-compile — `cargo build --release -p aihu-compiler`)
+ * (uses the repository's locked, published @aihu/compiler release)
  */
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { transform } from '@aihu/compiler'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../..')
-process.env.AIHU_COMPILE_BIN ??= join(repoRoot, 'target/release/aihu-compile')
 
-const { transform } = await import(`${repoRoot}/packages/compiler/js/index.ts`)
 const { renderToString } = await import(`${repoRoot}/packages/server/src/ssr.ts`)
 
 const SCRATCH = join(__dirname, '.scratch')

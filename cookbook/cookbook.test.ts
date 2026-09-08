@@ -6,14 +6,14 @@
  * plus the @aihu/use composable auto-import pattern (use-mouse).
  *
  * Run: bun test cookbook/cookbook.test.ts
- * Env: set AIHU_COMPILE_BIN to a pre-built aihu-compile binary if the
- *      repo does not have one in packages/compiler/bin/.
+ * The harness resolves the same published compiler package used by Aihu
+ * applications and CI consumers.
  */
 
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { transform } from '@aihu/compiler'
 import { describe, expect, it } from 'vitest'
-import { transform } from '../packages/compiler/js/index.ts'
 
 const cookbookDir = resolve(import.meta.dirname, '.')
 const sfcFiles = readdirSync(cookbookDir).filter((f) => f.endsWith('.aihu'))
