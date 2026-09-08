@@ -6,7 +6,7 @@ import { dts } from 'rolldown-plugin-dts'
 // runtime; node: builtins must never be bundled.
 const external = [
   /^node:/,
-  '@aihu/compiler',
+  /^@aihu\/compiler(?:\/|$)/,
   'vscode-languageserver',
   'vscode-languageserver/node.js',
   'vscode-languageserver-textdocument',

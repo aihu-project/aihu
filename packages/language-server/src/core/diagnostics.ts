@@ -12,9 +12,10 @@
  * onto protocol `Diagnostic` objects. Keeping the parse logic here is the clean
  * seam for a future `@volar/language-core` virtual-code adoption (arch-4 §2.7).
  */
-import { resolveCompilerBinary } from '@aihu/compiler'
+
 import { type ExecFileOptionsWithStringEncoding, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import { resolveCompilerBinary } from '@aihu/compiler'
 
 const execFileAsync = promisify(execFile)
 

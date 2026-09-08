@@ -6,9 +6,9 @@
  * an array of AihuDiagnostic objects on failure, with errors and warnings split.
  */
 
-import { resolveCompilerBinary } from '@aihu/compiler'
 import { execFileSync } from 'node:child_process'
 import { basename } from 'node:path'
+import { resolveCompilerBinary } from '@aihu/compiler'
 
 const binPath = resolveCompilerBinary()
 
