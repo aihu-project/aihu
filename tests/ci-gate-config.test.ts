@@ -45,6 +45,36 @@ describe('CI gate honesty (#445)', () => {
     expect(examples).toContain("needs.changes.outputs.governed == 'true'")
   })
 
+  it('reuses the check build for polished examples instead of rebuilding the workspace', () => {
+    const planA = readFileSync(new URL('../.github/workflows/plan-a.yml', import.meta.url), 'utf8')
+    const examples = planA.match(/ {2}examples:\n([\s\S]*?)\n {2}governed-examples:/)?.[1] ?? ''
+
+    expect(examples).toContain('workspace-build-$' + '{{ github.sha }}')
+    expect(examples).not.toContain('run: bun run build')
+  })
+
+  it('does not deploy docs for unrelated package manifest version bumps', () => {
+    const workflow = readFileSync(
+      new URL('../.github/workflows/deploy-docs.yml', import.meta.url),
+      'utf8',
+    )
+
+    expect(workflow).not.toContain("'packages/*/package.json'")
+    expect(workflow).toContain("'apps/docs/src/data/api/generated/**'")
+    expect(workflow).toContain("'packages/ui/registry/**'")
+  })
+
+  it('bounds Lighthouse and keeps full sampling for promotion runs', () => {
+    const workflow = readFileSync(
+      new URL('../.github/workflows/deploy-docs.yml', import.meta.url),
+      'utf8',
+    )
+
+    expect(workflow).toContain('timeout --signal=TERM --kill-after=30s 10m')
+    expect(workflow).toContain('LIGHTHOUSE_RUNS="$runs"')
+    expect(workflow).toContain("needs.changes.outputs.lighthouse == 'true'")
+  })
+
   it('every root-excluded test file is genuinely invoked in plan-a.yml via the gates config', () => {
     // The b3b class of bug: excluded at root AND invoked nowhere = a test
     // that exists but gates nothing. Any test file excluded at root must

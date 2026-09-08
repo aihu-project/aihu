@@ -77,6 +77,27 @@ const server = Bun.spawn(['bun', join('scripts', 'serve-dist.ts')], {
   env: { ...process.env, PORT: String(PORT), DIST_DIR },
 })
 
+// Always reap the static server when the gate exits unexpectedly. The old
+// cleanup lived only at the bottom of this file, so a Lighthouse/chrome error
+// left the child process alive until the runner was torn down. CI adds an
+// outer timeout as a second bound, but this hook makes ordinary exceptions
+// safe locally and in the workflow.
+let serverStopped = false
+function stopServer(): void {
+  if (serverStopped) return
+  serverStopped = true
+  server.kill()
+}
+process.once('exit', stopServer)
+process.once('SIGINT', () => {
+  stopServer()
+  process.exit(130)
+})
+process.once('SIGTERM', () => {
+  stopServer()
+  process.exit(143)
+})
+
 // ── 2. Poll until server is ready ────────────────────────────────────────────
 
 async function waitForServer(url: string, timeoutMs = 60_000): Promise<void> {
@@ -97,7 +118,7 @@ console.log('Waiting for docs server…')
 try {
   await waitForServer(`${BASE_URL}/`)
 } catch (err) {
-  server.kill()
+  stopServer()
   throw err
 }
 console.log('Server ready.')
@@ -188,7 +209,13 @@ async function measure(url: string): Promise<Measurement | null> {
 }
 
 /** How many Lighthouse passes per URL. Best-of-N absorbs run-to-run CI jitter. */
-const RUNS = 3
+const requestedRuns = Number(process.env.LIGHTHOUSE_RUNS ?? '3')
+if (!Number.isInteger(requestedRuns) || requestedRuns < 1 || requestedRuns > 3) {
+  throw new Error(
+    `LIGHTHOUSE_RUNS must be an integer between 1 and 3 (got ${process.env.LIGHTHOUSE_RUNS})`,
+  )
+}
+const RUNS = requestedRuns
 
 /**
  * Measure a URL `runs` times and reduce to the best per-metric result: the max
@@ -260,7 +287,7 @@ console.log(`\nResults written to ${RESULTS_PATH}`)
 
 // ── 8. Kill docs server ─────────────────────────────────────────────────────────
 
-server.kill()
+stopServer()
 
 // ── 9. Exit with failure if any threshold missed ──────────────────────────────
 

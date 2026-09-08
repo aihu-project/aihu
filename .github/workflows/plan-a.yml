@@ -977,8 +977,16 @@ jobs:
         with:
           auto-install: true
       - run: bun install --frozen-lockfile
-      - name: Build workspace packages
-        run: bun run build
+      # Reuse the exact package outputs produced by `check`. Rebuilding the
+      # workspace here was redundant: `check` already builds every package in
+      # dependency order and uploads the dist tree for the consumer lanes.
+      # Keeping one producer also prevents the example lane from accidentally
+      # exercising a different build than the conformance checks above it.
+      - name: Download workspace build outputs
+        uses: actions/download-artifact@v8
+        with:
+          name: workspace-build-${{ github.sha }}
+          path: .
       - name: Build examples
         run: |
           # Build only the polished examples that are also tested.
