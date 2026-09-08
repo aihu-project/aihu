@@ -330,8 +330,8 @@
     "@aihu/signals": "^0.5.1"
   },
   "peerDependencies": {
-    "@aihu/context": "workspace:*",
-    "@aihu/router": "workspace:*",
+    "@aihu/context": "^0.2.0",
+    "@aihu/router": "^0.5.0",
     "jwt-decode": ">=4"
   },
   "peerDependenciesMeta": {
@@ -346,8 +346,8 @@
     }
   },
   "devDependencies": {
-    "@aihu/context": "workspace:*",
-    "@aihu/router": "workspace:*",
+    "@aihu/context": "^0.2.0",
+    "@aihu/router": "^0.5.0",
     "jwt-decode": "^4.0.0"
   },
   "scripts": {
