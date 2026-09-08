@@ -28,7 +28,7 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
-import type { Registry, RegistryItem } from '../../ui/src/schema.ts'
+import type { Registry, RegistryItem } from '@aihu/ui/registry'
 
 // ─── Resolved UI config (defaults applied at read-time) ──────────────────────
 

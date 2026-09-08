@@ -12,8 +12,8 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import type { Registry } from '@aihu/ui/registry'
 import { describe, expect, it } from 'vitest'
-import type { Registry } from '../../ui/src/schema.ts'
 import type { AddIo } from '../src/commands/add.ts'
 import add from '../src/commands/add.ts'
 import type { ListIo } from '../src/commands/list.ts'

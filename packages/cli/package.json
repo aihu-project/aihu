@@ -37,6 +37,9 @@
   "dependencies": {
     "@aihu/mcp": "workspace:*"
   },
+  "devDependencies": {
+    "@aihu/ui": "^0.1.1"
+  },
   "description": "Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.",
   "repository": {
     "type": "git",

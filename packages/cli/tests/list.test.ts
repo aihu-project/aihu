@@ -13,8 +13,8 @@
  */
 
 import { join } from 'node:path'
+import type { Registry } from '@aihu/ui/registry'
 import { describe, expect, it } from 'vitest'
-import type { Registry } from '../../ui/src/schema.ts'
 import type { ListIo } from '../src/commands/list.ts'
 import list from '../src/commands/list.ts'
 import type { RegistryFs } from '../src/registry-resolve.ts'
