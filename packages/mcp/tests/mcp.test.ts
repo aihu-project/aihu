@@ -12,6 +12,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { resolveBinPath } from '../src/compiler.js'
 import {
   _resetIndex,
   _setIndex,
@@ -49,6 +50,25 @@ const FIXTURE_ENTRIES: CookbookEntry[] = [
       '@state { $lifecycle: { mount: () => { }, dispose: () => { } } }\n@template { <div>mounted</div> }',
   },
 ]
+
+describe('compiler binary resolution', () => {
+  it('uses an explicit compiler binary unchanged', () => {
+    expect(
+      resolveBinPath({ AIHU_COMPILE_BIN: '/opt/aihu/custom-compiler' }, () => {
+        throw new Error('package resolution should not run for an explicit binary')
+      }),
+    ).toBe('/opt/aihu/custom-compiler')
+  })
+
+  it('resolves the binary shipped by the published compiler package', () => {
+    const resolved = resolveBinPath({})
+
+    expect(resolved).toMatch(/node_modules\/@aihu\/compiler\/bin\/aihu-compile\.mjs$/)
+    expect(resolved).not.toContain('/packages/compiler/')
+    expect(resolved).not.toContain('/target/release/')
+    expect(resolved).not.toContain('/target/debug/')
+  })
+})
 
 // ───────────────────────────────────────────────
 // Cookbook index loading tests

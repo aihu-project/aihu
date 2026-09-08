@@ -61,6 +61,7 @@ bun add @aihu/mcp
 
 **Dependencies:**
 
+- `@aihu/compiler` — `^1.3.3`
 - `@modelcontextprotocol/sdk` — `^1.0.0`
 
 <sub><i>Auto-generated against `@aihu/mcp@0.2.0`.</i></sub>

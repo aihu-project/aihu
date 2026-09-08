@@ -8,27 +8,27 @@
 
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { basename, dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
+import { basename, resolve } from 'node:path'
 
-const ext = process.platform === 'win32' ? '.exe' : ''
+const require = createRequire(import.meta.url)
 
-function resolveBinPath(): string {
-  if (process.env.AIHU_COMPILE_BIN) {
-    return process.env.AIHU_COMPILE_BIN
+export function resolveBinPath(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+  resolvePaths: (specifier: string) => readonly string[] | null = (specifier) =>
+    require.resolve.paths(specifier),
+  pathExists: (path: string) => boolean = existsSync,
+): string {
+  if (env.AIHU_COMPILE_BIN) {
+    return env.AIHU_COMPILE_BIN
   }
 
-  const here = dirname(fileURLToPath(import.meta.url))
-  const candidates = [
-    resolve(here, '../../../compiler/bin', `aihu-compile${ext}`),
-    resolve(here, '../../compiler/bin', `aihu-compile${ext}`),
-  ]
-
-  for (const p of candidates) {
-    if (existsSync(p)) return p
+  for (const nodeModulesPath of resolvePaths('@aihu/compiler') ?? []) {
+    const candidate = resolve(nodeModulesPath, '@aihu/compiler/bin/aihu-compile.mjs')
+    if (pathExists(candidate)) return candidate
   }
 
-  return `aihu-compile${ext}`
+  throw new Error('@aihu/mcp requires the published @aihu/compiler package')
 }
 
 const binPath = resolveBinPath()
