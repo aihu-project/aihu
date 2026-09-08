@@ -47,11 +47,29 @@ name: Deploy aihu-docs
       - 'packages/context/**'
       - 'packages/css-engine/**'
       - 'packages/plugin-agent-readiness/**'
-      # Version-bearing manifests: a `chore(release): version packages` merge
-      # rewrites these without touching source (same reasoning as
-      # deploy-docs.yml's entry, which was added after 7 of 49 release merges
-      # shipped a stale docs build).
-      - 'packages/*/package.json'
+      # The docs build also generates the API datasheets and the hosted UI
+      # registry. Watch their committed inputs explicitly instead of every
+      # package manifest: a version-only change to an unrelated package (for
+      # example @aihu/cli) must not install Rust, Chromium, and Lighthouse just
+      # to deploy an unchanged site. API source changes are promoted through
+      # the generated datasheet files by the release/check lane; this workflow
+      # consumes those committed outputs.
+      - 'apps/docs/src/data/api/generated/**'
+      - 'scripts/__package-inventory.json'
+      - 'packages/agent/**'
+      - 'packages/arbor/**'
+      - 'packages/signals/**'
+      - 'packages/primitives/**'
+      - 'packages/ui/registry.json'
+      - 'packages/ui/registry/**'
+      - 'packages/plugin/package.json'
+      - 'packages/plugin-agent-readiness/package.json'
+      - 'packages/plugin-data/package.json'
+      - 'packages/plugin-demo/package.json'
+      - 'packages/plugin-drizzle/package.json'
+      - 'packages/plugin-kindly-note/package.json'
+      - 'packages/adapter-cloudflare/**'
+      - 'packages/adapter-vercel/**'
   pull_request:
     # Keep identical to the `push` list above (no anchors in Actions YAML).
     paths:
@@ -65,7 +83,22 @@ name: Deploy aihu-docs
       - 'packages/context/**'
       - 'packages/css-engine/**'
       - 'packages/plugin-agent-readiness/**'
-      - 'packages/*/package.json'
+      - 'apps/docs/src/data/api/generated/**'
+      - 'scripts/__package-inventory.json'
+      - 'packages/agent/**'
+      - 'packages/arbor/**'
+      - 'packages/signals/**'
+      - 'packages/primitives/**'
+      - 'packages/ui/registry.json'
+      - 'packages/ui/registry/**'
+      - 'packages/plugin/package.json'
+      - 'packages/plugin-agent-readiness/package.json'
+      - 'packages/plugin-data/package.json'
+      - 'packages/plugin-demo/package.json'
+      - 'packages/plugin-drizzle/package.json'
+      - 'packages/plugin-kindly-note/package.json'
+      - 'packages/adapter-cloudflare/**'
+      - 'packages/adapter-vercel/**'
   workflow_dispatch:
 
 permissions:
@@ -74,6 +107,37 @@ permissions:
   pull-requests: write
 
 jobs:
+  changes:
+    # Keep the deploy job's check stable for docs PRs while letting the
+    # expensive Lighthouse sample follow its own performance-sensitive paths.
+    # A docs copy/navigation change still gets build + browser smoke coverage;
+    # only an explicit rendering/runtime input pays for Lighthouse.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      lighthouse: ${{ steps.filter.outputs.lighthouse }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            lighthouse:
+              - 'apps/docs/src/styles/**'
+              - 'apps/docs/src/pages/**'
+              - 'apps/docs/src/layouts/**'
+              - 'apps/docs/src/components/**'
+              - 'apps/docs/src/main.ts'
+              - 'apps/docs/vite.config.ts'
+              - 'packages/app/**'
+              - 'packages/runtime/**'
+              - 'packages/router/**'
+              - 'packages/server/**'
+              - 'packages/css-engine/**'
+              - 'scripts/lighthouse.ts'
+              - '.github/workflows/deploy-docs.yml'
+
   deploy:
     # NOT "Build & deploy". deploy-docs.yml's deploy job already emits a check
     # by that exact name, and a required status check is matched by NAME — so
@@ -91,7 +155,10 @@ jobs:
     # job (build+deploy combined, unlike deploy-docs.yml's separate `test`),
     # so skipping it loses the build-verification signal too for Dependabot
     # PRs specifically; acceptable for the same reason.
-    if: github.actor != 'dependabot[bot]'
+    needs: changes
+    if: >-
+      github.actor != 'dependabot[bot]'
+      && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
@@ -230,7 +297,16 @@ jobs:
       # always-on `test` job like deploy-docs.yml) so a perf/a11y regression
       # blocks the deploy step below outright.
       - name: Lighthouse gate
-        run: bun scripts/lighthouse.ts
+        # Pull requests get one sample only when a performance-sensitive input
+        # changed. Main, scheduled/manual promotions keep the full best-of-three
+        # gate. The outer timeout prevents a hung browser from holding the
+        # deploy job until the 25-minute job ceiling.
+        if: github.event_name != 'pull_request' || needs.changes.outputs.lighthouse == 'true'
+        run: |
+          runs=3
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then runs=1; fi
+          timeout --signal=TERM --kill-after=30s 10m \
+            env LIGHTHOUSE_RUNS="$runs" bun scripts/lighthouse.ts
 
       - name: Upload Lighthouse results
         if: always()
