@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "package": "@aihu/use",
+  "entries": [
+    {
+      "name": "useFixtureAlpha",
+      "specifier": "@aihu/use/useFixtureAlpha",
+      "description": ""
+    }
+  ]
+}

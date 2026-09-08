@@ -187,6 +187,8 @@ const NEGATIVE_FIXTURES: Record<string, Fixture> = {
     env: {
       COMPOSABLE_REGISTRY_RS: 'scripts/fixtures/composable-registry/use_registry.rs',
       COMPOSABLE_REGISTRY_OUT: 'scripts/fixtures/composable-registry/expected-mismatch.ts',
+      COMPOSABLE_REGISTRY_CONTRACT_OUT:
+        'scripts/fixtures/composable-registry/expected-mismatch.json',
       COMPOSABLE_USE_SRC_ROOT: 'scripts/fixtures/composable-registry/nonexistent-src',
     },
     green: {
@@ -194,6 +196,8 @@ const NEGATIVE_FIXTURES: Record<string, Fixture> = {
       env: {
         COMPOSABLE_REGISTRY_RS: 'scripts/fixtures/composable-registry/use_registry.rs',
         COMPOSABLE_REGISTRY_OUT: 'scripts/fixtures/composable-registry/expected-match.ts',
+        COMPOSABLE_REGISTRY_CONTRACT_OUT:
+          'scripts/fixtures/composable-registry/expected-match.json',
         COMPOSABLE_USE_SRC_ROOT: 'scripts/fixtures/composable-registry/nonexistent-src',
       },
     },

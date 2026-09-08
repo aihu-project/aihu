@@ -165,7 +165,10 @@ export function parseBarrelExports(barrelSrc: string): Set<string> {
 export function parsePackageJsonExports(pkg: { exports?: Record<string, unknown> }): Set<string> {
   const names = new Set<string>()
   for (const key of Object.keys(pkg.exports ?? {})) {
-    if (key === '.' || key === './shared') continue
+    // Published metadata artifacts are package exports, but they are not
+    // composable entry points and therefore do not take part in the
+    // src/barrel/rolldown/size parity matrix.
+    if (key === '.' || key === './shared' || key === './composable-registry.json') continue
     if (key.startsWith('./')) names.add(key.slice(2))
   }
   return names

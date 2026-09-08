@@ -15,6 +15,7 @@
       "types": "./dist/shared.d.ts",
       "import": "./dist/shared.js"
     },
+    "./composable-registry.json": "./composable-registry.json",
     "./useActiveElement": {
       "types": "./dist/useActiveElement.d.ts",
       "import": "./dist/useActiveElement.js"
@@ -322,6 +323,7 @@
   },
   "files": [
     "dist",
+    "composable-registry.json",
     "README.md",
     "LICENSE"
   ],
