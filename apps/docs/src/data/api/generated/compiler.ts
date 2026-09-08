@@ -14,260 +14,289 @@ export const EXPORTS: readonly ApiExport[] = [
   {
     name: '_buildDeferredHydration',
     kind: 'function',
-    signature: 'function xe(e,t)',
-    summary: '',
+    signature:
+      'function _buildDeferredHydration(compiledCode: string, elementTag: string): string;',
+    summary:
+      'Rewrite an interactive-island module so its `connectedCallback` waits for the element to scroll into view before mounting.',
   },
   {
     name: '_buildStaticIsland',
     kind: 'function',
-    signature: 'function Se(e,t)',
-    summary: '',
+    signature: 'function _buildStaticIsland(compiledCode: string, elementTag: string): string;',
+    summary: 'Build a static-island shim for a compiled module.',
   },
   {
     name: '_clearTransformMemo',
     kind: 'function',
-    signature: 'function ce()',
-    summary: '',
+    signature: 'function _clearTransformMemo(): void;',
+    summary: 'Test/diagnostic hook — wipe the memo and its counters.',
   },
   {
     name: '_compileViaBackend',
     kind: 'function',
-    signature: 'function j(e,n,r)',
-    summary: '',
+    signature:
+      'function _compileViaBackend(source: string, legacyArgs: string[], options: CompileEnvelopeOptions): EnvelopeReply;',
+    summary: 'Run one compile through the active backend.',
   },
   {
     name: '_deriveChildTags',
     kind: 'function',
-    signature: 'function Y(e)',
-    summary: '',
+    signature: 'function _deriveChildTags(compiledCode: string): string[];',
+    summary:
+      "Derive the `__aihu_child_tags__` set from SERVER-TARGET compiled code: the tags the compiled string renderer will actually look up, read off the `__aihu_schild('<tag>'` call sites the Rust codegen emitted.",
   },
   {
     name: '_errMessage',
     kind: 'function',
-    signature: 'function W(e)',
-    summary: '',
+    signature: 'function _errMessage(err: unknown): string;',
+    summary: 'Best-effort message text for an unknown thrown value.',
   },
   {
     name: '_foldCssEngineStyles',
     kind: 'function',
-    signature: 'function X(e,t)',
+    signature: 'function _foldCssEngineStyles(compiledCode: string, css: string): string;',
     summary: '',
   },
   {
     name: '_foldCssEngineStylesGlobal',
     kind: 'function',
-    signature: 'function je(e,t,n)',
-    summary: '',
+    signature:
+      'function _foldCssEngineStylesGlobal(compiledCode: string, css: string, id: string): { code: string; virtualId: string; } | null;',
+    summary: "Bug 6 — `shadowMode === 'light'` branch.",
   },
   {
     name: '_foldSsrCssExport',
     kind: 'function',
-    signature: 'function Ee(e,t)',
-    summary: '',
+    signature: 'function _foldSsrCssExport(compiledCode: string, css: string): string;',
+    summary: "Fold css-engine utility CSS into the SERVER target's `__aihu_css__` export.",
   },
   {
     name: '_formatExtractCensus',
     kind: 'function',
-    signature: 'function fe(e)',
-    summary: '',
+    signature:
+      'function _formatExtractCensus(census: ReadonlyMap<string, { read: string; call: string; }>): string[];',
+    summary:
+      'GX Phase 1 (#437-GX) — format the per-value extract census (the DA-e census pattern from #437: every build PRINTS the posture distribution, so the default-vs-declared migration story stays visible rather than silent).',
   },
   {
     name: '_getCompilerNativeStateKind',
     kind: 'function',
-    signature: 'function x()',
-    summary: '',
+    signature: "function _getCompilerNativeStateKind(): CompilerNativeState['kind'];",
+    summary: 'Returns the cached state kind (resolving if needed).',
   },
   {
     name: '_globalizeAuthoredStyle',
     kind: 'function',
-    signature: 'function H(e)',
-    summary: '',
+    signature: 'function _globalizeAuthoredStyle(code: string): string;',
+    summary:
+      "Light-DOM (`shadowMode:'light'`) recipes: redirect the authored `@style` block's per-instance `host.adoptedStyleSheets = [__style__]` assignment to `document.adoptedStyleSheets` so the recipe's class-scoped CSS reaches the global cascade (a light-DOM host has no shadow root, making the original setter a silent no-op).",
   },
   {
     name: '_hashIdForUtilityCss',
     kind: 'function',
-    signature: 'function ke(e)',
-    summary: '',
+    signature: 'function _hashIdForUtilityCss(id: string): string;',
+    summary: 'Stable short hash for keying the virtual-CSS module per source-SFC id.',
   },
   {
     name: '_injectAutoWiring',
     kind: 'function',
-    signature: 'function Z(e)',
-    summary: '',
+    signature: 'function _injectAutoWiring(code: string): string;',
+    summary:
+      'Inject `_setMount(mount)` + `_setSignal(signal)` auto-wiring into a compiled `.aihu` module.',
   },
   {
     name: '_injectLightScopeId',
     kind: 'function',
-    signature: 'function V(e,t)',
-    summary: '',
+    signature: 'function _injectLightScopeId(code: string, lightScopeId: string): string;',
+    summary:
+      "Fill the Rust codegen's `__AIHU_LIGHT_SCOPE_ID__` placeholder with the component's real light-DOM scope id (LDF §10 step 3).",
   },
   {
     name: '_injectShadowMode',
     kind: 'function',
-    signature: 'function B(e,t,n)',
-    summary: '',
+    signature:
+      "function _injectShadowMode(code: string, mode: 'light' | 'shadow', lightScopeId?: string): string;",
+    summary:
+      "Inject `shadowMode: '...'` (and, for light mode, `lightScopeId: '...'` in the SAME options object) into the third argument of the emitted `defineElement('tag', defineComponent(...))` call — appending the options object when the call has two arguments, or merging the fields into an existing third argument (`$form` emits `, { formAssociated: true }`).",
   },
   {
     name: '_isLayoutFile',
     kind: 'function',
-    signature: 'function ge(e,t)',
-    summary: '',
+    signature: 'function _isLayoutFile(rawId: string, layoutsDir: string): boolean;',
+    summary: 'Is `rawId` a layout SFC (a `.aihu` file under the configured layouts dir)?',
   },
   {
     name: '_isViteMissing',
     kind: 'function',
-    signature: 'function G(e)',
-    summary: '',
+    signature: 'function _isViteMissing(err: unknown): boolean;',
+    summary:
+      'Is this `import(\'vite\')` rejection the ONE legitimate "there is no Vite here" case — a standalone `transform()` caller, a unit test, any non-Vite host?',
   },
   {
     name: '_layoutTag',
     kind: 'function',
-    signature: 'function _e(e)',
-    summary: '',
+    signature: 'function _layoutTag(stem: string): string;',
+    summary: 'Layout custom-element tag for a filename stem.',
   },
   {
     name: '_lightScopeId',
     kind: 'function',
-    signature: 'function Ae(e)',
-    summary: '',
+    signature: 'function _lightScopeId(id: string): string;',
+    summary:
+      "Deterministic 8-hex-char scope id for a light-DOM component's `data-a` attribute (light-DOM leaf flip, LDF §10 step 1 / step 3).",
   },
   {
     name: '_parseComponentTagsMarker',
     kind: 'function',
-    signature: 'function J(e)',
-    summary: '',
+    signature: 'function _parseComponentTagsMarker(compiledCode: string): string[];',
+    summary: '§22 — parse the `//',
   },
   {
     name: '_parseExtractMarker',
     kind: 'function',
-    signature: 'function de(e)',
-    summary: '',
+    signature:
+      'function _parseExtractMarker(code: string): { read: string; call: string; } | null;',
+    summary: 'GX Phase 1 (#437-GX) — parse the `//',
   },
   {
     name: '_parseIslandMarker',
     kind: 'function',
-    signature: 'function U(e)',
-    summary: '',
+    signature: "function _parseIslandMarker(compiledCode: string): 'static' | 'interactive';",
+    summary: "Read the compiler's AUTHORITATIVE island classification from the `//",
   },
   {
     name: '_passivizeOutlet',
     kind: 'function',
-    signature: 'function ye(e)',
-    summary: '',
+    signature: 'function _passivizeOutlet(code: string): string;',
+    summary:
+      'Collapse the reactive `<outlet>` boundary the Rust codegen emits into a passive `data-aihu-outlet` marker.',
   },
   {
     name: '_resetCompileBackend',
     kind: 'function',
-    signature: 'function ie()',
-    summary: '',
+    signature: 'function _resetCompileBackend(): void;',
+    summary: 'Reset the cached backend (tests).',
   },
   {
     name: '_resetCompilerNative',
     kind: 'function',
-    signature: 'function S()',
-    summary: '',
+    signature: 'function _resetCompilerNative(): void;',
+    summary: 'Reset the cached state.',
   },
   {
     name: '_resolveCompileBackend',
     kind: 'function',
-    signature: 'function O()',
-    summary: '',
+    signature: 'function _resolveCompileBackend(): CompileBackend;',
+    summary: 'Resolve (once) which backend serves compiles for this process.',
   },
   {
     name: '_stripFailure',
     kind: 'function',
-    signature: 'function K(e,t,n,r,i)',
-    summary: '',
+    signature:
+      "function _stripFailure(fn: 'transformWithOxc' | 'transformWithEsbuild', id: string, viteVersion: string, isServerEnv: boolean, err: unknown): string;",
+    summary:
+      'The message for a strip that failed with Vite present — names the branch, the Vite version, the environment and the file, and says why it is fatal rather than swallowed.',
   },
   {
     name: '_stripTypes',
     kind: 'function',
-    signature: 'async function q(e,t,n,r)',
-    summary: '',
+    signature:
+      'function _stripTypes(vite: ViteStripApi, code: string, id: string, isServerEnv: boolean): Promise<StripTypesResult>;',
+    summary:
+      'Strip TypeScript from compiler output using whichever transform the resolved Vite exposes.',
+    agent: true,
   },
   {
     name: '_transformMemoStats',
     kind: 'function',
-    signature: 'function le()',
-    summary: '',
+    signature:
+      'function _transformMemoStats(): { size: number; hits: number; misses: number; seeds: number; };',
+    summary: 'Test/diagnostic hook — current memo size + hit/miss/seed counters.',
   },
   {
     name: 'aihuCompilerPlugin',
     kind: 'function',
-    signature: 'function Re(e)',
+    signature: 'function aihuCompilerPlugin(options?: AihuCompilerPluginOptions): VitePlugin;',
     summary: '',
   },
   {
     name: 'compileRouteMeta',
     kind: 'function',
-    signature: 'function Pe(e,t)',
+    signature: 'function compileRouteMeta(source: string, id?: string): RouteMeta | null;',
     summary: '',
   },
   {
     name: 'compileSidecar',
     kind: 'function',
-    signature: 'function Me(e,n,i)',
-    summary: '',
+    signature:
+      "function compileSidecar(source: string, id?: string, options?: { /** * #486 step 4 — emit the attribute/component-prop type layer * (`--strict-templates`). Default off: the surface stays byte-identical * to the pre-#486 sidecar. */ strictTemplates?: boolean; /** * Build target threaded to the compiler binary (`--target`), same flag * `transform()` passes. Defaults to the binary's own default * (`universal`) when omitted. * * This is NOT cosmetic: `--target` changes what `compile_full_with_options` * produces (packages/compiler/src/bin/main.rs), which `sidecar_ts` is * derived from — e.g. a `target: 'client'` build elides server-only * artifacts. A caller that never passes this always type-checks against * the `universal` surface regardless of the project's actual configured * target, which can pass tsc on code the real build would elide or * reject. `islands`/`shadowMode` are deliberately NOT parameters here: * both are applied as JS-side post-processing on the RUNTIME JS output * (see `transform()`), never touch `sidecar_ts`, and have no bearing on * type-check accuracy. */ target?: 'client' | 'server' | 'universal'; }): string;",
+    summary:
+      "Compile an SFC to its TYPE-CHECK SURFACE and return it as a string — the `.aihu.ts` sidecar's content, without writing a file.",
+    agent: true,
   },
   {
     name: 'compileToAst',
     kind: 'function',
-    signature: 'function Ne(e,t)',
+    signature: 'function compileToAst(source: string, id?: string): SfcAst;',
     summary: '',
   },
   {
     name: 'kebabComponentTag',
     kind: 'function',
-    signature: 'function ve(e)',
-    summary: '',
+    signature: 'function kebabComponentTag(raw: string): string;',
+    summary:
+      "O1a (tag naming) — JS mirror of the Rust compiler's `tags::kebab_component_tag` (packages/compiler/src/tags.rs).",
   },
   {
     name: 'loadCompilerNative',
     kind: 'function',
-    signature: 'function b()',
-    summary: '',
+    signature: 'function loadCompilerNative(): CompilerNativeState;',
+    summary: 'Resolve (and cache) the native compiler addon.',
   },
   {
     name: 'matchBrace',
     kind: 'function',
-    signature: 'function t(t,n)',
-    summary: '',
+    signature: 'function matchBrace(s: string, i: number): number;',
+    summary: 'Matching `}` for the `{` at `i` (string/comment aware).',
   },
   {
     name: 'matchParen',
     kind: 'function',
-    signature: 'function n(n,r)',
-    summary: '',
+    signature: 'function matchParen(s: string, i: number): number;',
+    summary: 'Matching `)` for the `(` at `i` (string/comment/brace aware).',
   },
   {
     name: 'migrate',
     kind: 'function',
-    signature: 'function e(e)',
+    signature: 'function migrate(source: string): MigrateResult;',
     summary: '',
   },
   {
     name: 'migrateStateWrappers',
     kind: 'function',
-    signature: 'function E(e,t={})',
+    signature:
+      'function migrateStateWrappers(source: string, options?: StateWrapperOptions): StateWrapperResult;',
     summary: '',
   },
   {
     name: 'migrateTemplateGrammar',
     kind: 'function',
-    signature: 'function s(e)',
-    summary: '',
+    signature: 'function migrateTemplateGrammar(source: string): TemplateGrammarResult;',
+    summary:
+      'Run every template-grammar-v2 pass over one `.aihu` source (or a markdown document containing `.aihu` snippets — the transforms are anchored to template-syntax shapes and leave prose alone).',
   },
   {
     name: 'transform',
     kind: 'function',
-    signature: 'function Ce(e,n,i)',
-    summary: '',
+    signature:
+      "function transform(source: string, id: string, options?: { sidecarOut?: string; target?: 'client' | 'server' | 'universal'; /** Override the registered custom-element tag (default: file stem). Used for layouts. */ tag?: string; /** * #486 step 4 — emit the sidecar's attribute/component-prop type layer * (`--strict-templates`). Affects only the type-check surface written to * `sidecarOut`; the compiled JS is identical either way. Default off. */ strictTemplates?: boolean; }): { code: string; map: null; };",
+    summary: 'Compile a .aihu source string to TypeScript.',
   },
   {
     name: '_MEMO_MAX_ENTRIES',
     kind: 'const',
-    signature: 'const oe',
-    summary: '',
+    signature: 'const _MEMO_MAX_ENTRIES',
+    summary: 'FIFO size bound.',
   },
   {
     name: 'resolveCompilerBinary',
@@ -278,8 +307,9 @@ export const EXPORTS: readonly ApiExport[] = [
   {
     name: 'VIRTUAL_UTILITY_PREFIX',
     kind: 'const',
-    signature: 'const De',
-    summary: '',
+    signature: 'const VIRTUAL_UTILITY_PREFIX',
+    summary:
+      "Virtual-module prefix used by the `shadowMode === 'light'` branch to route per-SFC utility CSS through Vite's built-in CSS pipeline.",
   },
   {
     name: 'AihuCompilerPluginOptions',

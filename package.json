@@ -61,7 +61,7 @@
     "check:hmr": "bun scripts/hmr-check.ts",
     "test:cookbook": "bun run --cwd cookbook test",
     "release": "bun run build && bash scripts/publish-all.sh",
-    "release:version": "changeset version && bun scripts/stamp-platform-versions.ts --host server,css-engine && bun install && bun scripts/sync-template-versions.ts && bun scripts/sync-readme.ts && bun apps/docs/scripts/gen-api.ts",
+    "release:version": "changeset version && bun install && bun scripts/sync-template-versions.ts && bun scripts/sync-readme.ts && bun apps/docs/scripts/gen-api.ts",
     "prepare": "husky",
     "storybook": "bun run --cwd apps/storybook storybook",
     "build-storybook": "bun run --cwd apps/storybook build-storybook",

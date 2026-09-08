@@ -207,7 +207,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     exportCount: 61,
     valueCount: 45,
     typeCount: 16,
-    agent: false,
+    agent: true,
   },
   {
     name: '@aihu/context',

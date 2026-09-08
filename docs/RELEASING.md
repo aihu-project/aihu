@@ -106,8 +106,9 @@ gh workflow run release.yml -f canary=true
 gh workflow run release.yml -f canary=true -f dry_run=false
 ```
 
-Both run the full binary matrix (5 compiler platforms, WASM, server + css-engine
-natives) at the tip of `main`, then:
+Both build the root server and CSS native matrices at the tip of `main`, then
+run the root JavaScript canary flow. Compiler binaries are built and published
+by the standalone `aihu-project/aihu-compiler` release flow.
 
 1. Each publish job writes an ephemeral catch-all changeset
    (`scripts/canary-catchall-changeset.ts` — covers every publishable
@@ -116,13 +117,12 @@ natives) at the tip of `main`, then:
    deterministic `0.0.0-canary-<sha>` for every package
    (`.changeset/config.json` `snapshot.prereleaseTemplate: "{tag}-{commit}"`
    keys the suffix to the commit, so all jobs agree without coordination).
-2. `scripts/stamp-platform-versions.ts` syncs the native platform packages
-   (`packages/{compiler,server,css-engine}/npm/*` — not workspace members, so
-   changesets never sees them) and the hosts' `optionalDependencies` pins to
-   the same snapshot version.
-3. `scripts/publish-all.sh --tag canary` (JS packages) and the platform-package
-   jobs publish with `npm publish --tag canary` — plus `--dry-run` unless
-   `dry_run=false`.
+2. Root canaries keep the released exact pins for the independently versioned
+   server and CSS native families. The root workflow does not stamp or publish
+   those native packages in a canary run; stable-tag native publication remains
+   in `release-platforms.yml`.
+3. `scripts/publish-all.sh --tag canary` publishes the root JavaScript packages
+   with `npm publish --tag canary` — plus `--dry-run` unless `dry_run=false`.
 
 Consume it with:
 
@@ -133,13 +133,11 @@ npm install @aihu/app@0.0.0-canary-abc1234  # exact snapshot pin
 
 Note: the `packages/_moved/*` legacy-name stubs are excluded from the
 catch-all (frozen at their 1.x stable versions; the live publish's idempotency
-check skips them). Canary consumers get canary binaries via the
-`@aihu/compiler-<platform>` optionalDependencies path, which is the only
-resolution route — `packages/compiler/js/resolve-binary.ts` performs no
-network fetch. (This note previously described a compiler `postinstall`
-GitHub-release fallback pointing at the latest stable Release assets. No such
-script exists: `packages/compiler` declares no `postinstall`, so there was no
-fallback and canaries could not have silently picked up a stable binary.)
+check skips them). Compiler packages and compiler platform binaries are owned
+and released by the standalone `aihu-project/aihu-compiler` repository. Root
+canaries therefore resolve the last stable native server/CSS packages through
+their exact optional-dependency pins while the root JavaScript packages move
+through the canary tag.
 
 ## Pre-release channels (alpha / beta / rc)
 

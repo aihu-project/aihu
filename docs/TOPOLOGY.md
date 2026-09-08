@@ -61,7 +61,7 @@ three-revision merge-order argument.
 | `apps/docs-next/**`, `deploy-docs-next.yml` | docs-next | |
 | `packages/css-engine/**`, `@aihu/ui`, daisyUI work | team-lead | |
 | `bench/**`, `RESULTS.md` | perf track | regeneration STOPPED — §5 |
-| `packages/compiler/**` | shared — announce first | |
+| `aihu-project/aihu-compiler` | standalone compiler owner | Publishes `@aihu/compiler` and compiler platform/WASM artifacts; root keeps consumer and release integration checks. |
 | `.github/workflows/plan-a.yml` | shared — announce first | |
 
 Primary checkout `/Users/smcguirt/conductor/repos/aihu` is currently on

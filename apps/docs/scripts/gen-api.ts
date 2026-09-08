@@ -52,6 +52,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
+import { pairedDeclarationTarget } from './gen-api-targets.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url)) // apps/docs/scripts
 const APP = resolve(HERE, '..') // apps/docs
@@ -457,6 +458,11 @@ function entryFiles(dir: string): string[] {
   const files: string[] = []
   for (const t of targets) {
     if (!/\.(ts|js)$/.test(t)) continue
+    // When a package exports both a typed declaration and its runtime JS,
+    // parse the declaration only. The JS file is often minified and would
+    // overwrite the typed signature and JSDoc collected from the .d.ts.
+    const declarationTarget = pairedDeclarationTarget(t, targets)
+    if (declarationTarget && existsSync(resolve(dir, declarationTarget))) continue
     const srcFile = t
       .replace('/dist/', '/src/')
       .replace(/\.d\.ts$/, '.ts')

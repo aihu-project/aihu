@@ -206,9 +206,9 @@ jobs:
   #
   # Mirrors the publish-native pattern: triggered only by an actual tag push,
   # authenticates to npm with the repository's trusted-publisher OIDC policy,
-  # then runs after the server/CSS native packages so declared
-  # by the time these JS packages reach npm their declared
-  # `optionalDependencies` already resolve.
+  # then runs after the server/CSS native builds and stable-tag publications so
+  # declared `optionalDependencies` resolve. Canary runs publish root JS
+  # packages with their last stable native pins and do not publish natives.
   #
   # Uses `bun publish --workspaces` because Bun rewrites `workspace:*` deps to
   # actual versions automatically. Changesets has versioned the packages on
@@ -282,11 +282,9 @@ jobs:
         run: bun install
 
       - name: Snapshot version (canary)
-        # Ephemeral 0.0.0-canary-<sha> versions, identical to the ones the
-        # publish-*-native jobs computed (deterministic {tag}-{commit} template
-        # from the same SHA). Re-run `bun install` afterwards so bun.lock
-        # matches the bumped versions before packing — publish-all.sh's
-        # workspace:* rewrite reads lock-resolved versions.
+        # Ephemeral 0.0.0-canary-<sha> versions for root JavaScript packages.
+        # Server/CSS native families keep their independently released stable
+        # pins; native canary publication is disabled in release-platforms.yml.
         if: github.event_name == 'workflow_dispatch' && inputs.canary
         env:
           HUSKY: '0'
@@ -296,7 +294,6 @@ jobs:
         run: |
           bun scripts/canary-catchall-changeset.ts
           bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot --host server,css-engine
           bun install
 
       - name: Build all packages

@@ -9,10 +9,6 @@
 # most), `blocked`, `automerge`, `agent-active` (all intentional human/agent
 # acts — see .kodiak.toml), and `swarm` (owned by the swarm sync, not by paths).
 
-compiler:
-  - changed-files:
-      - any-glob-to-any-file:
-
 css-engine:
   - changed-files:
       - any-glob-to-any-file:

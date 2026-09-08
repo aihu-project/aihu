@@ -12,8 +12,9 @@ name: Build and publish platform native packages
 # Builds the two root-owned native addon families (@aihu/server and
 # @aihu/css-engine) and publishes their @aihu/*-<platform> optionalDependency
 # package sets to npm. The build-* jobs always run, so the GitHub Release always
-# has fresh binaries; the publish-* jobs only run on a real tag push or a canary
-# workflow_dispatch — gated by `inputs.is_release`, computed by the caller.
+# has fresh binaries; the publish-* jobs only run on a real tag push. Canary
+# dispatches keep the last stable native pins while the root JavaScript packages
+# are published, because these native families have independent version streams.
 #
 # Called from:
 #   - release.yml, unconditionally, on every trigger (tag push, dry-run
@@ -131,10 +132,10 @@ jobs:
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
-    # Tag push (stable) OR canary workflow_dispatch. On a plain dispatch
-    # (canary=false) this job still skips, preserving the old dry-run-build
-    # behavior of the `tag` input path.
-    if: inputs.is_release
+    # Native platform packages publish on stable tags only. Canary root
+    # packages keep their last stable native pins; these families are versioned
+    # independently from the root snapshot.
+    if: inputs.is_release && !inputs.canary
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -146,45 +147,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
-      - name: Setup Bun (canary)
-        if: inputs.canary
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Snapshot version (canary)
-        # Ephemeral 0.0.0-canary-<sha> versions — computed identically in every
-        # canary publish job from the same SHA (snapshot.prereleaseTemplate is
-        # "{tag}-{commit}"). stamp-platform-versions.ts then synchronizes the
-        # remaining server/CSS platform manifests and host pins.
-        if: inputs.canary
-        env:
-          HUSKY: '0'
-          # @changesets/changelog-github requires a token even for snapshot
-          # changelog assembly.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bun install --frozen-lockfile --ignore-scripts
-          bun scripts/canary-catchall-changeset.ts
-          bun changeset version --snapshot canary
-          bun scripts/stamp-platform-versions.ts --require-snapshot --host server,css-engine
-
       - name: Download all native artifacts
         uses: actions/download-artifact@v8
         with:
           path: native-artifacts
 
       - name: Stage and publish each platform package (idempotent)
-        env:
-          CANARY: ${{ inputs.canary && '1' || '' }}
-          CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
         run: |
           set -euo pipefail
-          # Canary → publish under the `canary` dist-tag (latest untouched);
-          # dry-run canary → pack + validate only, no network write.
-          NPM_EXTRA=""
-          if [ -n "${CANARY:-}" ]; then NPM_EXTRA="--tag canary"; fi
-          if [ -n "${CANARY_DRY_RUN:-}" ]; then NPM_EXTRA="$NPM_EXTRA --dry-run"; fi
           for dir in packages/server/npm/*/; do
             platform=$(basename "$dir")
             node_file=$(ls native-artifacts/native-$platform/*.node 2>/dev/null || true)
@@ -220,7 +190,7 @@ jobs:
               echo "${pkg_name}@${pkg_version} already published — skipping"
               continue
             fi
-            ( cd "$dir" && npm publish --access public $NPM_EXTRA )
+            ( cd "$dir" && npm publish --access public )
           done
 
   # ---------------------------------------------------------------------------
@@ -308,8 +278,8 @@ jobs:
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
-    # Tag push (stable) OR canary workflow_dispatch (see publish-native).
-    if: inputs.is_release
+    # Native platform packages publish on stable tags only; see publish-native.
+    if: inputs.is_release && !inputs.canary
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -321,40 +291,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
-      - name: Setup Bun (canary)
-        if: inputs.canary
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Snapshot version (canary)
-        # See publish-native's snapshot step — identical, deterministic per SHA.
-        if: inputs.canary
-        env:
-          HUSKY: '0'
-          # @changesets/changelog-github requires a token even for snapshot
-          # changelog assembly.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bun install --frozen-lockfile --ignore-scripts
-          bun scripts/canary-catchall-changeset.ts
-          bun changeset version --snapshot canary
-
       - name: Download all css-native artifacts
         uses: actions/download-artifact@v8
         with:
           path: css-native-artifacts
 
       - name: Stage and publish each platform package (idempotent)
-        env:
-          CANARY: ${{ inputs.canary && '1' || '' }}
-          CANARY_DRY_RUN: ${{ (inputs.canary && inputs.dry_run) && '1' || '' }}
         run: |
           set -euo pipefail
-          # Canary dist-tag / dry-run flags (see publish-native).
-          NPM_EXTRA=""
-          if [ -n "${CANARY:-}" ]; then NPM_EXTRA="--tag canary"; fi
-          if [ -n "${CANARY_DRY_RUN:-}" ]; then NPM_EXTRA="$NPM_EXTRA --dry-run"; fi
           for dir in packages/css-engine/npm/*/; do
             platform=$(basename "$dir")
             # The css binary is a raw executable named aihu-css-compile[.exe];
@@ -393,5 +337,5 @@ jobs:
               echo "${pkg_name}@${pkg_version} already published — skipping"
               continue
             fi
-            ( cd "$dir" && npm publish --access public $NPM_EXTRA )
+            ( cd "$dir" && npm publish --access public )
           done
