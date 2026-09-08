@@ -28,7 +28,7 @@ export function resolveBinPath(
     if (pathExists(candidate)) return candidate
   }
 
-  throw new Error('@aihu/mcp requires the published @aihu/compiler package')
+  return 'aihu-compile'
 }
 
 const binPath = resolveBinPath()

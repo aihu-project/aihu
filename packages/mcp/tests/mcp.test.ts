@@ -68,6 +68,16 @@ describe('compiler binary resolution', () => {
     expect(resolved).not.toContain('/target/release/')
     expect(resolved).not.toContain('/target/debug/')
   })
+
+  it('supports package managers that expose dependency bins through PATH', () => {
+    expect(
+      resolveBinPath(
+        {},
+        () => [],
+        () => false,
+      ),
+    ).toBe('aihu-compile')
+  })
 })
 
 // ───────────────────────────────────────────────
