@@ -14,6 +14,10 @@
     "./ssr": {
       "types": "./dist/ssr-string.d.ts",
       "import": "./dist/ssr-string.js"
+    },
+    "./app": {
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js"
     }
   },
   "files": [

@@ -9,7 +9,7 @@ declare const __DEV__: boolean
 
 import type { MatchResult, RouteContextValue, RouteDefinition, RouteHead } from '@aihu/router'
 import { bindRouteSignalWriter, createRouter, provideRouteContext } from '@aihu/router'
-import { _setHydrate, _setMount, _setSignal, _withOwnerContext } from '@aihu/runtime'
+import { _setHydrate, _setMount, _setSignal, _withOwnerContext } from '@aihu/runtime/app'
 // Pure subpath — NOT the @aihu/server barrel. The barrel reaches loader.ts +
 // the lazy native loader; importing it would risk dragging node:-bearing code
 // into the browser client bundle and trip check:runtime-purity. head-lowering.ts

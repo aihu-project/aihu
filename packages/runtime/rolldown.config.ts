@@ -2,10 +2,16 @@ import { defineConfig } from 'rolldown'
 import { dts } from 'rolldown-plugin-dts'
 
 export default defineConfig({
+  // `app` entry is a narrow integration bridge for `@aihu/app`; it avoids
+  // making the app bootstrap depend on the runtime's whole public barrel.
   // `ssr-string` is a SEPARATE server-only entry (`@aihu/runtime/ssr`) so the
   // compiled-`__ssrString` escape helpers never tax the client bundle's size
   // gate — client pages import `.` only.
-  input: { index: 'src/index.ts', 'ssr-string': 'src/ssr-string.ts' },
+  input: {
+    index: 'src/index.ts',
+    app: 'src/app.ts',
+    'ssr-string': 'src/ssr-string.ts',
+  },
   checks: { circularDependency: true },
   output: {
     dir: 'dist',
