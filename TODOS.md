@@ -1,5 +1,13 @@
 # TODOS
 
+**2026-09-10 pass:** most of the compiler/agent items below predate the
+`aihu-compiler` / `aihu-agent` / `aihu-dom` extractions and describe code
+that no longer lives in this repo. Each item below has been re-verified
+against the current extracted repos; items confirmed fixed are marked
+`FIXED` inline with evidence, items that are now real satellite-repo bugs
+have been routed as issues there (linked inline), and items that still need
+a design call are left open as-is.
+
 ## Compiler / language (added 2026-07-10)
 
 ### aihu-tsc — DONE (2026-07-13); remaining follow-ups
@@ -17,7 +25,13 @@
     the editor and `aihu-tsc` cannot disagree. Its `state-generator.ts` is a second,
     weaker generator and should be retired.
 
-### `signal(null)` infers `T = null` — untyped signals across the corpus (added 2026-07-12)
+### `signal(null)` infers `T = null` — untyped signals across the corpus (added 2026-07-12) — ROUTED to aihu-dom
+
+**Routed:** `@aihu/signals` now lives in `aihu-project/aihu-dom` (extracted).
+Re-verified still reproducing against current `aihu-dom` source
+(`packages/signals/src/signal.ts:496`, single generic overload, no
+`null`/`undefined` special case). Tracked as
+[`aihu-dom#5`](https://github.com/aihu-project/aihu-dom/issues/5).
 - **What:** `const [doc, setDoc] = signal(null)` gives `T = null`, so `doc()` is
   `null`, `setDoc(realDoc)` is an error, and every member read off it lands on
   `never`. Same for `signal([])` → `never[]`. Wants `signal<Doc | null>(null)`.
@@ -28,64 +42,33 @@
 - **Note:** this is app-side authoring, not a compiler bug — but the corpus has
   to be migrated before `.aihu` type-checking can be made blocking.
 
-### TS type-check sidecar — remaining harvest gap
-- **Status (2026-07-12):** the @state body is now INLINED into the sidecar at its
-  real lines, so plain script code (imports, consts, functions) carries real
-  types and is fully checked. What remains:
-  - **macro bodies are not checked.** `$prop:`/`$action:`/`$computed:` lines are
-    blanked (they are aihu syntax, not TS — `type: { params: { ref: string } }`
-    puts `string` in value position). Their bindings are declared instead, with
-    `$prop` carrying its real `type:`. Lowering macro bodies to TS is the fix.
-  - **loop aliases are `any`.** `{#each xs as m}` binds `m` in the template, so
-    there is no declaration to borrow from. Deriving the element type from the
-    iterable (e.g. projecting the body through `xs.forEach((m) => …)`) would
-    give `m` a real type.
+### TS type-check sidecar — remaining harvest gap — PARTIALLY FIXED
+- **Compiler source moved to `aihu-project/aihu-compiler`** (extracted). Re-verified
+  against current source:
+  - **loop aliases — FIXED.** `{#each xs as m}` now lowers to
+    `for (const [item, i] of __aihu_each(list))` against a generic-inferring
+    helper, so `m` gets a real inferred type instead of `any`
+    (`sidecar_ts.rs:23-26`, helper at `:251`).
+  - **`$prop:` bodies — improved.** Still blanked from the lifted body, but a
+    synthetic accessor declaration restores real type-checking for reads
+    elsewhere in the file (`sidecar_ts.rs:1168-1188`).
+  - **`$action:`/`$computed:`/collection-macro bodies — still `any`.** Explicitly
+    acknowledged in the current source (`sidecar_ts.rs:1142-1144, 1206`). Tracked
+    as [`aihu-compiler#14`](https://github.com/aihu-project/aihu-compiler/issues/14).
 
 ### TS type-check sidecar — completion pass
-- **What:** Finish the TypeScript sidecar so `tsc` coverage over `.aihu` files is
-  complete: every template-referenced binding surfaces in the sidecar (not just
-  `$context` keys + destructuring loop aliases from #389), line preservation
-  (#390) holds across all macro forms, and the remaining unharvested constructs
-  (whatever an audit of the emit paths turns up — `@state` collection-macro
-  bodies, `$action`/`$computed` return types, slot/prop generics) are typed
-  rather than elided.
-- **Why:** The sidecar's whole value is trust — a type error in an `.aihu` file
-  should always cite the real line (#390's contract) and never be silently
-  skipped because a construct wasn't harvested. Partial harvesting gives false
-  green checkmarks, which is worse than no checking.
-- **Context:** Recent work: #389 (sidecar harvests `$context` keys +
-  destructuring loop aliases), #390 (line-preserving sidecar so tsc cites the
-  real `.aihu` line). Start with an audit of what the harvester still skips.
-- **Start at:** `packages/compiler/src/types.rs` (sidecar placement fields,
-  ~L88), the codegen emit paths in `packages/compiler/src/codegen/`, and the
-  sidecar tests (`packages/compiler/tests/b3_variant_b.rs`,
-  `route_and_build_target.rs`).
-- **Depends on:** nothing; sequence after the `@state` server-lowering fix below
-  if both touch `emit.rs`, to avoid churn.
+- Superseded by the harvest-gap item above for the loop-alias/`$prop`/macro-body
+  specifics; the remaining piece is `aihu-compiler#14`. `packages/compiler` no
+  longer exists in this repo (extracted to `aihu-project/aihu-compiler`).
 
-### Template expressions: spread, `.map`, and array/array-like functions
-- **What:** First-class support in the HTML/template portion of `.aihu` syntax
-  for spread (`...xs`), `.map()`/`.filter()`/`.flatMap()` and friends, and
-  array-likes (`Set`/`Map` iteration, `Array.from`, index/entries) — both in
-  interpolation expressions and in attribute/loop positions. Define what the
-  template expression grammar admits vs what must be hoisted to the script
-  portion, and make the compiler's error message say exactly that when an
-  expression is rejected.
-- **Why:** Component authors reach for `items.map(...)` and spread as
-  reflexively as in JSX; today the boundary between "template expression" and
-  "hoist it to a `$computed`" is undocumented and (per founder report) errors
-  are opaque. Whether the fix is grammar support, better lowering, or just a
-  crisp diagnostic + docs, the current silent/obscure failure is the bug.
-- **Context:** Founder request 2026-07-10, same session as the HTML-comment
-  parser report — treat both as "template tokenizer/expression grammar
-  hardening". Audit what the expression parser accepts today before deciding
-  the cut-line.
-- **Start at:** the template expression parser/tokenizer in
-  `packages/compiler/src/` (grep for the interpolation/expression grammar), its
-  codegen lowering in `codegen/emit.rs`, and the compiler test suite for
-  template-expression cases; add a docs page for the template-expression subset
-  once the grammar is settled.
-- **Depends on:** nothing.
+### Template expressions: spread, `.map`, and array/array-like functions — FIXED
+- **Verified against current `aihu-compiler` source.** The expression grammar is
+  now oxc-backed (a real JS/TS parser), default-on since PR #485
+  (`lib.rs:73-94`, `expr/mod.rs:1-14`). Tests directly cover spread,
+  `.map()`/`.filter()`, and `Array.from` across interpolation, `{#each}`, and
+  attribute-binding positions (`expr/mod.rs:492-538`), and rejected input gets a
+  rich C320 diagnostic quoting the offending expression rather than an opaque
+  failure.
 
 ## Deferred from go-public eng review (2026-06-02)
 
@@ -141,7 +124,7 @@
 - **Diagnosed rather than rewritten:** destructuring / `for-of` / `for-in` into a prop is **C560** (no sound desugar without a temporary and a statement split); a prop write inside `$computed`/`$resource` is **C561** (a derivation must not mutate); `count.foo = x` warns rather than rewriting, since fixing it would require a *read* rewrite.
 - **Why esbuild missed it:** `esbuild --loader=ts` transform does not perform const-assignment analysis. `Bun.Transpiler` does. The earlier 32-component sweep passed all of these.
 
-### `$afterNavigate` lowering strips its call head, leaving a dangling `})` (bug)
+### `$afterNavigate` lowering strips its call head, leaving a dangling `})` (bug) — FIXED; separate gate bug tracked as aihu-compiler#13
 - **File:** `examples/hacker-news/src/pages/item/[id].aihu` — after CO1, the only remaining `(parse)` failure in `bun run check:emit-parses`.
 - **What:** the `$afterNavigate((to) => {` head — the call expression *and* its arrow prefix — is stripped during lowering, but the body and its closing `})` are spliced through. The emit ends up as:
 
@@ -154,6 +137,15 @@
   ```
 
   The orphaned `})` is a syntax error, so the whole module fails to parse. The arrow's `to` parameter is left unbound as well.
+
+  **2026-09-10: fixed.** `parse_state_macros` now uses a balanced-paren scanner
+  (`find_paren_close`) to capture the whole `(to) => {...}` expression verbatim,
+  with a regression test pinning this exact shape (`aihu-compiler`
+  `state_macros.rs:1468-1500, 2722-2734`). A separate, still-open gap in the
+  same emit family — a bare `afterNavigate(...)` call is only lowered when
+  `@state` also declares another binding wrapper — was found while verifying
+  this and caused the real production incident in aihu#744; tracked as
+  [`aihu-compiler#13`](https://github.com/aihu-project/aihu-compiler/issues/13).
 - **NOT a `$prop` write bug.** This file writes no prop. It was mis-attributed to the prop-write defect above; CO1 deliberately left it alone, and the negative-control test `hacker_news_item_is_unchanged_by_co1` pins that its emit is untouched. Substituting it into a prop-write brief's acceptance set would have made that slice unfalsifiable.
 - **Start at:** the router-macro lowering for `$afterNavigate` / `$beforeNavigate` in `packages/compiler/src/codegen/emit.rs` — compare against how `$lifecycle` callbacks correctly keep their head and args.
 - **Depends on:** nothing.
@@ -167,34 +159,61 @@
 - **Why it hid:** the existing AC11 test's fixture throws `no action:` from `callAction`, so it asserted the INVOKER's rejection, not the gate's — the same inversion mirrored in the test. New AC11b cases use a binding that succeeds for any name; verified failing against the old code, where an unadvertised `wipeDatabase` executed.
 - **Residual:** when NO metadata is registered for a tag there is nothing to enforce against and the call falls through to the invoker. Not reachable by anything compiled from source (the compiler now always emits `registerAgentMetadata`), but closing it properly means giving `LiveBinding` an advertised surface.
 
-### a2a / acp are shims that look finished (security + correctness)
-- **What:** Neither implements its spec. `agent-a2a` is REST paths using deprecated pre-v0.2 method names with no JSON-RPC envelope and no task store; `body.message` must be the literal string `"tag/action"`, so a conforming client sending a `Message` with `parts` gets `error: 'bad message'`. `agent-acp` hardcodes `handleToolCall(toolName, null)` — **the ACP path structurally cannot pass arguments to any action.**
-- **Security:** both forward no `RequestContext`, so they are anonymous by construction. Components *with* `$scope` fail closed correctly, but any component without `$scope`/`$rate-limit` is fully callable, unauthenticated and unthrottled, over public HTTP.
-- **Why it hides:** 542 lines of tests validate the shims' own invented shape, locking in the divergence rather than catching it.
-- **Also:** the header claims Zed's Agent Client Protocol; the implementation resembles BeeAI ACP.
-- **Decision needed:** implement, or mark experimental and stop shipping them as complete.
+### a2a / acp are shims that look finished (security + correctness) — FIXED
+- **Agent packages moved to `aihu-project/aihu-agent`** (extracted). Re-verified
+  against current source and CHANGELOGs:
+  - `agent-a2a` now implements real JSON-RPC 2.0 envelopes, spec v1.0.1
+    PascalCase methods, and parts-based `Message` parsing via a real
+    `TaskStore` (`a2a-adapter.ts:1-20, 73-88, 245-261`; CHANGELOG 1.0.0: "The
+    0.1.x wire was a shim that implemented neither the old nor the new spec;
+    it is removed entirely").
+  - `agent-acp` derives `params` from the incoming message and threads them
+    into `handleToolCall` (`acp-adapter.ts:72-84`) — the hardcoded-`null` bug
+    is fixed and explicitly called out in a code comment; deprecated in favor
+    of A2A but functionally correct.
+  - Both adapters now construct a real `RequestContext` (defaulting to an
+    explicit `ANONYMOUS` sentinel, not "nothing") and thread it through
+    `agent-service`'s `runGate` for scope/rate-limit enforcement
+    (`a2a-adapter.ts:103-110,174`; `acp-adapter.ts:29-36,84`).
 
-### Rate limiting fails open where scope fails closed
-- **What:** `if (rateLimitSpec !== null && rateLimitPlugin)` — declare `$rate-limit`, forget to install the plugin, get silently unlimited. Scope, by contrast, fails closed (401 `AUTH_MISSING`).
-- **Also:** rate-limit keys are `${userId}:${tag}` where `userId` is caller-supplied via MCP tool arguments — trivially evaded by rotating it.
+### Rate limiting fails open where scope fails closed — FIXED
+- **Verified in current `aihu-agent/packages/agent-service`.** The guard is now
+  `if (rateLimitSpec !== null)` — a declared `$rate-limit` with no plugin
+  installed now returns 429 `RATE_LIMIT_MISSING` (fail-closed), not silent
+  unlimited access (`agent-service.ts:322-364`). Rate-limit keys are now
+  `${verifiedSub}:${tag}` off the JWT-verified principal, not caller-supplied
+  `userId` (`agent-service.ts:357`).
 
-### `@aihu/seo` duplicates `plugin-agent-readiness`, with inverted defaults
-- **What:** Copy-pasted bot list; sitemap does **not** XML-escape (a path containing `&` produces invalid XML); `plugin.ts`/`json-ld.ts` write to `ast.__seoJsonLd`, which nothing reads. Not wired into the app pipeline; one example consumer.
-- **The footgun:** `agent-readiness` defaults `aiAgents = 'allow-all'`; `seo` defaults `disallowAiBots` to **true**. Same 13 bots, opposite defaults, undocumented. For a framework selling agent-readiness, `@aihu/seo` blocking every AI crawler by default is the wrong default in the wrong package.
-- **Also:** `mcp-server-card.ts:84-85` advertises `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`; nothing serves either.
-- **Recommendation:** delete `@aihu/seo` or re-export from `plugin-agent-readiness`.
+### `@aihu/seo` duplicates `plugin-agent-readiness`, with inverted defaults — FIXED
+- **Verified against `aihu-project/aihu-seo` (extracted) and core
+  `plugin-agent-readiness`.** `@aihu/seo` is now an explicit "DEPRECATED
+  compatibility shim over @aihu-plugin/agent-readiness" that imports the bot
+  list/sitemap/robots generation directly from `plugin-agent-readiness` rather
+  than duplicating it. The bot registry has one source of truth
+  (`plugin-agent-readiness/src/robots.ts:61-181`). Sitemap XML-escaping is
+  implemented (`sitemap.ts:26-33`). The old `disallowAiBots` default is
+  preserved only as a documented, warned compatibility mapping in the seo
+  shim, not a silent inverted default (`aihu-seo/src/routes.ts:25-40`).
 
-### Docs describe unshipped behavior with no status markers
-- **What:** `docs/site/agent-discovery.md` + `authoring-agents.md` total 937 lines with **zero** "not yet implemented"/"planned"/"deferred" markers. Specific contradictions: "Every aihu application automatically exposes standard discovery endpoints… with no manual configuration" (it is opt-in via `config.agentReadiness`, routes hand-wired); "The `skills` array is auto-populated from the `@agent` blocks in your SFCs… aggregated at build time" (hand-mirrored in `vite.config.ts`); and a `.mcp.json` sidecar that does not exist (the real file is `agent-manifest.json`, a different non-MCP shape).
-- **Also:** `MarkdownResolver` is an injected interface with no concrete implementation shipping anywhere, and content negotiation is `Accept: text/markdown`-only — it does not sniff user-agents, so a crawler that omits the header gets HTML.
+### Docs describe unshipped behavior with no status markers — STALE (files removed)
+- `docs/site/agent-discovery.md` and `authoring-agents.md` no longer exist in
+  this repo — the docs site was reorganized since this was filed. No action
+  needed here; if the successor docs make similar claims, file a fresh issue
+  against the current file.
 
-### SSR hydration does not work end-to-end — two independent mismatches
-- **Path keys never match.** Server emits `data-aihu-path="0"`, `"0.0"` (`packages/server/src/ssr.ts:440`); client hydrate hardcodes `const pathBase = 'hydrate.0'` (`packages/arbor/src/hydrate.ts:276`). Every lookup misses, `existingEl` is undefined, and hydration silently degrades to the `_materialize()` fallback — appending new nodes alongside the server's rather than adopting them.
-- **Why it's green:** `packages/arbor/tests/hydrate.test.ts` hand-writes `hydrate.0` markup instead of feeding it real `renderToString` output. There is no test anywhere piping `renderToString(…, {hydratable:true})` into `hydrate()`. The Rust renderer shares the convention (`packages/server/src-native/src/render.rs:408`), so a fix lands in three places.
-- **Shadow DOM is invisible to SSR.** No declarative shadow DOM (`<template shadowrootmode>`) is emitted — grep `packages/server/src` for `shadow` returns nothing. Server output is flat light DOM while the client hydrates into `this.shadowRoot ?? this`. With `mode: 'open'` the default, those are different trees. A second mismatch stacked on the first.
-- **Also:** the production SSR path (`packages/router/src/server.ts`) calls `renderToString(component)` with no options at all, so it emits non-hydratable HTML regardless.
-- **Also:** `_rootIdCounter` is a mutable module global, so path keys are stable only within one page's mount ordering — not across a server and client render.
-- **Depends on:** nothing. Blocks any real SSR story, and blocks shards entirely.
+### SSR hydration does not work end-to-end — FIXED
+- **Path keys now match.** Both sides agree on `'0'` as root, with an explicit
+  shared-wire-protocol comment and a dedicated integration test
+  (`packages/server/src/ssr.ts:495` `ROOT_PATH = '0'`;
+  `aihu-dom` `packages/arbor/src/hydrate.ts:81` `_ROOT_PATH = '0'`;
+  `tests/integration/ssr-hydrate-path-parity.test.ts`). The old
+  `hydrate.0` hardcode is gone, and the hydrate `snapshot` param is now
+  actively used to pre-seed signal/attr values before effects run
+  (`hydrate.ts:100-114, 327, 398, 464`) rather than discarded.
+- **Shadow DOM is now emitted in SSR.** Declarative shadow DOM
+  (`<template shadowrootmode>`) is emitted from `packages/runtime/src/ssr-string.ts:552`
+  and wired through `packages/server/src/ssr.ts:834`, with a test asserting
+  the `shadowrootmode="open"` output (`ssr-child-adoption.test.ts:315`).
 
 ### C205 is a stale hard error rejecting valid code — DONE (#424)
 - **What:** `lib.rs` fired C205 when a plain `@state` const read a `$prop`, on the premise that the prop shadow is emitted AFTER the plain body. Issue #279 hoisted prop bindings ABOVE the plain body, which fixed the TDZ this guarded against. Confirmed empirically: `const label = ctx.props.label` now emits before the plain body.
@@ -202,27 +221,36 @@
 
 ### Shard prerequisites (only if pursuing topcoat-style server fragments)
 - Ordered; each blocks the next. Recorded from the feasibility pass so the shape isn't re-derived.
-- 1. The two SSR mismatches above — prerequisite for everything.
-- 2. **Signal pre-seeding.** `hydrate()` accepts a `snapshot` and explicitly discards it (`void snapshot`, hydrate.ts:244) because `signalRegistry` stores getters only, not setters. A server fragment can re-wire effects but cannot deliver VALUES — which is the entire point of a shard.
+- 1. The two SSR mismatches above — prerequisite for everything. **Satisfied as of 2026-09-10** (see "SSR hydration does not work end-to-end — FIXED" above).
+- 2. **Signal pre-seeding.** **Satisfied as of 2026-09-10** — `hydrate()`'s `snapshot` param is no longer discarded; `_seedSignal`/`_seedAttrs` (aihu-dom `hydrate.ts:100-114`) now pre-seed values before effects run.
 - 3. **SSR for structural nodes.** `renderNodeAsync` handles `leaf` and `branch`, then falls through to `enqueue('')` — `when()`/`each()` render to the empty string. No shard may contain a list or conditional.
 - 4. **A `hydrateFragment(node, host, pathPrefix, parentScope)` entry point.** Today `pathBase` is hardcoded and there is no way to hydrate against an EXISTING scope, so a fragment can't splice into its parent's disposal chain.
 - 5. **The endpoint layer.** No server-function / RPC / action concept exists anywhere in `router` or `server` (grepped: zero hits). Registry, stable IDs, protocol, and client-signal serialization all need building.
 - **Reusable as-is:** fragment-mode `renderToString` (omit `head`), the hydration walker's wire-don't-recreate algorithm, `ChildScope` + `_teardownChildScope` + `_mc` as the region swap primitive, `effect()` for invalidation, `defineApiRoute` as endpoint substrate.
 - **Recommendation:** restrict v1 shards to `shadowMode: 'light'` — those route CSS through `virtual:aihu-utility/<hash>.css` and sidestep the constructable-stylesheet problem entirely, since a server fragment cannot carry `adoptedStyleSheets`.
 
-### MCP tools still ship without parameter schemas
-- **What:** `buildToolDefinitions` emits `inputSchema: { properties: { args: { type: 'array' } } }` for every action — no arity, no parameter names, no types. `ActionSchema` carries `returns` and (now) `describe`, but no parameter information, so there is nothing to emit even in principle.
-- **Why it matters:** descriptions now reach agents, which fixes tool SELECTION. This is what's left for tool USE — an LLM still has to guess argument shape.
-- **Fix:** extract handler signatures (arity + types off the `handler:` arrow) in the compiler and thread them into `ActionSchema`. Interacts with the `$prop`-mutation decision above, since both touch action-body/handler parsing.
+### MCP tools still ship without parameter schemas — FIXED
+- **Verified against current `aihu-compiler` source.** `mcp_schema.rs` ("DE5")
+  replaces the old `args: {type:'array'}` shape with named, typed JSON-Schema
+  properties derived from the parsed handler signature, with a documented
+  TS→JSON-Schema mapping and tests confirming the old shape is gone
+  (`mcp_schema.rs:1-7, 34-41, 103-142, 223-235`).
 
-### plugin-agent-readiness serves deprecated / non-spec discovery endpoints (bug)
-- **Verified against the specs and against our own source.** Three separate problems:
-  1. **`/.well-known/agent.json` is the DEPRECATED A2A path.** Spec v0.3.0 (2025-07-30) renamed it to **`/.well-known/agent-card.json`** — flagged breaking, rationale was IANA feedback that `agent.json` was too generic. Current spec is v1.0.1 (2026-05-28, Linux Foundation). SDKs serve both with a deprecation warning; we serve only the old one. See `src/a2a-card.ts:3`, `src/types.ts:63`, `src/vite-plugin.ts:211`.
-  2. **`/.well-known/mcp.json` and `/.well-known/mcp/server-card.json` are in NO MCP spec.** Revision `2025-11-25` defines neither. The proposals are unmerged: **SEP-1649 is CLOSED**; SEP-2127 was moved **off the Standards Track onto the Extensions Track**. Our `tests/compliance/mcp-server-card-schema.test.ts` validates "SEP-1649 compliance" against a closed proposal — a test that pins us to a dead spec. See `src/mcp-discovery.ts:3,27`, `src/mcp-server-card.ts:4`.
-  3. **The one thing MCP *does* specify, we don't serve.** `mcp-server-card.ts:84-85` advertises `/.well-known/oauth-protected-resource` (RFC 9728) and `/.well-known/oauth-authorization-server` (RFC 8414) and **nothing serves either**. Note RFC 8414's document belongs on the **authorization server**, not the MCP server.
-- **Also:** `llms-full.txt` is a **Mintlify invention**, not in llmstxt.org (which defines `llms-ctx.txt` / `llms-ctx-full.txt`). Harmless and widely copied — just don't call it spec compliance.
-- **Fix:** serve `agent-card.json` (keep `agent.json` as a deprecated alias), stop claiming SEP-1649 compliance, and either serve the OAuth well-knowns or stop advertising them.
-- **Context:** full evidence in `docs/domain-hints/seo-and-agent-discoverability.md` §6.
+### plugin-agent-readiness serves deprecated / non-spec discovery endpoints (bug) — MOSTLY FIXED
+- **Re-verified against current core source.**
+  1. **Agent card — fixed.** `vite-plugin.ts:20-22` now serves the canonical
+     `/.well-known/agent-card.json`, with `/.well-known/agent.json` kept as a
+     deliberate, documented deprecated alias (not the only path served).
+  2. **OAuth well-knowns — fixed.** `mcp-server-card.ts:128-133` deliberately no
+     longer advertises `/.well-known/oauth-protected-resource` /
+     `-authorization-server` without serving them ("a dangling unserved
+     advertisement is worse than none").
+  3. **`mcp.json` / `mcp/server-card.json` — still served, but no longer a false
+     conformance claim.** Both are now explicitly documented as non-standard,
+     speculative endpoints with SEP-1649's closed status called out in-source
+     (`mcp-server-card.ts:1-9`, `mcp-discovery.ts:3-7`). Serving them is now a
+     documented choice, not a silent spec-compliance bug — no further action
+     needed unless the project wants to drop them outright.
 
 ### Adopt ARD (`/.well-known/ai-catalog.json` + robots.txt `Agentmap:`)
 - **What:** [Agentic Resource Discovery](https://agenticresourcediscovery.org/spec), announced 2026-06-17 by Google, Microsoft, GitHub, Hugging Face, Cisco, Databricks, NVIDIA, Salesforce, ServiceNow, Snowflake. A `/.well-known/ai-catalog.json` listing `application/a2a-agent-card+json` and `application/mcp-server-card+json` entries, plus an **`Agentmap:` robots.txt directive mirroring `Sitemap:`**.
@@ -230,15 +258,9 @@
 - **Status:** v0.9 draft, one month old, Apache-2.0. Real backing, but do not over-index. Track it; don't bet the design on it yet.
 - **Depends on:** the endpoint-correctness item above (ARD entries reference the A2A and MCP cards, so those paths must be right first).
 
-### Bare boolean attributes are stripped in templates (bug)
-- **What:** A bare HTML boolean attribute in `@template` (e.g. `<button disabled>`)
-  is dropped from the emitted element — authors must write `$disabled={true}` to
-  get `disabled=""`. Found while wiring a disabled affordance in fellwork-web; the
-  same latent bug sits on an audio `<button disabled>` there.
-- **Why:** Bare booleans (`disabled`, `readonly`, `required`, `checked`, `selected`,
-  `hidden`, …) are standard HTML; silently stripping them is a correctness trap the
-  author only catches at runtime.
-- **Start at:** the template attribute parser/codegen (`packages/compiler/src/parser/`
-  attribute handling + `codegen/emit.rs`) — emit a bare boolean attribute as
-  `attr=""` (or the framework's boolean-attr convention), or diagnose it.
-- **Depends on:** nothing.
+### Bare boolean attributes are stripped in templates (bug) — FIXED
+- **Verified against current `aihu-compiler` source.** `parse_attr("disabled")`
+  now returns `Attr::Static{name:"disabled", value:""}`
+  (`directives.rs:1272-1278`), and codegen serializes it as `disabled: ''`
+  rather than dropping it (`template_emit.rs:1423-1434`). An adjacent W602
+  diagnostic warns when authors over-specify a non-empty value.
