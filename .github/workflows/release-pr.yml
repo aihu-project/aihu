@@ -69,7 +69,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Open / update Release PR
-        uses: changesets/action@v2
+        uses: changesets/action@v1
         with:
           # Compound version step, run via the `release:version` package script:
           #   1. changeset version  — bump package.json + write CHANGELOGs
