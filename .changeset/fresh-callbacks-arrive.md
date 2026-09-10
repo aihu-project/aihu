@@ -1,6 +1,4 @@
 ---
-'@aihu/arbor': patch
-'@aihu/compiler': patch
 '@aihu/magna': patch
 ---
 
