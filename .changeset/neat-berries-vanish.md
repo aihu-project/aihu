@@ -1,5 +1,4 @@
 ---
-'@aihu/arbor': patch
 '@aihu/css-engine': patch
 '@aihu/primitives': patch
 ---
