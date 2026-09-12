@@ -187,7 +187,7 @@
   },
   {
     "name": "@aihu/runtime",
-    "version": "6.1.0",
+    "version": "6.1.1",
     "dir": "packages/runtime",
     "isPlatform": false
   },

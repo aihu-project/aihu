@@ -1,0 +1,7 @@
+{
+  "name": "@aihu/app",
+  "version": "10.1.0",
+  "peerDependencies": {
+    "@aihu/runtime": "workspace:*"
+  }
+}

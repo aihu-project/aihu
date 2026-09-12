@@ -310,7 +310,7 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/plugin-demo`](./packages/plugin-demo) | `0.1.4` | Canonical proof-of-life for the @aihu/plugin API — exercises macros, middleware, and transforms. |
 | [`@aihu/primitives`](./packages/primitives) | `0.2.4` | aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS. |
 | [`@aihu/router`](./packages/router) | `0.5.0` | File-based router for the aihu meta-framework. |
-| [`@aihu/runtime`](./packages/runtime) | `6.1.0` | Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler. |
+| [`@aihu/runtime`](./packages/runtime) | `6.1.1` | Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler. |
 | [`@aihu/seo`](./packages/seo) | `1.0.5` | DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD). |
 | [`@aihu/server`](./packages/server) | `0.6.0` | Server runtime + native renderer (napi-rs) for aihu SSR. |
 | [`@aihu/store`](./packages/store) | `0.1.2` | Pinia-style global stores on aihu signals — defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins. |

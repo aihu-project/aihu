@@ -1,0 +1,6 @@
+{
+  "@aihu/runtime@6.1.0": {
+    "version": "6.1.0",
+    "exports": { ".": "./dist/index.js", "./ssr": "./dist/ssr.js" }
+  }
+}

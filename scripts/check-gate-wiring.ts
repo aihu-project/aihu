@@ -170,6 +170,20 @@ const NEGATIVE_FIXTURES: Record<string, Fixture> = {
       env: { MOON_GRAPH_ROOT: 'scripts/fixtures/moon-graph/should-not-flag' },
     },
   },
+  // #843 — an imported @aihu/* subpath must be exported by the version the
+  // importer publishes against. `PUBLISHED_EXPORTS_ROOT` repoints the scan at a
+  // fixture tree whose `npm.json` stands in for the registry. Red is the real
+  // failure: app imports `@aihu/runtime/app` under a `workspace:*` peer while
+  // the workspace runtime's version (6.1.0) is already on npm without `./app`.
+  // Green bumps the workspace runtime to a published version that exports it.
+  'check:published-exports': {
+    cmd: ['bun', 'scripts/check-published-exports.ts'],
+    env: { PUBLISHED_EXPORTS_ROOT: 'scripts/fixtures/published-exports/should-flag' },
+    green: {
+      cmd: ['bun', 'scripts/check-published-exports.ts'],
+      env: { PUBLISHED_EXPORTS_ROOT: 'scripts/fixtures/published-exports/should-not-flag' },
+    },
+  },
   'check:lockfile-platform-pins': {
     cmd: ['bun', 'scripts/check-lockfile-platform-pins.ts'],
     env: { LOCKFILE_PINS_ROOT: 'scripts/fixtures/lockfile-platform-pins/should-flag' },
