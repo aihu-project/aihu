@@ -1,22 +1,16 @@
 ---
 source: packages/css-engine/crates/aihu-css-core/tests/scoped_snapshot.rs
-assertion_line: 90
-expression: "compile_sfc_scoped(&sfc(\"hover:bg-primary focus:text-accent dark:bg-surface md:p-8 [&>div]:text-primary md:hover:bg-primary\")).unwrap()"
+expression: css
 ---
 @layer aihu.reset, aihu.tokens, aihu.components, aihu.utilities;
-:host {
-  --color-accent: #c8543a;
-  --color-primary: #1a1d24;
-  --color-surface: #faf8f4;
-}
 *, ::before, ::after { border-style: solid; border-width: 0; }
-.\[&>div\]\:text-primary>div { color: var(--color-primary); }
+.\[&>div\]\:text-primary>div { color: var(--color-primary, #1a1d24); }
 /* dark cascade (Firefox-safe; see decision-firefox-host-context-workaround) */
-:host([data-theme="dark"]) .dark\:bg-surface, :root.dark .dark\:bg-surface, :root[data-theme="dark"] .dark\:bg-surface { background-color: var(--color-surface); }
-.focus\:text-accent:focus { color: var(--color-accent); }
-.hover\:bg-primary:hover { background-color: var(--color-primary); }
+:host([data-theme="dark"]) .dark\:bg-surface, :root.dark .dark\:bg-surface, :root[data-theme="dark"] .dark\:bg-surface { background-color: var(--color-surface, #faf8f4); }
+.focus\:text-accent:focus { color: var(--color-accent, #c8543a); }
+.hover\:bg-primary:hover { background-color: var(--color-primary, #1a1d24); }
 @media (min-width: 48rem) {
-.md\:hover\:bg-primary:hover { background-color: var(--color-primary); }
+.md\:hover\:bg-primary:hover { background-color: var(--color-primary, #1a1d24); }
 }
 @media (min-width: 48rem) {
 .md\:p-8 { padding: 2rem; }

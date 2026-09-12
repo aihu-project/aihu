@@ -26,9 +26,10 @@ fn scoped_output_has_no_bare_global_utility_sheet() {
     // scoped by living in the shadow root. There is no separate global sheet.
     assert!(css.contains(".bg-primary"));
     assert!(css.contains("padding: 1rem"));
-    // Theme tokens emitted at :host so var(--color-*) resolves in the shadow.
-    assert!(css.contains(":host {"));
-    assert!(css.contains("--color-primary"));
+    // Default tokens are var() fallbacks, not a :host block, so a theme the
+    // component inherits from the document wins (#836).
+    assert!(!css.contains(":host {"), "{css}");
+    assert!(css.contains("background-color: var(--color-primary, #1a1d24)"), "{css}");
 }
 
 #[test]
@@ -65,7 +66,7 @@ fn global_style_block_passes_through_edge_e6() {
 fn host_variant_emits_host_rule() {
     let css = compile_sfc_scoped(&sfc_with_classes("host:bg-primary")).unwrap();
     assert!(css.contains(":host("), "host: → :host(...) selector: {css}");
-    assert!(css.contains("background-color: var(--color-primary)"));
+    assert!(css.contains("background-color: var(--color-primary, #1a1d24)"));
 }
 
 #[test]
@@ -118,7 +119,7 @@ fn responsive_md_wraps_media_query() {
 fn arbitrary_selector_variant() {
     let css = compile_sfc_scoped(&sfc_with_classes("[&>div]:text-primary")).unwrap();
     assert!(css.contains(">div"), "[&>div]: → child selector: {css}");
-    assert!(css.contains("color: var(--color-primary)"));
+    assert!(css.contains("color: var(--color-primary, #1a1d24)"));
 }
 
 #[test]
@@ -138,7 +139,7 @@ fn group_hover_emits_ancestor_state_selector() {
         css.contains(".group:hover .group-hover\\:bg-primary"),
         "group-hover: → `.group:hover <base>` ancestor selector: {css}"
     );
-    assert!(css.contains("background-color: var(--color-primary)"));
+    assert!(css.contains("background-color: var(--color-primary, #1a1d24)"));
 }
 
 #[test]
@@ -162,7 +163,7 @@ fn peer_checked_emits_sibling_state_selector() {
         css.contains(".peer:checked ~ .peer-checked\\:bg-primary"),
         "peer-checked: → `.peer:checked ~ <base>` sibling selector: {css}"
     );
-    assert!(css.contains("background-color: var(--color-primary)"));
+    assert!(css.contains("background-color: var(--color-primary, #1a1d24)"));
 }
 
 #[test]
@@ -215,8 +216,26 @@ fn theme_override_registers_token() {
 #[test]
 fn default_aihu_brand_tokens_present() {
     let css = compile_sfc_scoped(&sfc_with_classes("bg-accent")).unwrap();
-    // Default accent is the aihu terracotta.
-    assert!(css.contains("--color-accent: #c8543a"), "baked aihu brand default present: {css}");
+    // Default accent is the aihu terracotta, carried as the var() fallback.
+    assert!(
+        css.contains("background-color: var(--color-accent, #c8543a)"),
+        "baked aihu brand default present: {css}"
+    );
+    assert!(!css.contains("--color-accent: #c8543a"), "default must not be declared: {css}");
+}
+
+#[test]
+fn authored_style_rules_get_default_fallbacks_and_theme_tokens_stay_declared() {
+    // #836: authored rules inherit document tokens exactly like utilities do,
+    // while a token the SFC's own @theme sets is still declared at :host.
+    let json = r#"{"tag":"X","astVersion":1,
+      "style":{"content":"@theme { --color-accent: red; } .note { color: var(--color-muted-foreground); border-color: var(--color-accent); }","scope":"scoped"},
+      "meta":{"name":"X"},"template":null}"#;
+    let css = compile_sfc_scoped(&ast(json)).unwrap();
+    assert!(css.contains("color: var(--color-muted-foreground, #8a8880)"), "{css}");
+    assert!(css.contains(":host {\n  --color-accent: red;\n}"), "{css}");
+    assert!(css.contains("border-color: var(--color-accent)"), "{css}");
+    assert!(!css.contains("--color-muted-foreground:"), "{css}");
 }
 
 // ── Round 2: aria-* / data-* attribute variants ─────────────────────────────
@@ -228,7 +247,7 @@ fn aria_keyword_variant_emits_true_attr_selector() {
         css.contains(r#"[aria-checked="true"]"#),
         "aria-checked: → [aria-checked=\"true\"] selector: {css}"
     );
-    assert!(css.contains("background-color: var(--color-accent)"));
+    assert!(css.contains("background-color: var(--color-accent, #c8543a)"));
 }
 
 #[test]
@@ -269,7 +288,7 @@ fn data_state_variant_emits_attr_selector() {
         css.contains(r#"[data-state="open"]"#),
         "data-[state=open]: → [data-state=\"open\"] selector: {css}"
     );
-    assert!(css.contains("background-color: var(--color-accent)"));
+    assert!(css.contains("background-color: var(--color-accent, #c8543a)"));
 }
 
 #[test]

@@ -1,13 +1,9 @@
 ---
 source: packages/css-engine/crates/aihu-css-core/tests/scoped_snapshot.rs
-assertion_line: 28
 expression: "compile_sfc_scoped(&sfc(\"bg-primary p-4 rounded-lg\")).unwrap()"
 ---
 @layer aihu.reset, aihu.tokens, aihu.components, aihu.utilities;
-:host {
-  --color-primary: #1a1d24;
-}
 *, ::before, ::after { border-style: solid; border-width: 0; }
-.bg-primary { background-color: var(--color-primary); }
+.bg-primary { background-color: var(--color-primary, #1a1d24); }
 .p-4 { padding: 1rem; }
 .rounded-lg { border-radius: 0.5rem; }
