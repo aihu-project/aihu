@@ -16,7 +16,7 @@
  *
  * Error paths (R6) are TYPED errors (`RegistryResolveError`) the command layer
  * renders as an actionable message + nonzero exit:
- *   (i)   no `aihu.config.ts` walking up from `cwd`        → 'no-config'
+ *   (i)   no `vite.config.ts`/`aihu.config.ts` walking up from `cwd` → 'no-config'
  *   (ii)  `@aihu/ui` not resolvable in `node_modules`      → 'registry-not-installed'
  *   (iii) config present but no `ui` field                 → 'no-ui-field'
  *   (iv)  a requested recipe not present in `registry.json` → 'unknown-recipe'
@@ -29,6 +29,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import type { Registry, RegistryItem } from '@aihu/ui/registry'
+import { loadProjectConfig } from './load-project-config.ts'
 
 // ─── Resolved UI config (defaults applied at read-time) ──────────────────────
 
@@ -83,23 +84,35 @@ export const realRegistryFs: RegistryFs = {
 }
 
 /**
- * Load the raw `ui` block from `aihu.config.ts`. Returns:
+ * Load the raw `ui` block from the project's aihu config. Returns:
  *   - `null`           when no config file is found (→ 'no-config')
  *   - `{ ui: undefined }` when the config has no `ui` field (→ 'no-ui-field')
  *   - `{ ui: {...} }`   when present.
  *
- * The real loader dynamic-imports `aihu.config.ts` (same approach as `dev.ts`);
- * tests inject a fake that returns a fixture config.
+ * The real loader goes through `loadProjectConfig` (same shared reader `aihu
+ * build`/`aihu dev` use), which prefers `vite.config.ts` and falls back to the
+ * legacy `aihu.config.ts` — see its doc comment. `aihu add` used to dynamic-
+ * import `aihu.config.ts` directly here, a third private loader alongside
+ * those two commands' own; a project configured only via `viteAihuPlugin({...})`
+ * in `vite.config.ts` (the now-canonical location) made `aihu add` report
+ * "no config found" even though `aihu build`/`aihu dev` read it fine. Tests
+ * inject a fake that returns a fixture config instead of touching either file.
  */
 export interface ConfigLoader {
   load(cwd: string): Promise<{ ui?: Partial<ResolvedUiConfig> | undefined } | null>
 }
 
-/** Walk up from `cwd` looking for `aihu.config.ts`; returns its dir or null. */
+/**
+ * Walk up from `cwd` looking for a project config marker — `vite.config.ts`
+ * (canonical) or `aihu.config.ts` (legacy fallback) — and return its
+ * directory. `loadProjectConfig`/Vite's own config loader only look in the
+ * exact directory they're given, so this upward walk is what lets `aihu add`
+ * run from a nested subdirectory of the project, same as before.
+ */
 function findConfigDir(cwd: string, fs: RegistryFs): string | null {
   let dir = resolve(cwd)
   for (let i = 0; i < 12; i++) {
-    if (fs.exists(join(dir, 'aihu.config.ts'))) return dir
+    if (fs.exists(join(dir, 'vite.config.ts')) || fs.exists(join(dir, 'aihu.config.ts'))) return dir
     const parent = dirname(dir)
     if (parent === dir) break
     dir = parent
@@ -111,20 +124,10 @@ export const realConfigLoader: ConfigLoader = {
   async load(cwd) {
     const dir = findConfigDir(cwd, realRegistryFs)
     if (dir === null) return null
-    const configPath = join(dir, 'aihu.config.ts')
-    try {
-      const mod = (await import(configPath)) as {
-        default?: { ui?: Partial<ResolvedUiConfig> }
-      }
-      const cfg = mod.default ?? {}
-      // Distinguish "no ui field" from "ui present": preserve undefined.
-      return Object.hasOwn(cfg, 'ui') ? { ui: cfg.ui } : {}
-    } catch {
-      // A config that exists but fails to import is treated as present-with-no-ui
-      // so the caller surfaces the actionable 'no-ui-field' message rather than a
-      // raw stack trace.
-      return {}
-    }
+    const loaded = await loadProjectConfig(dir)
+    if (loaded === null) return {}
+    // Distinguish "no ui field" from "ui present": preserve undefined.
+    return Object.hasOwn(loaded.config, 'ui') ? { ui: loaded.config.ui } : {}
   },
 }
 
@@ -187,13 +190,13 @@ export async function resolveRegistry(
   const configLoader = deps.configLoader ?? realConfigLoader
   const resolveRegistryRoot = deps.resolveRegistryRoot ?? defaultResolveRegistryRoot
 
-  // (i) no aihu.config.ts walking up from cwd.
+  // (i) no vite.config.ts / aihu.config.ts walking up from cwd.
   const projectRoot = findConfigDir(cwd, fs)
   const loaded = await configLoader.load(cwd)
   if (loaded === null || projectRoot === null) {
     throw new RegistryResolveError(
       'no-config',
-      'No aihu.config.ts found.\n' +
+      'No aihu project config found (checked vite.config.ts and aihu.config.ts).\n' +
         'Run `aihu add` from inside an aihu project, or create one with:  aihu app <name>',
     )
   }
@@ -202,7 +205,7 @@ export async function resolveRegistry(
   if (loaded.ui === undefined) {
     throw new RegistryResolveError(
       'no-ui-field',
-      'aihu.config.ts has no `ui` field.\n' +
+      'aihu config has no `ui` field.\n' +
         "Add a `ui` block, e.g.:  ui: { registry: '@aihu/ui', target: './src/components/ui' }",
     )
   }
