@@ -1,6 +1,11 @@
 {
   "name": "@aihu/css-engine-darwin-arm64",
   "version": "0.1.18",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
+    "directory": "packages/css-engine/npm/darwin-arm64"
+  },
   "license": "MIT",
   "os": [
     "darwin"
