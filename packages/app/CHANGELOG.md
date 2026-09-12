@@ -1,5 +1,11 @@
 # @aihu/app
 
+## 10.1.1
+
+### Patch Changes
+
+- [#844](https://github.com/aihu-project/aihu/pull/844) [`d257f63`](https://github.com/aihu-project/aihu/commit/d257f63c7710c5c654260684333e2a51b17c396e) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fix the `@aihu/runtime` peer pin. `@aihu/app` 10.1.0 imports `@aihu/runtime/app` but pinned `@aihu/runtime` to 6.1.0, which predates that export, so installing the declared peers failed to resolve the import. The workspace runtime version now matches the published 6.1.1 that provides `./app`, so this release pins `@aihu/runtime` 6.1.1 ([#843](https://github.com/aihu-project/aihu/issues/843)).
+
 ## 10.1.0
 
 ### Minor Changes
