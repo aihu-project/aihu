@@ -34,7 +34,8 @@ export const EXPORTS: readonly ApiExport[] = [
   {
     name: 'compileSfc',
     kind: 'function',
-    signature: 'function compileSfc(source: string, id?: string, lightScopeId?: string): string',
+    signature:
+      'function compileSfc( source: string, id?: string, lightScopeId?: string, options?: CompileSfcOptions, ): string',
     summary: 'Compile a `.aihu` SFC source string to scoped, shadow-DOM-embedded CSS.',
   },
   {
@@ -94,6 +95,13 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'position',
     kind: 'const',
     signature: 'const position',
+    summary: '',
+  },
+  {
+    name: 'CompileSfcOptions',
+    kind: 'interface',
+    signature:
+      "interface CompileSfcOptions {\n  /**\n   * Project theme: CSS containing `@theme { … }` blocks, or a bare\n   * `--name: value;` declaration list. Replaces the built-in default token\n   * values. They still compile to `var(--name, <value>)` fallbacks, so a theme\n   * the component inherits from the document wins; an SFC's own `@theme`\n   * block overrides both.\n   */\n  theme?: string\n  /**\n   * `false` drops the default-value fallbacks, so token references compile to\n   * bare `var(--name)`. For apps that always load their tokens at `:root`.\n   * Tokens an SFC's own `@theme` sets are still declared. Default `true`.\n   */\n  hostTokens?: boolean\n}",
     summary: '',
   },
   {

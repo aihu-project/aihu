@@ -228,9 +228,9 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     version: '0.6.1',
     tagline: 'aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output.',
     note: '',
-    exportCount: 19,
+    exportCount: 20,
     valueCount: 13,
-    typeCount: 6,
+    typeCount: 7,
     agent: false,
   },
   {

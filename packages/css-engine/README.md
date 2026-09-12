@@ -122,6 +122,37 @@ That gives you three layers, highest priority first:
 3. **The built-in defaults** — used only when nothing above sets the token, so a
    component rendered standalone still looks right.
 
+Two `css` options on `viteAihuPlugin` change layer 3:
+
+```ts
+viteAihuPlugin({
+  css: {
+    // Your palette replaces the built-in defaults as the fallback values.
+    // A CSS file (relative to the Vite root) with an @theme block, or a
+    // style pack from defineStylePack().
+    theme: './src/theme.css',
+  },
+})
+```
+
+```css
+/* src/theme.css */
+@theme {
+  --color-primary: #0a7a5c;
+  --color-muted-foreground: #516763;
+}
+```
+
+Components then compile to `var(--color-primary, #0a7a5c)`: they render your
+palette even where no theme stylesheet is loaded, and a `:root` theme still
+wins where one is. The dev server restarts when the theme file changes.
+
+If your app always loads its tokens at `:root`, `css: { hostTokens: false }`
+drops the fallbacks entirely (`var(--color-primary)`), which trims every
+component's stylesheet. An unset token then falls back to the property's
+initial value, so only use it when a theme is guaranteed. It can't be combined
+with `theme`, since the theme only supplies fallback values.
+
 ### Utility vocabulary
 
 The engine is **inspired by Tailwind v4, not a fork** — the supported set is
@@ -270,10 +301,10 @@ bun add @aihu/css-engine
 
 **Optional dependencies (platform-specific):**
 
-- `@aihu/css-engine-darwin-arm64` — `0.1.18`
-- `@aihu/css-engine-darwin-x64` — `0.1.18`
-- `@aihu/css-engine-linux-x64-gnu` — `0.1.18`
-- `@aihu/css-engine-win32-x64-msvc` — `0.1.18`
+- `@aihu/css-engine-darwin-arm64` — `0.1.19`
+- `@aihu/css-engine-darwin-x64` — `0.1.19`
+- `@aihu/css-engine-linux-x64-gnu` — `0.1.19`
+- `@aihu/css-engine-win32-x64-msvc` — `0.1.19`
 
 <sub><i>Auto-generated against `@aihu/css-engine@0.6.1`.</i></sub>
 

@@ -41,6 +41,23 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
     expect(css).not.toContain(':host {')
   })
 
+  it('uses a project theme (options.theme) for the var() fallback values', () => {
+    const source = `@template { <div class="bg-primary text-accent">x</div> }`
+    const css = compileSfc(source, 'Themed.aihu', undefined, {
+      theme: '@theme { --color-primary: #0a7; }',
+    })
+    expect(css).toContain('background-color: var(--color-primary, #0a7)')
+    expect(css).toContain('color: var(--color-accent, #c8543a)')
+    expect(css).not.toContain(':host {')
+  })
+
+  it('drops default fallbacks when options.hostTokens is false', () => {
+    const source = `@template { <div class="bg-primary">x</div> }`
+    const css = compileSfc(source, 'Bare.aihu', undefined, { hostTokens: false })
+    expect(css).toContain('background-color: var(--color-primary);')
+    expect(css).not.toContain('#1a1d24')
+  })
+
   it('tree-shakes unreferenced brand tokens — no color utility means no token block at all', () => {
     const source = `@template {
   <div class="flex p-4"><span>hi</span></div>

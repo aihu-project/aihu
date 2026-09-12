@@ -20,6 +20,7 @@ import type { Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import type { AdapterContext, CreateHandlerSourceOptions } from './adapter.ts'
 import type { AihuConfig } from './config.ts'
 import { validateAihuConfig } from './config.ts'
+import { resolveCssTheme } from './css-theme.ts'
 import { ENTRY_RESOLVED_ID, ENTRY_VIRTUAL_ID, entrySource, injectEntryScript } from './entry.ts'
 import { applyHeadConfig } from './head.ts'
 import { AIHU_CONFIG_PLUGIN, type AihuModuleApi, type AihuPluginApi } from './load-config.ts'
@@ -258,6 +259,30 @@ export function viteAihuPlugin(config?: AihuConfig): PluginOption[] {
   // home for aihu config, this is the path that matters most.
   const resolved: AihuConfig = config ?? {}
   validateAihuConfig(resolved)
+
+  // `css.theme` / `css.hostTokens` → the compiler's css-engine options. A
+  // relative theme path resolves the way Vite resolves `root` itself.
+  const cssTheme = resolveCssTheme(
+    config?.css?.theme,
+    resolvePath(config?.vite?.root ?? process.cwd()),
+  )
+  const cssEngineOptions = {
+    ...(cssTheme ? { theme: cssTheme.css } : {}),
+    ...(config?.css?.hostTokens != null ? { hostTokens: config.css.hostTokens } : {}),
+  }
+  // The theme is read once, when this function runs. Restarting the dev
+  // server re-evaluates the Vite config, which re-reads the file.
+  const cssThemeWatchPlugin: Plugin = {
+    name: 'aihu-css-theme',
+    configureServer(server) {
+      const file = cssTheme?.file
+      if (file === undefined) return
+      server.watcher.add(file)
+      server.watcher.on('change', (changed) => {
+        if (resolvePath(changed) === file) void server.restart()
+      })
+    },
+  }
 
   // Marker plugin: carries the evaluated config on a public `api` handle so
   // non-Vite consumers (aihu add / dev / build, the language server, the VS
@@ -723,7 +748,11 @@ export function viteAihuPlugin(config?: AihuConfig): PluginOption[] {
       // namespaced tag + passive <outlet> marker the client renderer fills.
       layoutsDir: routerOpts.layoutsDir,
       ...(config?.css?.shadowMode != null ? { shadowMode: config.css.shadowMode } : {}),
+      // Needs an @aihu/compiler release with the `css` option; older ones
+      // ignore it.
+      ...(Object.keys(cssEngineOptions).length > 0 ? { css: cssEngineOptions } : {}),
     }) as unknown as Plugin,
+    cssThemeWatchPlugin,
     viteRouterIntegration(routerOpts) as unknown as Plugin,
     agentPlugin,
     entryPlugin,
