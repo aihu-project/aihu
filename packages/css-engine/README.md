@@ -301,10 +301,10 @@ bun add @aihu/css-engine
 
 **Optional dependencies (platform-specific):**
 
-- `@aihu/css-engine-darwin-arm64` — `0.1.18`
-- `@aihu/css-engine-darwin-x64` — `0.1.18`
-- `@aihu/css-engine-linux-x64-gnu` — `0.1.18`
-- `@aihu/css-engine-win32-x64-msvc` — `0.1.18`
+- `@aihu/css-engine-darwin-arm64` — `0.1.19`
+- `@aihu/css-engine-darwin-x64` — `0.1.19`
+- `@aihu/css-engine-linux-x64-gnu` — `0.1.19`
+- `@aihu/css-engine-win32-x64-msvc` — `0.1.19`
 
 <sub><i>Auto-generated against `@aihu/css-engine@0.6.1`.</i></sub>
 

@@ -109,25 +109,25 @@
   },
   {
     "name": "@aihu/css-engine-darwin-arm64",
-    "version": "0.1.18",
+    "version": "0.1.19",
     "dir": "packages/css-engine/npm/darwin-arm64",
     "isPlatform": true
   },
   {
     "name": "@aihu/css-engine-darwin-x64",
-    "version": "0.1.18",
+    "version": "0.1.19",
     "dir": "packages/css-engine/npm/darwin-x64",
     "isPlatform": true
   },
   {
     "name": "@aihu/css-engine-linux-x64-gnu",
-    "version": "0.1.18",
+    "version": "0.1.19",
     "dir": "packages/css-engine/npm/linux-x64-gnu",
     "isPlatform": true
   },
   {
     "name": "@aihu/css-engine-win32-x64-msvc",
-    "version": "0.1.18",
+    "version": "0.1.19",
     "dir": "packages/css-engine/npm/win32-x64-msvc",
     "isPlatform": true
   },

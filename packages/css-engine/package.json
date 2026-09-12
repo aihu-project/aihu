@@ -41,10 +41,10 @@
     "@aihu/compiler": "^1.3.2"
   },
   "optionalDependencies": {
-    "@aihu/css-engine-darwin-arm64": "0.1.18",
-    "@aihu/css-engine-darwin-x64": "0.1.18",
-    "@aihu/css-engine-linux-x64-gnu": "0.1.18",
-    "@aihu/css-engine-win32-x64-msvc": "0.1.18"
+    "@aihu/css-engine-darwin-arm64": "0.1.19",
+    "@aihu/css-engine-darwin-x64": "0.1.19",
+    "@aihu/css-engine-linux-x64-gnu": "0.1.19",
+    "@aihu/css-engine-win32-x64-msvc": "0.1.19"
   },
   "scripts": {
     "build": "bun run gen:style-packs && rolldown -c",

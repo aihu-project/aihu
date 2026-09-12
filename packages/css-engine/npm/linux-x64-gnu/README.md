@@ -34,7 +34,7 @@ npm install @aihu/css-engine-linux-x64-gnu
 bun add @aihu/css-engine-linux-x64-gnu
 ```
 
-<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.18`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.19`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -45,12 +45,12 @@ bun add @aihu/css-engine-linux-x64-gnu
 
 | | |
 |---|---|
-| **Version** | `0.1.18` |
+| **Version** | `0.1.19` |
 | **Tier** | platform — Platform-specific native binary distributor for `@aihu/css-engine` |
 | **Published files** | 1 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.18`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.19`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -62,7 +62,7 @@ bun add @aihu/css-engine-linux-x64-gnu
 - [@aihu/css-engine](../../README.md)
 - [Aihu framework root](../../../../README.md)
 
-<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.18`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.19`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -73,6 +73,6 @@ bun add @aihu/css-engine-linux-x64-gnu
 
 MIT — see [LICENSE](../../../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.18`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-linux-x64-gnu@0.1.19`.</i></sub>
 
 <!-- END_AUTOGEN: license -->
