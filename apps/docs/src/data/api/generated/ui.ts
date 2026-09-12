@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/ui',
   slug: 'ui',
   tier: 'Authoring & UI',
-  version: '0.1.1',
+  version: '0.1.2',
   tagline:
     'aihu styled-recipe registry — copy-paste .aihu recipes distributed as source via `aihu add` (no runtime bundle).',
   note: '',

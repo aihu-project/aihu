@@ -91,7 +91,7 @@ export const config = {
     '@aihu/signals': '^0.5.1',
     '@aihu/router': '^0.5.0',
     '@aihu/server': '^0.6.0',
-    '@aihu/adapter-cloudflare': '^13.0.0',
+    '@aihu/adapter-cloudflare': '^14.0.0',
   },
   appPeerDepsConditional: {
     'better-auth': { version: '^1.0.0', when: 'auth === "better-auth"' },

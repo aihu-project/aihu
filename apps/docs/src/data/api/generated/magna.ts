@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/magna',
   slug: 'magna',
   tier: 'Authoring & UI',
-  version: '0.2.7',
+  version: '0.2.8',
   tagline: 'aihu bridge for Magna GraphQL — dep-free fetch, resource composition, JWT relay',
   note: '',
 }

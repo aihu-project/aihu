@@ -25,13 +25,13 @@
   },
   {
     "name": "@aihu/adapter-cloudflare",
-    "version": "13.0.0",
+    "version": "14.0.0",
     "dir": "packages/adapter-cloudflare",
     "isPlatform": false
   },
   {
     "name": "@aihu/adapter-vercel",
-    "version": "13.0.0",
+    "version": "14.0.0",
     "dir": "packages/adapter-vercel",
     "isPlatform": false
   },
@@ -79,7 +79,7 @@
   },
   {
     "name": "@aihu/app",
-    "version": "10.0.0",
+    "version": "10.1.0",
     "dir": "packages/app",
     "isPlatform": false
   },
@@ -91,7 +91,7 @@
   },
   {
     "name": "@aihu/cli",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "dir": "packages/cli",
     "isPlatform": false
   },
@@ -103,7 +103,7 @@
   },
   {
     "name": "@aihu/css-engine",
-    "version": "0.6.1",
+    "version": "0.7.0",
     "dir": "packages/css-engine",
     "isPlatform": false
   },
@@ -145,19 +145,19 @@
   },
   {
     "name": "@aihu/language-server",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "dir": "packages/language-server",
     "isPlatform": false
   },
   {
     "name": "@aihu/magna",
-    "version": "0.2.7",
+    "version": "0.2.8",
     "dir": "packages/magna",
     "isPlatform": false
   },
   {
     "name": "@aihu/mcp",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "dir": "packages/mcp",
     "isPlatform": false
   },
@@ -175,7 +175,7 @@
   },
   {
     "name": "@aihu/primitives",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "dir": "packages/primitives",
     "isPlatform": false
   },
@@ -241,13 +241,13 @@
   },
   {
     "name": "@aihu/tsc",
-    "version": "0.3.3",
+    "version": "0.3.4",
     "dir": "packages/tsc",
     "isPlatform": false
   },
   {
     "name": "@aihu/ui",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "dir": "packages/ui",
     "isPlatform": false
   },
@@ -259,7 +259,7 @@
   },
   {
     "name": "create-aihu",
-    "version": "0.1.11",
+    "version": "0.1.12",
     "dir": "packages/create-aihu",
     "isPlatform": false
   },

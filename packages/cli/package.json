@@ -1,6 +1,6 @@
 {
   "name": "@aihu/cli",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -38,7 +38,7 @@
     "@aihu/mcp": "workspace:*"
   },
   "devDependencies": {
-    "@aihu/ui": "^0.1.1"
+    "@aihu/ui": "^0.1.2"
   },
   "description": "Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.",
   "repository": {

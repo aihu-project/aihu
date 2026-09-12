@@ -1,5 +1,12 @@
 # @aihu/example-auth-magna-seo
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [[`fc1b270`](https://github.com/aihu-project/aihu/commit/fc1b2705a5c4ff53ab692e83908be780dba8d3ea)]:
+  - @aihu/magna@0.2.8
+
 ## 0.0.9
 
 ### Patch Changes

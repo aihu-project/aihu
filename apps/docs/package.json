@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.6",
   "type": "module",
-  "description": "Redesigned aihu documentation + DX site \u2014 a full dogfood aihu SSG app (@aihu/app + file router + output:'static').",
+  "description": "Redesigned aihu documentation + DX site — a full dogfood aihu SSG app (@aihu/app + file router + output:'static').",
   "scripts": {
     "gen:css": "bun gen-css.ts",
     "gen:api": "bun scripts/gen-api.ts",

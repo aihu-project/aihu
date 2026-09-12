@@ -1,5 +1,11 @@
 # @aihu/mcp
 
+## 0.2.1
+
+### Patch Changes
+
+- [#816](https://github.com/aihu-project/aihu/pull/816) [`50c87cb`](https://github.com/aihu-project/aihu/commit/50c87cb904f518d5ee69fba77940095964c73492) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Resolve the MCP validation compiler from the installed `@aihu/compiler` package while preserving the explicit `AIHU_COMPILE_BIN` override.
+
 ## 0.2.0
 
 ### Minor Changes

@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/css-engine',
   slug: 'css-engine',
   tier: 'Runtime core',
-  version: '0.6.1',
+  version: '0.7.0',
   tagline: 'aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output.',
   note: '',
 }
