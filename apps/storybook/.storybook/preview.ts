@@ -10,12 +10,10 @@
  *    `.dark` on documentElement (light-DOM / pack `.dark` overrides) and
  *    `data-theme="dark"` stamped on every custom-element host in the canvas.
  *
- * KNOWN LIMITATION (filed as css-engine follow-up): scoped compile bakes pack
- * token LITERALS into each component's `:host { … }` block, and direct `:host`
- * declarations beat values inherited from the document. Until the engine emits
- * fallback-style tokens (`var(--aihu-*, <literal>)`), pack-swap and dark token
- * overrides do not restyle shadow-DOM recipe internals — only light-DOM
- * content. The toolbar ships per the spec contract regardless.
+ * Pack-swap and dark token overrides reach shadow-DOM recipe internals: scoped
+ * compile writes default tokens as `var()` fallbacks (`var(--color-*, <literal>)`)
+ * rather than a `:host { … }` block, so the document-level pack tokens swapped
+ * here are inherited into every shadow root (#836).
  *
  * Chromatic modes (spec §10.1 matrix): every story snapshots under the four
  * global pack × mode combinations. Per-story `viewports`/`modes` overrides are

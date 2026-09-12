@@ -9,14 +9,28 @@
 //! Breakpoints (`md:`, `sm:`, …) read from the registry so `@theme` can
 //! override them. `oklch()` and custom properties are emitted directly
 //! (allowed by the ratified baseline browser window).
+//!
+//! Defaults vs declarations (#836): the baked brand tokens and the Tailwind
+//! palette are *fallbacks*, never declarations. A `:host { --color-*: … }`
+//! block of defaults would beat every value the component inherits from the
+//! document, so an app's theme pack (or its own `:root` tokens) could never
+//! reach a shadow-scoped component. Instead the scoped emitter declares only
+//! the tokens an SFC's own `@theme` block sets
+//! ([`ThemeRegistry::emit_declared_tokens`]) and rewrites every other
+//! reference to `var(--name, <default>)`
+//! ([`ThemeRegistry::with_default_fallbacks`]): inherited tokens win, and a
+//! component rendered with no theme in scope still gets the defaults.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// A design-token registry: `--name` → `value`. Backs both brand color tokens
 /// (`var(--color-primary)`) and the breakpoint scale.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ThemeRegistry {
     tokens: BTreeMap<String, String>,
+    /// Names set by an authored `@theme` block. Everything else in `tokens`
+    /// is an engine default, emitted only as a `var()` fallback.
+    declared: BTreeSet<String>,
     /// Monotonic version, bumped on every mutation — feeds the cache key (Task 8).
     version: u64,
 }
@@ -32,6 +46,7 @@ impl ThemeRegistry {
     pub fn empty() -> Self {
         Self {
             tokens: BTreeMap::new(),
+            declared: BTreeSet::new(),
             version: 0,
         }
     }
@@ -89,6 +104,7 @@ impl ThemeRegistry {
     pub fn apply_theme_block(&mut self, theme_body: &str) -> usize {
         let mut count = 0;
         for (name, value) in parse_theme_declarations(theme_body) {
+            self.declared.insert(name.clone());
             self.tokens.insert(name, value);
             count += 1;
         }
@@ -96,6 +112,88 @@ impl ThemeRegistry {
             self.version += 1;
         }
         count
+    }
+
+    /// Register `--name: value;` declarations as engine defaults (fallbacks),
+    /// not author declarations. Used for the Tailwind palette entries the
+    /// scoped emitter pulls in on demand. Returns the number registered.
+    pub fn register_defaults(&mut self, body: &str) -> usize {
+        let mut count = 0;
+        for (name, value) in parse_theme_declarations(body) {
+            self.tokens.insert(name, value);
+            count += 1;
+        }
+        if count > 0 {
+            self.version += 1;
+        }
+        count
+    }
+
+    /// The default value `name` falls back to, or `None` when an authored
+    /// `@theme` block declared it (it is emitted as a real declaration then)
+    /// or the registry does not know it.
+    fn default_value(&self, name: &str) -> Option<&str> {
+        if self.declared.contains(name) {
+            return None;
+        }
+        self.get(name)
+    }
+
+    /// As [`Self::emit_used_tokens`], but only for tokens an authored `@theme`
+    /// block declared. Engine defaults are left out: they reach the CSS as
+    /// `var()` fallbacks ([`Self::with_default_fallbacks`]), so they never
+    /// shadow a value the component inherits from the document.
+    pub fn emit_declared_tokens(&self, body: &str, scope: TokenScope) -> String {
+        let declared: BTreeMap<String, String> = self
+            .tokens
+            .iter()
+            .filter(|(name, _)| self.declared.contains(*name) && var_is_referenced(body, name))
+            .map(|(name, value)| (name.clone(), value.clone()))
+            .collect();
+        self.emit_tokens_for(&declared, scope)
+    }
+
+    /// Rewrite every fallback-less `var(--name)` in `css` whose `name` is an
+    /// engine default to `var(--name, <default>)`. References that already
+    /// carry a fallback, tokens an `@theme` block declared, and names the
+    /// registry does not know are left untouched.
+    pub fn with_default_fallbacks(&self, css: &str) -> String {
+        const OPEN: &str = "var(";
+        let mut out = String::with_capacity(css.len());
+        let mut rest = css;
+        while let Some(pos) = rest.find(OPEN) {
+            // `var(` must start a function token, not end a longer name.
+            let in_ident = rest[..pos]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_alphanumeric() || c == '-' || c == '_');
+            out.push_str(&rest[..pos + OPEN.len()]);
+            rest = &rest[pos + OPEN.len()..];
+            if in_ident {
+                continue;
+            }
+            let lead = rest.len() - rest.trim_start().len();
+            let arg = &rest[lead..];
+            if !arg.starts_with("--") {
+                continue;
+            }
+            let name_len = arg
+                .find(|c: char| !(c.is_alphanumeric() || c == '-' || c == '_'))
+                .unwrap_or(arg.len());
+            let name = &arg[..name_len];
+            if !arg[name_len..].trim_start().starts_with(')') {
+                continue;
+            }
+            let Some(value) = self.default_value(name) else {
+                continue;
+            };
+            out.push_str(&rest[..lead + name_len]);
+            out.push_str(", ");
+            out.push_str(value);
+            rest = &rest[lead + name_len..];
+        }
+        out.push_str(rest);
+        out
     }
 
     /// Emit a `:host { --token: value; … }` block for every registered token,
@@ -395,5 +493,53 @@ mod tests {
         assert!(out.contains("--gradient-brand:"), "{out}");
         assert!(!out.contains("--font-serif"), "unreferenced token leaked:\n{out}");
         assert!(!out.contains("--ease-brand"), "unreferenced token leaked:\n{out}");
+    }
+
+    #[test]
+    fn defaults_become_var_fallbacks_not_declarations() {
+        // #836: a default declared at `:host` beats the inherited app theme.
+        let registry = ThemeRegistry::with_aihu_defaults();
+        let body = ".x { color: var(--color-muted-foreground); }";
+        assert_eq!(registry.emit_declared_tokens(body, TokenScope::Shadow), "");
+        assert_eq!(
+            registry.with_default_fallbacks(body),
+            ".x { color: var(--color-muted-foreground, #8a8880); }"
+        );
+    }
+
+    #[test]
+    fn declared_tokens_are_emitted_and_keep_bare_references() {
+        let mut registry = ThemeRegistry::with_aihu_defaults();
+        registry.apply_theme_block("--color-primary: red;");
+        let body = ".x { color: var(--color-primary); background: var(--color-accent); }";
+        assert_eq!(
+            registry.emit_declared_tokens(body, TokenScope::Shadow),
+            ":host {\n  --color-primary: red;\n}\n"
+        );
+        assert_eq!(
+            registry.with_default_fallbacks(body),
+            ".x { color: var(--color-primary); background: var(--color-accent, #c8543a); }"
+        );
+    }
+
+    #[test]
+    fn fallback_rewrite_leaves_existing_fallbacks_and_unknown_names_alone() {
+        let mut registry = ThemeRegistry::with_aihu_defaults();
+        registry.register_defaults("--color-red-500: oklch(63.7% 0.237 25.331);");
+        let css = "a { color: var(--color-primary, blue); \
+                   border: var(--tw-ring-color); \
+                   fill: var( --color-red-500 ); \
+                   b: color-mix(in oklab, var(--color-primary-foreground) 90%, black); \
+                   c: somevar(--color-primary); }";
+        assert_eq!(
+            registry.with_default_fallbacks(css),
+            "a { color: var(--color-primary, blue); \
+             border: var(--tw-ring-color); \
+             fill: var( --color-red-500, oklch(63.7% 0.237 25.331) ); \
+             b: color-mix(in oklab, var(--color-primary-foreground, #faf8f4) 90%, black); \
+             c: somevar(--color-primary); }"
+        );
+        // Palette entries register as defaults, so nothing is declared.
+        assert_eq!(registry.emit_declared_tokens(css, TokenScope::Shadow), "");
     }
 }

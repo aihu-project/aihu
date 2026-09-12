@@ -1,20 +1,14 @@
 ---
 source: packages/css-engine/crates/aihu-css-core/tests/light_scope_snapshot.rs
-assertion_line: 76
 expression: "compile_sfc_scoped(&light(\".btn { @apply host:bg-primary; }\")).unwrap()"
 ---
 @layer aihu.reset, aihu.tokens, aihu.components, aihu.utilities;
-@layer aihu.tokens {
-:root {
-  --color-primary: #1a1d24;
-}
-}
 *, ::before, ::after { border-style: solid; border-width: 0; }
 /* authored @style (scoped) */
 @scope ([data-a="a1b2c3d4"]) to ([data-a]) {
 .btn {
   :scope:is(&) {
-    background-color: var(--color-primary);
+    background-color: var(--color-primary, #1a1d24);
   }
 }
 }

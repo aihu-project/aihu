@@ -34,7 +34,7 @@ npm install @aihu/css-engine-win32-x64-msvc
 bun add @aihu/css-engine-win32-x64-msvc
 ```
 
-<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.17`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.18`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -45,12 +45,12 @@ bun add @aihu/css-engine-win32-x64-msvc
 
 | | |
 |---|---|
-| **Version** | `0.1.17` |
+| **Version** | `0.1.18` |
 | **Tier** | platform — Platform-specific native binary distributor for `@aihu/css-engine` |
 | **Published files** | 1 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.17`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.18`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -62,7 +62,7 @@ bun add @aihu/css-engine-win32-x64-msvc
 - [@aihu/css-engine](../../README.md)
 - [Aihu framework root](../../../../README.md)
 
-<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.17`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.18`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -73,6 +73,6 @@ bun add @aihu/css-engine-win32-x64-msvc
 
 MIT — see [LICENSE](../../../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.17`.</i></sub>
+<sub><i>Auto-generated against `@aihu/css-engine-win32-x64-msvc@0.1.18`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

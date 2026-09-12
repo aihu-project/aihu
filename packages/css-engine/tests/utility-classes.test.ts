@@ -164,7 +164,7 @@ describe('@aihu/css-engine — ring widths + offset (Round 2)', () => {
     expect(css).toContain('calc(2px + var(--tw-ring-offset-width))')
     expect(css).toContain('box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow)')
     // Regression: the color side still emits --tw-ring-color on the same render.
-    expect(css).toContain('--tw-ring-color: var(--color-blue-500)')
+    expect(css).toContain('--tw-ring-color: var(--color-blue-500, oklch(')
   })
 
   it('bare ring is the 3px default', () => {
@@ -251,7 +251,7 @@ describe('@aihu/css-engine — group/peer relational variants (round 2)', () => 
     const css = compileSfc(source, 'GroupHover.aihu')
     // `.group:hover .group-hover\:bg-primary { background-color: ... }`
     expect(css).toContain('.group:hover .group-hover\\:bg-primary')
-    expect(css).toContain('background-color: var(--color-primary)')
+    expect(css).toContain('background-color: var(--color-primary, #1a1d24)')
     // Bare `group` marker survives as an empty-body rule.
     expect(css).toContain('.group {')
   })
@@ -264,7 +264,7 @@ describe('@aihu/css-engine — group/peer relational variants (round 2)', () => 
     const css = compileSfc(source, 'PeerChecked.aihu')
     // `.peer:checked ~ .peer-checked\:bg-primary { background-color: ... }`
     expect(css).toContain('.peer:checked ~ .peer-checked\\:bg-primary')
-    expect(css).toContain('background-color: var(--color-primary)')
+    expect(css).toContain('background-color: var(--color-primary, #1a1d24)')
     expect(css).toContain('.peer {')
   })
 
@@ -301,7 +301,7 @@ describe('@aihu/css-engine — aria/data variants + container queries (Round 2)'
       'AriaExpanded.aihu',
     )
     expect(css).toContain('[aria-expanded="true"]')
-    expect(css).toContain('background-color: var(--color-accent)')
+    expect(css).toContain('background-color: var(--color-accent, #c8543a)')
   })
 
   it('data-[state=open]: emits a data-attribute selector', () => {

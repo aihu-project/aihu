@@ -12,7 +12,7 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
 
     // Static utilities resolved (Form A).
     expect(css).toContain('bg-primary')
-    expect(css).toContain('background-color: var(--color-primary)')
+    expect(css).toContain('background-color: var(--color-primary, #1a1d24)')
     expect(css).toContain('p-4')
     expect(css).toContain('padding: 1rem')
 
@@ -20,19 +20,24 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
     expect(css).toContain('rounded-lg')
     expect(css).toContain('border-radius: 0.5rem')
 
-    // Scoped: theme tokens emitted at :host (no global utility sheet).
-    expect(css).toContain(':host {')
-    expect(css).toContain('--color-primary')
+    // Default tokens ride along as var() fallbacks, never a :host block, so an
+    // app theme inherited from the document wins inside the shadow root (#836).
+    expect(css).not.toContain(':host {')
+    expect(css).not.toContain('--color-primary:')
   })
 
-  it('emits tokens at :root instead of :host when compiled with a lightScopeId (LDF §10 step 2)', () => {
-    const source = `@template {
-  <button class="bg-primary p-4">Go</button>
+  it('emits @theme tokens at :root instead of :host when compiled with a lightScopeId (LDF §10 step 2)', () => {
+    const source = `@style {
+  @theme { --color-primary: red; }
+}
+@template {
+  <button class="bg-primary text-accent p-4">Go</button>
 }`
     const css = compileSfc(source, 'Button.aihu', 'a1b2c3d4')
     expect(css).toContain('background-color: var(--color-primary)')
-    expect(css).toContain(':root {')
-    expect(css).toContain('--color-primary')
+    expect(css).toContain(':root {\n  --color-primary: red;\n}')
+    expect(css).toContain('color: var(--color-accent, #c8543a)')
+    expect(css).not.toContain('--color-accent:')
     expect(css).not.toContain(':host {')
   })
 
@@ -55,7 +60,7 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
     const css = compileSfc(source, 'Tag.aihu')
     // Static class from Form A.
     expect(css).toContain('text-accent')
-    expect(css).toContain('color: var(--color-accent)')
+    expect(css).toContain('color: var(--color-accent, #c8543a)')
     // String literal inside the binding compiled (deferred binding, not dropped).
     expect(css).toContain('shadow-md')
     expect(css).toContain('box-shadow')
@@ -68,14 +73,14 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
     const source = `@template { <div class="host:bg-primary">x</div> }`
     const css = compileSfc(source, 'Host.aihu')
     expect(css).toContain(':host(')
-    expect(css).toContain('background-color: var(--color-primary)')
+    expect(css).toContain('background-color: var(--color-primary, #1a1d24)')
   })
 
   it('emits a hover: variant as a :hover rule', () => {
     const source = `@template { <button class="hover:bg-accent">x</button> }`
     const css = compileSfc(source, 'Hover.aihu')
     expect(css).toContain(':hover')
-    expect(css).toContain('background-color: var(--color-accent)')
+    expect(css).toContain('background-color: var(--color-accent, #c8543a)')
   })
 
   it('registers an @theme token that a utility then references', () => {

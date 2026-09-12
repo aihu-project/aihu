@@ -1,18 +1,12 @@
 ---
 source: packages/css-engine/crates/aihu-css-core/tests/scoped_snapshot.rs
-assertion_line: 83
 expression: "compile_sfc_scoped(&sfc(\"host:bg-primary slotted:p-4 slotted-img:rounded-lg part-thumb:bg-accent host-context-dark:bg-surface\")).unwrap()"
 ---
 @layer aihu.reset, aihu.tokens, aihu.components, aihu.utilities;
-:host {
-  --color-accent: #c8543a;
-  --color-primary: #1a1d24;
-  --color-surface: #faf8f4;
-}
 *, ::before, ::after { border-style: solid; border-width: 0; }
 /* dark cascade (Firefox-safe; see decision-firefox-host-context-workaround) */
-:host([data-theme="dark"]) .host-context-dark\:bg-surface, :root.dark .host-context-dark\:bg-surface, :root[data-theme="dark"] .host-context-dark\:bg-surface { background-color: var(--color-surface); }
-:host(.host\:bg-primary) { background-color: var(--color-primary); }
-::part(thumb) { background-color: var(--color-accent); }
+:host([data-theme="dark"]) .host-context-dark\:bg-surface, :root.dark .host-context-dark\:bg-surface, :root[data-theme="dark"] .host-context-dark\:bg-surface { background-color: var(--color-surface, #faf8f4); }
+:host(.host\:bg-primary) { background-color: var(--color-primary, #1a1d24); }
+::part(thumb) { background-color: var(--color-accent, #c8543a); }
 ::slotted(img.slotted-img\:rounded-lg) { border-radius: 0.5rem; }
 ::slotted(.slotted\:p-4) { padding: 1rem; }

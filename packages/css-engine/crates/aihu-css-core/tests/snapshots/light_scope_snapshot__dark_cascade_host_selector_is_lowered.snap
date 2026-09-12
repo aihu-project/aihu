@@ -1,20 +1,14 @@
 ---
 source: packages/css-engine/crates/aihu-css-core/tests/light_scope_snapshot.rs
-assertion_line: 86
 expression: "compile_sfc_scoped(&light(\".btn { @apply dark:bg-surface; }\")).unwrap()"
 ---
 @layer aihu.reset, aihu.tokens, aihu.components, aihu.utilities;
-@layer aihu.tokens {
-:root {
-  --color-surface: #faf8f4;
-}
-}
 *, ::before, ::after { border-style: solid; border-width: 0; }
 /* authored @style (scoped) */
 @scope ([data-a="a1b2c3d4"]) to ([data-a]) {
 .btn {
   :scope:is([data-theme="dark"]) &, :root.dark &, :root[data-theme="dark"] & {
-    background-color: var(--color-surface);
+    background-color: var(--color-surface, #faf8f4);
   }
 }
 }

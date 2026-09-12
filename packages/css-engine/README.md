@@ -101,6 +101,27 @@ rules. Importing a pack alone does **not** enable the scanner; setting
 `css.shadowMode: 'light'` alone does **not** import a pack. Use both for a
 complete look; either independently is fine.
 
+#### How a theme reaches shadow-scoped components
+
+Custom properties inherit through shadow boundaries, so tokens a pack (or your
+own stylesheet) sets at `:root` apply inside every component, however deeply
+nested. The scoped compiler never declares the built-in `aihu-default` values
+itself. It writes each reference with the default as a fallback:
+
+```css
+.text-muted-foreground { color: var(--color-muted-foreground, #8a8880); }
+```
+
+That gives you three layers, highest priority first:
+
+1. **A component's own `@theme` block** — declared at that component's `:host`
+   (or `:root` under `'light'`). Use it to pin a token for one component; the
+   value also inherits into components nested inside it.
+2. **Your app theme** — a pack import, or `--color-*` set at `:root` / on any
+   ancestor element. Utilities and authored `@style` rules both pick it up.
+3. **The built-in defaults** — used only when nothing above sets the token, so a
+   component rendered standalone still looks right.
+
 ### Utility vocabulary
 
 The engine is **inspired by Tailwind v4, not a fork** — the supported set is
@@ -249,10 +270,10 @@ bun add @aihu/css-engine
 
 **Optional dependencies (platform-specific):**
 
-- `@aihu/css-engine-darwin-arm64` — `0.1.17`
-- `@aihu/css-engine-darwin-x64` — `0.1.17`
-- `@aihu/css-engine-linux-x64-gnu` — `0.1.17`
-- `@aihu/css-engine-win32-x64-msvc` — `0.1.17`
+- `@aihu/css-engine-darwin-arm64` — `0.1.18`
+- `@aihu/css-engine-darwin-x64` — `0.1.18`
+- `@aihu/css-engine-linux-x64-gnu` — `0.1.18`
+- `@aihu/css-engine-win32-x64-msvc` — `0.1.18`
 
 <sub><i>Auto-generated against `@aihu/css-engine@0.6.1`.</i></sub>
 

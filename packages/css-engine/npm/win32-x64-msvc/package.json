@@ -1,6 +1,11 @@
 {
   "name": "@aihu/css-engine-win32-x64-msvc",
-  "version": "0.1.17",
+  "version": "0.1.18",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
+    "directory": "packages/css-engine/npm/win32-x64-msvc"
+  },
   "license": "MIT",
   "os": [
     "win32"
