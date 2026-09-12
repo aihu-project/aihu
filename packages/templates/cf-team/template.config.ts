@@ -109,7 +109,7 @@ export const config = {
   // `appPeerDepsConditional` below is NOT generated: those are third-party auth
   // SDKs this repo does not publish.
   appPeerDeps: {
-    '@aihu/runtime': '^6.1.0',
+    '@aihu/runtime': '^6.1.1',
     '@aihu/arbor': '^4.1.2',
     '@aihu/signals': '^0.5.1',
     '@aihu/router': '^0.5.0',

@@ -86,7 +86,7 @@ export const config = {
   // GENERATED ranges — see the same block in template.config.ts, and
   // scripts/sync-template-versions.ts.
   appPeerDeps: {
-    '@aihu/runtime': '^6.1.0',
+    '@aihu/runtime': '^6.1.1',
     '@aihu/arbor': '^4.1.2',
     '@aihu/signals': '^0.5.1',
     '@aihu/router': '^0.5.0',
