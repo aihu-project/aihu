@@ -287,8 +287,8 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu-plugin/data`](./packages/plugin-data) | `2.0.5` | Reactive data loaders and resource primitives for aihu. |
 | [`@aihu-plugin/drizzle`](./packages/plugin-drizzle) | `0.1.6` | Drizzle ORM data adapter for aihu — typed createResource fetchers and defineLoader helpers (Postgres / SQLite / libSQL). |
 | [`@aihu-plugin/kindly-note`](./packages/plugin-kindly-note) | `0.2.4` | Runtime syntax highlighting + markdown rendering for aihu — <aihu-code>/<aihu-markdown> custom elements + signal-aware highlight()/renderMarkdown() helpers, powered by published @kindly-note/* packages with lazy loading. |
-| [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare) | `14.0.0` | Cloudflare Workers/Pages deployment adapter for @aihu/app. |
-| [`@aihu/adapter-vercel`](./packages/adapter-vercel) | `14.0.0` | Vercel deployment adapter for @aihu/app. |
+| [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare) | `14.0.1` | Cloudflare Workers/Pages deployment adapter for @aihu/app. |
+| [`@aihu/adapter-vercel`](./packages/adapter-vercel) | `14.0.1` | Vercel deployment adapter for @aihu/app. |
 | [`@aihu/agent`](./packages/agent) | `0.2.0` | Agent primitives — the foundation of aihu agent-readiness. |
 | [`@aihu/agent-a2a`](./packages/agent-a2a) | `1.0.1` | A2A (Agent2Agent) protocol bindings (spec v1.0.1, JSON-RPC) for @aihu/agent-service. |
 | [`@aihu/agent-acp`](./packages/agent-acp) | `0.2.1` | DEPRECATED — use @aihu/agent-a2a. BeeAI ACP merged into A2A under the Linux Foundation (Aug 2025); this adapter's invented ACP shape has no spec to conform to. |
@@ -296,7 +296,7 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/agent-server`](./packages/agent-server) | `0.4.4` | Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge. |
 | [`@aihu/agent-service`](./packages/agent-service) | `0.4.0` | Service-side agent runtime (server-hosted agent endpoints). |
 | [`@aihu/ai`](./packages/ai) | `0.1.0` | Thin adapters from AI SDK stream types to ReadableStream<string> for aihu $stream collections. |
-| [`@aihu/app`](./packages/app) | `10.1.0` | Top-level app integration — wires runtime, router, and adapters into a Vite app. |
+| [`@aihu/app`](./packages/app) | `10.1.1` | Top-level app integration — wires runtime, router, and adapters into a Vite app. |
 | [`@aihu/auth`](./packages/auth) | `6.0.0` | JWT scope checks, ScopeSignal, and server middleware for aihu auth. |
 | [`@aihu/cli`](./packages/cli) | `1.3.1` | Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands. |
 | [`@aihu/context`](./packages/context) | `0.2.0` | Async-context-friendly request/SSR context primitives for aihu. |

@@ -221,7 +221,7 @@
     },
     "examples/cf-adapter": {
       "name": "@aihu/example-cf-adapter",
-      "version": "0.0.34",
+      "version": "0.0.35",
       "dependencies": {
         "@aihu/adapter-cloudflare": "workspace:*",
         "@aihu/agent": "workspace:*",
@@ -395,7 +395,7 @@
     },
     "examples/ssg-site": {
       "name": "@aihu/example-ssg-site",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
         "@aihu/agent": "workspace:*",
         "@aihu/app": "workspace:*",
@@ -498,7 +498,7 @@
     },
     "packages/adapter-cloudflare": {
       "name": "@aihu/adapter-cloudflare",
-      "version": "14.0.0",
+      "version": "14.0.1",
       "peerDependencies": {
         "@aihu/app": "workspace:*",
         "vite": ">=5.0.0",
@@ -506,7 +506,7 @@
     },
     "packages/adapter-vercel": {
       "name": "@aihu/adapter-vercel",
-      "version": "14.0.0",
+      "version": "14.0.1",
       "peerDependencies": {
         "@aihu/app": "workspace:*",
         "vite": ">=5.0.0",
@@ -567,7 +567,7 @@
     },
     "packages/app": {
       "name": "@aihu/app",
-      "version": "10.1.0",
+      "version": "10.1.1",
       "dependencies": {
         "@aihu/compiler": "^1.3.2",
       },

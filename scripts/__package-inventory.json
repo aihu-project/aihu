@@ -25,13 +25,13 @@
   },
   {
     "name": "@aihu/adapter-cloudflare",
-    "version": "14.0.0",
+    "version": "14.0.1",
     "dir": "packages/adapter-cloudflare",
     "isPlatform": false
   },
   {
     "name": "@aihu/adapter-vercel",
-    "version": "14.0.0",
+    "version": "14.0.1",
     "dir": "packages/adapter-vercel",
     "isPlatform": false
   },
@@ -79,7 +79,7 @@
   },
   {
     "name": "@aihu/app",
-    "version": "10.1.0",
+    "version": "10.1.1",
     "dir": "packages/app",
     "isPlatform": false
   },
