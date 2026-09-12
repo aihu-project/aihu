@@ -18,7 +18,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { Registry } from '@aihu/ui/registry'
 import { afterEach, describe, expect, it } from 'vitest'
-import { realConfigLoader, type RegistryFs, resolveRegistry } from '../src/registry-resolve.ts'
+import { type RegistryFs, realConfigLoader, resolveRegistry } from '../src/registry-resolve.ts'
 
 const REGISTRY: Registry = {
   items: [
@@ -44,12 +44,17 @@ function makeFs(seed: Record<string, string>): RegistryFs {
 describe('resolveRegistry — project root recognized via vite.config.ts alone', () => {
   it('does not throw no-config when only vite.config.ts marks the project (no aihu.config.ts)', async () => {
     const fs = makeFs({
-      '/proj/vite.config.ts': "import { defineConfig } from 'vite'\nexport default defineConfig({})\n",
+      '/proj/vite.config.ts':
+        "import { defineConfig } from 'vite'\nexport default defineConfig({})\n",
       [join(REGISTRY_ROOT, 'registry.json')]: JSON.stringify(REGISTRY),
     })
     const resolved = await resolveRegistry('/proj', {
       fs,
-      configLoader: { async load() { return { ui: { target: './src/components/ui' } } } },
+      configLoader: {
+        async load() {
+          return { ui: { target: './src/components/ui' } }
+        },
+      },
       resolveRegistryRoot: () => REGISTRY_ROOT,
     })
     expect(resolved.projectRoot).toBe('/proj')
@@ -58,12 +63,17 @@ describe('resolveRegistry — project root recognized via vite.config.ts alone',
 
   it('still recognizes a project from a nested subdirectory (upward walk preserved)', async () => {
     const fs = makeFs({
-      '/proj/vite.config.ts': "import { defineConfig } from 'vite'\nexport default defineConfig({})\n",
+      '/proj/vite.config.ts':
+        "import { defineConfig } from 'vite'\nexport default defineConfig({})\n",
       [join(REGISTRY_ROOT, 'registry.json')]: JSON.stringify(REGISTRY),
     })
     const resolved = await resolveRegistry('/proj/src/deeply/nested', {
       fs,
-      configLoader: { async load() { return { ui: {} } } },
+      configLoader: {
+        async load() {
+          return { ui: {} }
+        },
+      },
       resolveRegistryRoot: () => REGISTRY_ROOT,
     })
     expect(resolved.projectRoot).toBe('/proj')
@@ -74,7 +84,11 @@ describe('resolveRegistry — project root recognized via vite.config.ts alone',
     await expect(
       resolveRegistry('/proj', {
         fs,
-        configLoader: { async load() { return null } },
+        configLoader: {
+          async load() {
+            return null
+          },
+        },
       }),
     ).rejects.toThrow('No aihu project config found')
   })
