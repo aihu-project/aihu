@@ -1,5 +1,16 @@
 # @aihu/cli
 
+## 1.3.1
+
+### Patch Changes
+
+- [#818](https://github.com/aihu-project/aihu/pull/818) [`b9c6afd`](https://github.com/aihu-project/aihu/commit/b9c6afda840b3e3426d2023ee603b92c3bfe1993) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bundle migration codemods from the public `@aihu/compiler` entry points instead of importing compiler source from the monorepo.
+
+- [#821](https://github.com/aihu-project/aihu/pull/821) [`95bf123`](https://github.com/aihu-project/aihu/commit/95bf1232ce3df85a5b4b373b79d760aba098d46b) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Expose the UI registry catalog types from `@aihu/ui/registry` and make the CLI
+  consume that public contract instead of importing the UI package's source tree.
+- Updated dependencies [[`50c87cb`](https://github.com/aihu-project/aihu/commit/50c87cb904f518d5ee69fba77940095964c73492)]:
+  - @aihu/mcp@0.2.1
+
 ## 1.3.0
 
 ### Minor Changes

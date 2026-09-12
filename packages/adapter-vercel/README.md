@@ -21,7 +21,7 @@ npm install @aihu/adapter-vercel
 bun add @aihu/adapter-vercel
 ```
 
-<sub><i>Auto-generated against `@aihu/adapter-vercel@13.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/adapter-vercel@14.0.0`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -32,12 +32,12 @@ bun add @aihu/adapter-vercel
 
 | | |
 |---|---|
-| **Version** | `13.0.0` |
+| **Version** | `14.0.0` |
 | **Tier** | B — Meta-framework — Vercel deploy adapter |
 | **Published files** | 3 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/adapter-vercel@13.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/adapter-vercel@14.0.0`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -50,7 +50,7 @@ bun add @aihu/adapter-vercel
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu/adapter-vercel@13.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/adapter-vercel@14.0.0`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -64,7 +64,7 @@ bun add @aihu/adapter-vercel
 - `@aihu/app` — `workspace:*`
 - `vite` — `>=5.0.0`
 
-<sub><i>Auto-generated against `@aihu/adapter-vercel@13.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/adapter-vercel@14.0.0`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -77,7 +77,7 @@ bun add @aihu/adapter-vercel
 - [@aihu/server](../server)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `@aihu/adapter-vercel@13.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/adapter-vercel@14.0.0`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -88,6 +88,6 @@ bun add @aihu/adapter-vercel
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/adapter-vercel@13.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/adapter-vercel@14.0.0`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

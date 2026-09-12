@@ -1,6 +1,6 @@
 {
   "name": "@aihu/tsc",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "MIT",
   "type": "module",
   "description": "aihu-tsc — `tsc` for projects containing .aihu Single File Components. Type-checks .aihu sources as virtual TypeScript, with no .aihu.ts files written to disk.",

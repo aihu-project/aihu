@@ -1,6 +1,6 @@
 {
   "name": "@aihu/app",
-  "version": "10.0.0",
+  "version": "10.1.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -48,7 +48,7 @@
     "@aihu-plugin/agent-readiness": "workspace:*",
     "@aihu/primitives": "workspace:*"
   },
-  "description": "Top-level app integration \u2014 wires runtime, router, and adapters into a Vite app.",
+  "description": "Top-level app integration — wires runtime, router, and adapters into a Vite app.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

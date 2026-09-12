@@ -287,8 +287,8 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu-plugin/data`](./packages/plugin-data) | `2.0.5` | Reactive data loaders and resource primitives for aihu. |
 | [`@aihu-plugin/drizzle`](./packages/plugin-drizzle) | `0.1.6` | Drizzle ORM data adapter for aihu — typed createResource fetchers and defineLoader helpers (Postgres / SQLite / libSQL). |
 | [`@aihu-plugin/kindly-note`](./packages/plugin-kindly-note) | `0.2.4` | Runtime syntax highlighting + markdown rendering for aihu — <aihu-code>/<aihu-markdown> custom elements + signal-aware highlight()/renderMarkdown() helpers, powered by published @kindly-note/* packages with lazy loading. |
-| [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare) | `13.0.0` | Cloudflare Workers/Pages deployment adapter for @aihu/app. |
-| [`@aihu/adapter-vercel`](./packages/adapter-vercel) | `13.0.0` | Vercel deployment adapter for @aihu/app. |
+| [`@aihu/adapter-cloudflare`](./packages/adapter-cloudflare) | `14.0.0` | Cloudflare Workers/Pages deployment adapter for @aihu/app. |
+| [`@aihu/adapter-vercel`](./packages/adapter-vercel) | `14.0.0` | Vercel deployment adapter for @aihu/app. |
 | [`@aihu/agent`](./packages/agent) | `0.2.0` | Agent primitives — the foundation of aihu agent-readiness. |
 | [`@aihu/agent-a2a`](./packages/agent-a2a) | `1.0.1` | A2A (Agent2Agent) protocol bindings (spec v1.0.1, JSON-RPC) for @aihu/agent-service. |
 | [`@aihu/agent-acp`](./packages/agent-acp) | `0.2.1` | DEPRECATED — use @aihu/agent-a2a. BeeAI ACP merged into A2A under the Linux Foundation (Aug 2025); this adapter's invented ACP shape has no spec to conform to. |
@@ -296,29 +296,29 @@ See [`packages/`](./packages) for all packages on disk. By tier:
 | [`@aihu/agent-server`](./packages/agent-server) | `0.4.4` | Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge. |
 | [`@aihu/agent-service`](./packages/agent-service) | `0.4.0` | Service-side agent runtime (server-hosted agent endpoints). |
 | [`@aihu/ai`](./packages/ai) | `0.1.0` | Thin adapters from AI SDK stream types to ReadableStream<string> for aihu $stream collections. |
-| [`@aihu/app`](./packages/app) | `10.0.0` | Top-level app integration — wires runtime, router, and adapters into a Vite app. |
+| [`@aihu/app`](./packages/app) | `10.1.0` | Top-level app integration — wires runtime, router, and adapters into a Vite app. |
 | [`@aihu/auth`](./packages/auth) | `6.0.0` | JWT scope checks, ScopeSignal, and server middleware for aihu auth. |
-| [`@aihu/cli`](./packages/cli) | `1.3.0` | Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands. |
+| [`@aihu/cli`](./packages/cli) | `1.3.1` | Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands. |
 | [`@aihu/context`](./packages/context) | `0.2.0` | Async-context-friendly request/SSR context primitives for aihu. |
-| [`@aihu/css-engine`](./packages/css-engine) | `0.6.1` | aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output. |
+| [`@aihu/css-engine`](./packages/css-engine) | `0.7.0` | aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output. |
 | [`@aihu/data`](./packages/_moved/data) | `2.0.5` | [MOVED] This package has moved to @aihu-plugin/data. |
 | [`@aihu/editor`](./packages/editor) | `0.1.2` | Hand-rolled, dependency-free, GX-governed rich-text editor — JSON doc model, invertible transactions, markdown (web-v1 dialect) round-trip, contenteditable view with IME-safe read-back, agent read/suggest/write surface. |
-| [`@aihu/language-server`](./packages/language-server) | `0.4.1` | Cross-editor Language Server (aihu-language-server) for .aihu Single File Components — diagnostics, hover, completion, and quick-fix code actions. |
-| [`@aihu/magna`](./packages/magna) | `0.2.7` | aihu bridge for Magna GraphQL — dep-free fetch, resource composition, JWT relay |
-| [`@aihu/mcp`](./packages/mcp) | `0.2.0` | MCP server for aihu — exposes aihu_example and aihu_validate tools via stdio transport. |
+| [`@aihu/language-server`](./packages/language-server) | `0.4.2` | Cross-editor Language Server (aihu-language-server) for .aihu Single File Components — diagnostics, hover, completion, and quick-fix code actions. |
+| [`@aihu/magna`](./packages/magna) | `0.2.8` | aihu bridge for Magna GraphQL — dep-free fetch, resource composition, JWT relay |
+| [`@aihu/mcp`](./packages/mcp) | `0.2.1` | MCP server for aihu — exposes aihu_example and aihu_validate tools via stdio transport. |
 | [`@aihu/plugin`](./packages/plugin) | `0.1.0` | Plugin substrate shared by @aihu/server and the meta-framework — runtime hook surface. |
 | [`@aihu/plugin-demo`](./packages/plugin-demo) | `0.1.4` | Canonical proof-of-life for the @aihu/plugin API — exercises macros, middleware, and transforms. |
-| [`@aihu/primitives`](./packages/primitives) | `0.2.3` | aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS. |
+| [`@aihu/primitives`](./packages/primitives) | `0.2.4` | aihu headless behavior primitives — WAI-ARIA APG patterns as vanilla custom elements, zero CSS. |
 | [`@aihu/router`](./packages/router) | `0.5.0` | File-based router for the aihu meta-framework. |
 | [`@aihu/runtime`](./packages/runtime) | `6.1.0` | Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler. |
 | [`@aihu/seo`](./packages/seo) | `1.0.5` | DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD). |
 | [`@aihu/server`](./packages/server) | `0.6.0` | Server runtime + native renderer (napi-rs) for aihu SSR. |
 | [`@aihu/store`](./packages/store) | `0.1.2` | Pinia-style global stores on aihu signals — defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins. |
 | [`@aihu/templates-cf-team`](./packages/templates/cf-team) | `3.1.0` | Cloudflare Workers + monorepo (bun workspaces + moon) team template for Aihu |
-| [`@aihu/tsc`](./packages/tsc) | `0.3.3` | aihu-tsc — `tsc` for projects containing .aihu Single File Components. Type-checks .aihu sources as virtual TypeScript, with no .aihu.ts files written to disk. |
-| [`@aihu/ui`](./packages/ui) | `0.1.1` | aihu styled-recipe registry — copy-paste .aihu recipes distributed as source via `aihu add` (no runtime bundle). |
+| [`@aihu/tsc`](./packages/tsc) | `0.3.4` | aihu-tsc — `tsc` for projects containing .aihu Single File Components. Type-checks .aihu sources as virtual TypeScript, with no .aihu.ts files written to disk. |
+| [`@aihu/ui`](./packages/ui) | `0.1.2` | aihu styled-recipe registry — copy-paste .aihu recipes distributed as source via `aihu add` (no runtime bundle). |
 | [`@aihu/use`](./packages/use) | `2.0.0` | aihu utility/sensor/state composables — SSR-safe, scope-aware, per-composable subpath entries. |
-| [`create-aihu`](./packages/create-aihu) | `0.1.11` | Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli. |
+| [`create-aihu`](./packages/create-aihu) | `0.1.12` | Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli. |
 | [`vscode-aihu`](./packages/vscode-aihu) | `1.0.0` | Syntax highlighting, snippets, and language support for .aihu Single File Components |
 
 <sub><i>Auto-generated — run `bun scripts/sync-readme.ts` to update.</i></sub>

@@ -1,5 +1,13 @@
 # @aihu/magna
 
+## 0.2.8
+
+### Patch Changes
+
+- [#804](https://github.com/aihu-project/aihu/pull/804) [`fc1b270`](https://github.com/aihu-project/aihu/commit/fc1b2705a5c4ff53ab692e83908be780dba8d3ea) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Pass `onX` callback props to child components without treating them as DOM event listeners.
+  Make Magna's unpublished GraphQL parser an explicit opt-in so Yarn installs retain
+  the documented graceful fallback.
+
 ## 0.2.7
 
 ### Patch Changes
