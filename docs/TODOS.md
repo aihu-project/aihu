@@ -4,7 +4,14 @@ Deferred items captured during plan reviews. Each has enough context to act on c
 
 ---
 
-## TODO-001: GitHub Actions release workflow for pre-built aihu-compile binaries
+## TODO-001: GitHub Actions release workflow for pre-built aihu-compile binaries — DONE
+
+**2026-09-10:** the compiler is now its own repo (`aihu-project/aihu-compiler`,
+extracted since this was filed) and already has `release.yml`. No action
+needed here; if the release matrix needs changes, file against that repo
+directly.
+
+<details><summary>Original item</summary>
 
 **What:** Write `.github/workflows/release.yml` that cross-compiles `aihu-compile` for `mac-arm64`, `mac-x64`, `linux-x64`, `windows-x64` and publishes to GitHub Releases on version tags.
 
@@ -15,6 +22,8 @@ Deferred items captured during plan reviews. Each has enough context to act on c
 **How to start:** Use `cross` crate for cross-compilation. Target matrix: `aarch64-apple-darwin`, `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`, `x86_64-pc-windows-msvc`. Trigger on `push: tags: ['v*']`. Upload binaries to GitHub Release assets. Update `packages/compiler/js/index.ts` postinstall to download from `releases/latest/download/aihu-compile-{platform}`.
 
 **Depends on:** Phase 1-compiler (binary must build successfully first).
+
+</details>
 
 ---
 
