@@ -89,6 +89,9 @@ fn hash_sfc(ast: &SfcAst, h: &mut impl Hasher) {
     // serve shadow-mode CSS for a component the compiler just flipped to
     // light, or vice versa.
     ast.light_scope_id.hash(h);
+    // Both change the emitted CSS for an otherwise identical SFC.
+    ast.theme.hash(h);
+    ast.host_tokens.hash(h);
     match &ast.style {
         Some(s) => {
             1u8.hash(h);

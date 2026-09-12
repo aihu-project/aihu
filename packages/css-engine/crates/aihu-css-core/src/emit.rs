@@ -389,6 +389,18 @@ impl ScopedCssChannels {
 pub fn emit_sfc_scoped_channels(ast: &SfcAst) -> Result<ScopedCssChannels, CompileError> {
     let mut theme = ThemeRegistry::with_aihu_defaults();
 
+    // Project-level theme (`css.theme`) replaces the built-in default values
+    // before per-SFC `@theme` blocks apply. It registers as defaults, not
+    // declarations: the values reach the CSS only as `var()` fallbacks, so an
+    // inherited document theme still wins (#836).
+    if let Some(project) = &ast.theme {
+        if project.contains("@theme") {
+            theme.register_defaults(&extract_theme_blocks(project));
+        } else {
+            theme.register_defaults(project);
+        }
+    }
+
     // Parse @theme directives from the authored style block first so utilities
     // and breakpoints see overrides.
     if let Some(style) = &ast.style {
@@ -505,11 +517,20 @@ pub fn emit_sfc_scoped_channels(ast: &SfcAst) -> Result<ScopedCssChannels, Compi
     } else {
         crate::theme::TokenScope::Shadow
     };
-    let tokens = theme.emit_declared_tokens(&referenced, token_scope);
-    let tokens = theme.with_default_fallbacks(&tokens);
-    let components = theme.with_default_fallbacks(&components);
-    let utilities = theme.with_default_fallbacks(&utilities);
-    let authored = theme.with_default_fallbacks(&authored);
+    // `hostTokens: false` skips the fallbacks: the app guarantees every token
+    // at `:root`, so references stay bare `var(--name)`.
+    let fallbacks = ast.host_tokens != Some(false);
+    let finish = |css: &str| {
+        if fallbacks {
+            theme.with_default_fallbacks(css)
+        } else {
+            css.to_string()
+        }
+    };
+    let tokens = finish(&theme.emit_declared_tokens(&referenced, token_scope));
+    let components = finish(&components);
+    let utilities = finish(&utilities);
+    let authored = finish(&authored);
     // Light mode's `:root` token block competes in the SAME global cascade as
     // every app-authored `:root {}`/`.dark {}` rule (both are unlayered,
     // (0,1,0) specificity — the winner would otherwise come down to

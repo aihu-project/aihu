@@ -187,6 +187,40 @@ export interface CssConfig {
    *               which is scoped and works in either mode.
    */
   readonly shadowMode?: 'light' | 'shadow'
+
+  /**
+   * Project theme for `@aihu/css-engine`: the values its utilities and
+   * recipes fall back to, in place of the built-in `aihu-default` palette.
+   *
+   * - A path (relative to the Vite root) to a CSS file with an
+   *   `@theme { --color-primary: …; }` block. The dev server restarts when the
+   *   file changes.
+   * - A style pack from `defineStylePack()`; its base `tokens` are used.
+   *
+   * Values compile to `var(--name, <value>)` fallbacks, never `:host`
+   * declarations, so tokens set at `:root` (e.g. an imported pack stylesheet)
+   * still win inside components, and an SFC's own `@theme` overrides both.
+   */
+  readonly theme?: string | CssThemePack
+
+  /**
+   * `false` compiles token references to bare `var(--name)` with no fallback
+   * value, trimming every component's CSS. Only for apps that always load
+   * their tokens at `:root`: an unset token then renders as the property's
+   * initial value. Tokens an SFC's own `@theme` sets are still declared.
+   * Default `true`. Cannot be combined with `theme`, which only supplies
+   * fallback values.
+   */
+  readonly hostTokens?: boolean
+}
+
+/**
+ * The part of a `defineStylePack()` result `css.theme` reads. Structural, so
+ * `@aihu/app` takes no dependency on `@aihu/css-engine`.
+ */
+export interface CssThemePack {
+  /** Base (light) tokens; names with or without the `--` prefix. */
+  readonly tokens: Readonly<Record<string, string>>
 }
 
 /** Router-related app config (arch-5 M1, RFC-A5-012). */
@@ -316,6 +350,19 @@ const OUTLET_ID = v.pattern(
   'an HTML id: a letter followed by letters, digits, hyphens, underscores, colons or periods',
 )
 
+/** `css.theme`: a CSS file path, or a style pack carrying a `tokens` map. */
+const CSS_THEME: v.Validator = (value, keypath) => {
+  if (value === undefined || typeof value === 'string') return
+  const tokens = (value as { tokens?: unknown } | null)?.tokens
+  if (typeof value === 'object' && tokens !== null && typeof tokens === 'object') return
+  throw new AihuConfigErrorImpl(
+    `${keypath} should be a path to a CSS file with an @theme block, ` +
+      'or a style pack from defineStylePack(), if specified.',
+    'INVALID_CSS_THEME',
+    keypath,
+  )
+}
+
 const SCHEMA: Record<string, v.Validator> = {
   dir: v.object({
     pages: v.string,
@@ -358,6 +405,8 @@ const SCHEMA: Record<string, v.Validator> = {
   typecheck: v.object({ strictTemplates: v.boolean, project: v.string }),
   css: v.object({
     shadowMode: v.list(['light', 'shadow'], 'INVALID_CSS_SHADOW_MODE'),
+    theme: CSS_THEME,
+    hostTokens: v.boolean,
   }),
   ui: v.object({
     registry: v.string,
@@ -447,9 +496,25 @@ function requireShadowModeForSsr(config: AihuConfig, keypath: string): void {
   )
 }
 
+/**
+ * `css.theme` only supplies `var()` fallback values and `css.hostTokens: false`
+ * removes every fallback, so together the theme would silently do nothing.
+ */
+function rejectThemeWithoutHostTokens(config: AihuConfig, keypath: string): void {
+  if (config.css?.theme === undefined || config.css.hostTokens !== false) return
+  throw new AihuConfigErrorImpl(
+    `${keypath}.css.theme has no effect when ${keypath}.css.hostTokens is false: ` +
+      'the theme only supplies var() fallback values, and hostTokens: false removes them. ' +
+      'Drop one of the two, or load the theme at :root instead.',
+    'CSS_THEME_UNUSED',
+    `${keypath}.css.theme`,
+  )
+}
+
 function validateConfig(config: AihuConfig, keypath: string): void {
   validateShape(config, keypath)
   requireShadowModeForSsr(config, keypath)
+  rejectThemeWithoutHostTokens(config, keypath)
 }
 
 /**

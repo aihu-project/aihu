@@ -400,11 +400,40 @@ export function compile(classes: string[]): string {
  *   `shadowMode: 'light'`. Injected onto the AST payload before it crosses the
  *   `--ast-json` boundary; not yet consumed by the CSS engine (step 3 does
  *   that) — passing it today is inert plumbing.
+ * @param options - project-level theme inputs, see {@link CompileSfcOptions}
  * @returns the scoped CSS string for the SFC
  */
-export function compileSfc(source: string, id?: string, lightScopeId?: string): string {
+export function compileSfc(
+  source: string,
+  id?: string,
+  lightScopeId?: string,
+  options?: CompileSfcOptions,
+): string {
   const ast = compileToAst(source, id)
-  const payload = lightScopeId !== undefined ? { ...ast, lightScopeId } : ast
+  const payload = {
+    ...ast,
+    ...(lightScopeId !== undefined ? { lightScopeId } : {}),
+    ...(options?.theme !== undefined ? { theme: options.theme } : {}),
+    ...(options?.hostTokens !== undefined ? { hostTokens: options.hostTokens } : {}),
+  }
   const bin = resolveBinary()
   return runBinary(bin, ['--ast-json'], JSON.stringify(payload))
+}
+
+/** Project-level inputs to {@link compileSfc}, shared by every SFC in a build. */
+export interface CompileSfcOptions {
+  /**
+   * Project theme: CSS containing `@theme { … }` blocks, or a bare
+   * `--name: value;` declaration list. Replaces the built-in default token
+   * values. They still compile to `var(--name, <value>)` fallbacks, so a theme
+   * the component inherits from the document wins; an SFC's own `@theme`
+   * block overrides both.
+   */
+  theme?: string
+  /**
+   * `false` drops the default-value fallbacks, so token references compile to
+   * bare `var(--name)`. For apps that always load their tokens at `:root`.
+   * Tokens an SFC's own `@theme` sets are still declared. Default `true`.
+   */
+  hostTokens?: boolean
 }
