@@ -192,14 +192,14 @@ describe('aihu list --installed — reflects only what was added', () => {
 // ─── error paths (R6) ──────────────────────────────────────────────────────────
 
 describe('aihu list — resolver error paths (R6)', () => {
-  it('no aihu.config.ts → exits nonzero with actionable message', async () => {
+  it('no aihu.config.ts / vite.config.ts → exits nonzero with actionable message', async () => {
     const fs = makeFs({})
     const io = makeIo()
     const resolve = makeResolveDeps({ fs, hasUi: false })
     await expect(list([], { cwd: '/proj', fs, io, resolve, exit: makeExit() })).rejects.toThrow(
       '__exit__:1',
     )
-    expect(io.err).toContain('No aihu.config.ts found')
+    expect(io.err).toContain('No aihu project config found')
   })
 
   it('@aihu/ui not installed → exits nonzero with `bun add -D`', async () => {

@@ -3,7 +3,8 @@
  * registry into the consumer's `ui.target` directory (Plan 5 Task 6, spec §9.6).
  *
  * Flow (spec §9.6 steps 1–6):
- *   1. Read `aihu.config.ts → ui.{registry,target,prefix,style}` (defaults at read-time)
+ *   1. Read `ui.{registry,target,prefix,style}` from `vite.config.ts` (or the
+ *      legacy `aihu.config.ts`) (defaults at read-time)
  *   2. Resolve requested items + their `registryDependencies` transitively (R8)
  *   3. Read the `.aihu` source(s) directly from the installed package (R3)
  *   4. Preflight target collisions
