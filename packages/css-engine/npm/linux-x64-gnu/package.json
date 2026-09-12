@@ -1,6 +1,11 @@
 {
   "name": "@aihu/css-engine-linux-x64-gnu",
   "version": "0.1.18",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
+    "directory": "packages/css-engine/npm/linux-x64-gnu"
+  },
   "license": "MIT",
   "os": [
     "linux"
