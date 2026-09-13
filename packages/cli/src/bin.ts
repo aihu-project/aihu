@@ -8,6 +8,7 @@
  *   aihu plugin <name>         Scaffold a plugin package
  *   aihu dev [options]         Start development server (arch-4 §3)
  *   aihu build [options]       Production build (arch-4 §3)
+ *   aihu deploy [options]      Deploy via the configured platform adapter (arch-4 §3)
  *   aihu migrate <files...>    Migrate legacy SFC syntax to v1.0+ canonical forms
  *   aihu add <names...>        Copy styled recipes from @aihu/ui (css-5 §9.6)
  *   aihu list [--installed]    List registry recipes (css-5 §9.6)
@@ -253,6 +254,11 @@ async function main(): Promise<void> {
   if (cmd === 'build') {
     const { default: build } = await import('./commands/build.js')
     await build(rest)
+    return
+  }
+  if (cmd === 'deploy') {
+    const { default: deploy } = await import('./commands/deploy.js')
+    await deploy(rest)
     return
   }
   if (cmd === 'migrate') {
