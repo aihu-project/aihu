@@ -49,8 +49,8 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
 
 /** External package ranges a scaffold pins. See EXTERNAL_RANGES in the generator. */
 export const EXTERNAL_DEP_VERSIONS: Readonly<Record<string, string>> = {
-  '@aihu/arbor': '^4.1.2',
-  '@aihu/compiler': '^1.3.5',
+  '@aihu/arbor': '^4.1.3',
+  '@aihu/compiler': '^1.3.11',
   '@aihu/reactive': '^0.2.1',
   '@aihu/signals': '^0.5.1',
   vite: '^6 || ^8',

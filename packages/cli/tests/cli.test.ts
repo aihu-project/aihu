@@ -554,12 +554,22 @@ describe("scaffoldApp · template 'agent' (capability-bridge showcase)", () => {
 
     const sfc = readFileSync(join(root, 'src/task-list.aihu'), 'utf8')
     expect(sfc).toContain('@agent')
-    expect(sfc).toContain('$action')
+    // The v2 collection-form vocabulary: `const x = action({ … }, fn)`, NOT the
+    // retired v1 `$action:` block (C440). The metadata that used to live in
+    // `@agent` is now per-entry `describe:` / `expose:` on the @state member.
+    expect(sfc).toContain('= action(')
+    expect(sfc).toContain("expose: 'read write'")
     expect(sfc).toContain('addTask')
-    expect(sfc).toContain('on:click={addFromInput}')
+    expect(sfc).toContain('on:submit.prevent={addFromInput}')
     // client-durable state: hydrates from + persists to localStorage (survives refresh)
     expect(sfc).toContain('localStorage')
-    expect(sfc).toContain('aihu:task-list:v1')
+    expect(sfc).toContain('aihu:task-list:v2')
+
+    // The project theme the component's utility classes resolve against, and
+    // the two places vite.config.ts consumes it.
+    expect(existsSync(join(root, 'src/theme.css'))).toBe(true)
+    expect(vite).toContain('css: { theme }')
+    expect(vite).toContain('themeRuntimePlugin')
   })
 
   // The agent template is the one named for agents; before this it was the only

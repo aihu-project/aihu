@@ -67,6 +67,10 @@ export function agentPackageJson(name: string, pm: PkgManager = 'bun'): string {
         '@aihu/agent-service': aihuDep('@aihu/agent-service'),
         '@aihu/arbor': aihuDep('@aihu/arbor'),
         '@aihu/compiler': aihuDep('@aihu/compiler'),
+        // Utility classes in the component's markup + the src/theme.css tokens
+        // they resolve against. Auto-wired by presence: vite.config.ts hands the
+        // theme text to the compiler plugin and every class in the SFC is scanned.
+        '@aihu/css-engine': aihuDep('@aihu/css-engine'),
         // Peer of `@aihu/runtime`, not of anything listed here directly — which
         // is why two passes missed it. `@aihu/runtime` and `@aihu/arbor` declare
         // ZERO runtime dependencies and express every edge as a peer, so what
@@ -118,8 +122,52 @@ export function agentPackageJson(name: string, pm: PkgManager = 'bun'): string {
 /** vite.config.ts — client-target compiler + proxy to the Bun bridge server. */
 export function agentViteConfig(): string {
   const lines = [
+    "import { readFileSync } from 'node:fs'",
     "import { aihuCompilerPlugin } from '@aihu/compiler'",
     "import { defineConfig } from 'vite'",
+    '',
+    '// The project theme: the values @aihu/css-engine utility classes and this',
+    "// component's authored CSS fall back to, in place of the built-in",
+    '// `aihu-default` palette. Tokens compile to `var(--name, <value>)`, so a',
+    '// stylesheet that sets them at :root still wins at runtime — the theme only',
+    '// supplies the fallback half.',
+    '//',
+    '// Read as TEXT rather than passed as a path on purpose. The documented',
+    "// `css: { theme: './src/theme.css' }` option belongs to @aihu/app's",
+    '// `viteAihuPlugin`, which resolves the path and reads the file before',
+    '// forwarding the CONTENT to the compiler. This template deliberately uses the',
+    '// bare client-target compiler plugin (no router, no pages, no @aihu/app), so',
+    '// it does that one step itself rather than taking the whole meta-framework on',
+    '// as a dependency for one option.',
+    "const theme = readFileSync(new URL('./src/theme.css', import.meta.url), 'utf8')",
+    '',
+    '// ── One theme file, two consumers. ─────────────────────────────────────────',
+    '//',
+    '// `theme` above is BUILD-TIME input: the engine bakes each value in as the',
+    '// `var(--name, <value>)` fallback that utility classes compile to.',
+    '//',
+    '// Nothing has SET those properties at runtime yet, though, and authored CSS',
+    '// in the SFC writes its own fallbacks by hand — so after you edit the theme',
+    '// the two halves would disagree, because only the utilities get regenerated.',
+    '// Setting the tokens at :root removes the question: a set value beats every',
+    '// fallback, and custom properties inherit through shadow boundaries.',
+    '//',
+    '// The runtime sheet is DERIVED rather than hand-maintained as a second block:',
+    '// one list, no drift. It cannot simply be the same file imported directly —',
+    "// `@theme` is not a real at-rule, so lightningcss warns 'Unknown at rule:",
+    "// @theme' on every build and ships the block as dead bytes.",
+    "const VIRTUAL_THEME = 'virtual:aihu-theme.css'",
+    "const themeRuntime = theme.replace(/@theme\\s*\\{/, ':root {')",
+    '',
+    'const themeRuntimePlugin = {',
+    "  name: 'aihu-theme-runtime',",
+    '  resolveId(id: string) {',
+    "    return id === VIRTUAL_THEME ? '\\0' + VIRTUAL_THEME : undefined",
+    '  },',
+    '  load(id: string) {',
+    "    return id === '\\0' + VIRTUAL_THEME ? themeRuntime : undefined",
+    '  },',
+    '}',
     '',
     '// The app is TWO origins behind one URL: Vite serves the page, the Bun',
     '// server (server.ts) serves the agent surface. Everything an agent needs —',
@@ -157,7 +205,13 @@ export function agentViteConfig(): string {
     '// opaque-ID dispatcher; src/main.ts takes it off the mounted element and runs',
     '// the capability-bridge client.',
     'export default defineConfig({',
-    "  plugins: [aihuCompilerPlugin({ target: 'client' })],",
+    '  plugins: [',
+    '    aihuCompilerPlugin({',
+    "      target: 'client',",
+    '      css: { theme },',
+    '    }),',
+    '    themeRuntimePlugin,',
+    '  ],',
     '  server: { proxy: AGENT_SURFACE },',
     '  // `vite preview` serves the built page; the agent surface still comes from',
     '  // the running Bun server, so proxy it there too.',
@@ -225,7 +279,10 @@ export function agentModuleShim(): string {
 // `$action` in src/task-list.aihu — keep the two in step.
 const METADATA_ACTIONS = [
   "    addTask: { describe: 'Append a task with the given text.', returns: {} },",
-  "    clearTasks: { describe: 'Remove all tasks.', returns: {} },",
+  '    toggleTask: {',
+  "      describe: 'Mark the task with this id done or not done.',",
+  '      returns: {},',
+  '    },',
   "    setLabel: { describe: 'Set the panel heading text.', returns: {} },",
   '    setVariant: {',
   '      describe:',
@@ -233,14 +290,28 @@ const METADATA_ACTIONS = [
   '      returns: {},',
   '    },',
 ]
-/** Readable state, surfaced as the llms.txt `## Components` State list. */
+/**
+ * Readable state, surfaced as the llms.txt `## Components` State list.
+ *
+ * These are the component's TIER 0 + TIER 1 members — the `expose: 'read'` prop
+ * and the two exposed `derived`s. They are deliberately the only readable names:
+ * `draft`, `filter` and `calls` are view state a person owns, and publishing
+ * them would widen the agent surface for no benefit to either audience.
+ */
 const METADATA_STATE = [
-  "    length: 'Number of tasks currently on the list.',",
-  "    count: 'Alias of length — number of tasks currently on the list.',",
+  "    owner: 'Display name of the person this list belongs to.',",
+  "    remaining: 'Count of tasks not yet done.',",
+  "    total: 'Total number of tasks on the list.',",
 ]
+/**
+ * The server-side twin's action map — one entry per TIER 2 action, and NO entry
+ * for any tier 3 action. The omission is the enforcement: a name absent here is
+ * a name `/agent/call` answers 404 for, so `clearAll` and `removeTask` cannot be
+ * reached by an agent even with a valid `tasks:write` credential.
+ */
 const BINDING_ACTIONS = [
   '        addTask: () => twinLen(),',
-  '        clearTasks: () => twinLen(),',
+  '        toggleTask: () => twinLen(),',
   '        setLabel: () => twinLen(),',
   '        setVariant: () => twinLen(),',
 ]
@@ -502,15 +573,57 @@ export function agentServerTs(): string {
     '  checkScope: (jwt: string, scope: string) =>',
     "    jwt.split(',').map((x) => x.trim()).includes(scope),",
     '}',
-    '// rateLimitPlugin: in-memory counter; rateSpec is "max calls per key".',
+    '// rateLimitPlugin: in-memory counter, keyed by VERIFIED subject.',
+    '//',
+    '// `rateSpec` arrives in the shape the compiler lowers `$rate-limit 60` to:',
+    "// the string '60/min'. Parse the leading integer rather than calling",
+    "// Number() on the whole thing — Number('60/min') is NaN, which a `|| max`",
+    '// fallback would silently paper over, leaving every component on the default',
+    '// limit no matter what its @agent block declared. A governance control that',
+    '// fails open while looking like it works is worse than no control.',
     'const _rl = new Map<string, number>()',
+    'function parseRate(spec: string): number {',
+    "  if (spec === 'unlimited') return Number.POSITIVE_INFINITY",
+    '  const n = Number.parseInt(spec, 10)',
+    '  return Number.isFinite(n) && n > 0 ? n : 60',
+    '}',
     'const rateLimitPlugin = {',
     '  checkRateLimit: (rateSpec: string, key: string) => {',
-    '    const max = Number(rateSpec) || 5',
+    '    const max = parseRate(rateSpec)',
     '    const n = (_rl.get(key) ?? 0) + 1',
     '    _rl.set(key, n)',
     '    return n <= max',
     '  },',
+    '}',
+    '',
+    '// ── The decision log — governance made VISIBLE. ────────────────────────────',
+    '// Every /agent/call verdict, refusals included, in a small ring buffer the',
+    '// page polls at /agent/log. This exists because of an asymmetry that is easy',
+    '// to miss: an APPROVED call reaches the browser over the bridge, so the page',
+    '// can see it. A REFUSED call never does — the gate stops it here, which is',
+    '// the entire point of a server-side gate. Without this log the human audience',
+    '// would only ever see the agent succeed, and the governance story would be',
+    '// invisible in the one place it most needs to be legible.',
+    'type GateCall = { at: number; tool: string; code: number; note: string }',
+    'const LOG_MAX = 25',
+    'const _log: GateCall[] = []',
+    'function record(tool: string, code: number, note: string): void {',
+    '  _log.unshift({ at: Date.now(), tool, code, note })',
+    '  if (_log.length > LOG_MAX) _log.length = LOG_MAX',
+    '}',
+    '',
+    '/**',
+    ' * Map a gate result onto the status the log (and the UI) speaks.',
+    ' *',
+    ' * The transport is always 200 — the verdict is in the BODY — so this reads',
+    ' * the envelope rather than a response status. An approved call has a',
+    ' * `result`; a refused one has `error` + `code`.',
+    ' */',
+    'function verdict(r: unknown): { code: number; note: string } {',
+    '  const e = (r ?? {}) as { error?: unknown; code?: unknown }',
+    "  if (e.error === undefined) return { code: 200, note: 'ok' }",
+    "  const code = typeof e.code === 'number' ? e.code : 400",
+    '  return { code, note: String(e.error) }',
     '}',
     '',
     '// A server-mounted twin so the gate can resolve the tag. It is NEVER executed',
@@ -527,10 +640,10 @@ export function agentServerTs(): string {
     '      actions: {',
     ...BINDING_ACTIONS,
     '      },',
-    '      reads: { length: () => twinLen(), count: () => twinLen() },',
+    '      reads: { owner: () => twinLen(), remaining: () => twinLen(), total: () => twinLen() },',
     '      writes: {},',
     "      scope: 'tasks:write',",
-    "      rateLimit: '5',",
+    "      rateLimit: '60/min',",
     '    },',
     '  },',
     '  authPlugin,',
@@ -585,10 +698,20 @@ export function agentServerTs(): string {
     "        userId: body.userId ?? 'demo-agent',",
     "        jwt: body.jwt ?? '',",
     '      })',
+    '      // Log the verdict BEFORE returning, so a refusal is on the page by the',
+    "      // time the caller reads its own 403. The page's poll is what makes the",
+    '      // gate observable to the human sitting in front of it.',
+    '      const v = verdict(result)',
+    '      record(body.tool, v.code, v.note)',
     '      return Response.json(result)',
     '    }',
     "    if (url.pathname === '/agent/state') {",
     '      return Response.json(server.serialize())',
+    '    }',
+    '    // Read-only and unauthenticated: it carries verdicts, never credentials',
+    '    // or parameters. The page polls it every 2s to render the call log.',
+    "    if (url.pathname === '/agent/log') {",
+    '      return Response.json(_log)',
     '    }',
     "    return new Response('not found', { status: 404 })",
     '  },',
@@ -616,9 +739,10 @@ export function agentServerTs(): string {
     '  },',
     '})',
     '',
-    "console.log('[agent] API + bridge on http://localhost:' + PORT + ' (actions gated: scope tasks:write, 5/key)')",
+    "console.log('[agent] API + bridge on http://localhost:' + PORT + ' (actions gated: scope tasks:write, 60/min)')",
     "console.log('  POST /agent/call   { tool, params, userId, jwt }   drive the component')",
     "console.log('  GET  /agent/state                                  read current state')",
+    "console.log('  GET  /agent/log                                    gate verdicts, refusals included')",
     "console.log('  WS   /bridge                                       browser capability bridge')",
     "console.log('  GET  ' + READINESS_PATHS.join(', ') + '   discovery surface')",
     '',
@@ -638,6 +762,11 @@ export function agentMainTs(): string {
     "import { createBridgeClient } from '@aihu/agent-server'",
     "import type { BridgeChannel } from '@aihu/agent-server'",
     "import { _takeAgentDispatcher } from '@aihu/runtime'",
+    '',
+    '// Side-effect import: the :root half of the project theme. Without this the',
+    '// custom properties are never SET, and every rule falls back to the value',
+    '// baked in at build time — see the long note at the top of src/theme.css.',
+    "import 'virtual:aihu-theme.css'",
     '',
     '// Side-effect import: compiles + registers the custom element.',
     "import './task-list.aihu'",
@@ -681,9 +810,19 @@ export function agentMainTs(): string {
     '    createBridgeClient({',
     '      dispatcher,',
     '      channel: wrapBrowserWs(ws),',
-    '      serialize: () => ({',
-    "        taskCount: (el.shadowRoot ?? el).querySelectorAll('.tl-item').length,",
-    '      }),',
+    '      // What GET /agent/state reports. Mirrors the three readable names in',
+    '      // the registry (owner, remaining, total) so an agent that read the MCP',
+    '      // card finds the same vocabulary here instead of a second one.',
+    '      serialize: () => {',
+    '        const root = el.shadowRoot ?? el',
+    "        const items = root.querySelectorAll('.tl-item')",
+    "        const done = root.querySelectorAll('.tl-item.done')",
+    '        return {',
+    "          owner: el.getAttribute('owner') ?? 'Alex',",
+    '          total: items.length,',
+    '          remaining: items.length - done.length,',
+    '        }',
+    '      },',
     '    })',
     "    console.log('[agent] bridge connected — the agent can now drive this instance')",
     '  })',
@@ -702,209 +841,505 @@ export function agentMainTs(): string {
   return lines.join('\n')
 }
 
-/** src/task-list.aihu — the durable, human+agent-drivable, RESKINNABLE component. */
+/**
+ * src/task-list.aihu — the dual-audience showcase.
+ *
+ * ONE component instance. TWO callers. TWO governance regimes.
+ *
+ * A human clicks it in the browser. An external AI agent drives the SAME live
+ * instance over the capability bridge. They are not equals: what each may do is
+ * decided by a four-tier ladder declared right here in `@state`, and enforced
+ * server-side by `server.ts`. The ladder IS the lesson — every member below is
+ * annotated with which caller reaches it and what stops the other one.
+ *
+ * The template is also the corpus's widest proven-construct sample (the
+ * "kitchen sink"): prop with attribute/reflect, state, derived, action, effect,
+ * onMount/onDispose, aria(), if/elseif/else, each+key+empty, show, bind:value,
+ * class:, on:*.prevent, <group>, and the standalone `@agent` block —
+ * every one of them already exercised elsewhere in the corpus, so a fresh
+ * scaffold compiles.
+ *
+ * Styling comes from `@aihu/css-engine` utility classes resolved against
+ * `src/theme.css`, with a short authored `@style` block for the few rules the
+ * utility vocabulary does not cover.
+ */
 export function agentComponentAihu(): string {
-  return `@state {
-  import { signal, effect } from '@aihu/signals'
+  return `<!--
+  task-list — one instance, two callers, two governance regimes.
 
-  // Client-durable state: hydrate from localStorage on mount, write back on
-  // every change. Survives a refresh — and because the agent's bridge calls
-  // drive these SAME signals, the agent's reskin persists too. Browser-only;
-  // guarded so any non-browser eval (build/SSR) safely falls back to defaults.
-  // (For state shared across tabs/devices + multiple viewers, move the source
-  // of truth server-side — e.g. a Durable Object / KV behind the agent gate.)
-  const STORE_KEY = 'aihu:task-list:v1'
-  const persisted =
-    typeof localStorage !== 'undefined'
-      ? JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}')
-      : {}
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ TIER            MEMBERS                    HUMAN          AGENT         │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │ 0 public read   owner                      reads          reads, no auth│
+  │ 1 derived read  remaining, total           reads          reads as MCP  │
+  │                                                           resource      │
+  │ 2 governed      addTask, toggleTask,       clicks         needs the     │
+  │   write         setLabel, setVariant       freely         tasks:write   │
+  │                                                           scope + under │
+  │                                                           the rate limit│
+  │ 3 human only    removeTask, clearAll,      clicks         DOES NOT EXIST│
+  │                 setFilter, addFromInput    freely         — no expose:, │
+  │                                                           so never in   │
+  │                                                           the registry  │
+  └─────────────────────────────────────────────────────────────────────────┘
 
-  // The durable list both a human and an agent drive. Each task: { id, text }.
-  const [tasks, setTasks] = signal(persisted.tasks ?? [])
-  const [nextId, setNextId] = signal(persisted.nextId ?? 1)
-  const [draft, setDraft] = signal('') // transient input — not persisted
-  // Agent-RESKINNABLE state: the heading text + the visual variant. An agent
-  // sets these on the live instance — molding a vanilla component into a styled one.
-  // The signal setters are named writeLabel/writeVariant so they don't collide
-  // with the agent-facing setLabel/setVariant $actions below (same name → the
-  // compiler would emit two top-level \`const setLabel\`).
-  const [label, writeLabel] = signal(persisted.label ?? 'Tasks')
-  const [variant, writeVariant] = signal(persisted.variant ?? 'default')
+  Two different mechanisms do the governing, and confusing them is the most
+  common way to ship an open door:
 
-  // Persist the durable slice on any change (effect re-runs when a signal it
-  // reads changes). draft is intentionally excluded.
-  effect(() => {
-    if (typeof localStorage === 'undefined') return
-    localStorage.setItem(
-      STORE_KEY,
-      JSON.stringify({ tasks: tasks(), nextId: nextId(), label: label(), variant: variant() }),
-    )
+    HIDING A CONTROL        is UX. It decides what a person is SHOWN. It is
+                            never authorization — anyone with devtools undoes it.
+
+    $scope / $rate-limit    is THE GATE (declared in the agent block at the
+                            bottom of this file). Enforced in server.ts before
+                            a call ever reaches this browser instance, against a
+                            signature-VERIFIED credential. This is the boundary.
+
+  Tier 3 is the strongest statement of the two-audience split, and it is neither
+  of the above: an action with no expose: key is not "forbidden to the agent",
+  it is INVISIBLE to it. It never enters the registry, so it is not in llms.txt,
+  not in the MCP server card, not in the A2A card, and /agent/call answers 404
+  for it — the agent cannot even discover a name it might have tried to guess.
+  The safest permission check is the one that has nothing to check.
+-->
+
+@state {
+  // ── TIER 0 — PUBLIC READ ────────────────────────────────────────────────
+  // expose: 'read' with no scope above it: readable by an agent that presents
+  // no credential at all. attribute/reflect keep the DOM attribute in step so
+  // a plain HTML author sets it without touching JS: <task-list owner="Robin">
+  let owner = prop({
+    default: 'Alex',
+    attribute: 'owner',
+    reflect: true,
+    describe: 'Display name of the person this list belongs to',
+    expose: 'read',
   })
 
-  // Shared mutation — the human input and the agent's addTask both call this, so
-  // both drive the SAME signal state on this one instance.
-  const add = (text) => {
-    const t = (text ?? '').trim()
-    if (!t) return
-    const id = nextId()
-    setTasks([...tasks(), { id, text: t }])
-    setNextId(id + 1)
-  }
+  // ── LOCAL STATE (not on the agent surface at all) ───────────────────────
+  let tasks = state<Array<{ id: number; text: string; done: boolean }>>([])
+  let nextId = state(1)
+  let draft = state('')
+  let label = state('Tasks')
+  let variant = state<'default' | 'compact' | 'danger'>('default')
+  let filter = state<'all' | 'open' | 'done'>('all')
+  // The gate's decision log, polled from server.ts. This is what makes the
+  // governance VISIBLE: a human watching the page sees the agent's refused
+  // calls (401/403/429), not just the ones that landed.
+  let calls = state<Array<{ at: number; tool: string; code: number; note: string }>>([])
+  let inputEl = state<HTMLInputElement | null>(null)
+  let pollTimer = state(0)
 
-  const onDraft = (e) => setDraft(e.target.value)
-  const addFromInput = () => {
-    add(draft())
-    setDraft('')
-  }
+  // ── TIER 1 — DERIVED READ ───────────────────────────────────────────────
+  // An exposed derived becomes a READ-ONLY MCP resource: the agent can observe
+  // the consequence of its writes without being handed a way to forge them.
+  const remaining = derived(
+    { describe: 'Count of tasks not yet done', expose: 'read' },
+    () => tasks.filter(t => !t.done).length)
+  const total = derived(
+    { describe: 'Total number of tasks on the list', expose: 'read' },
+    () => tasks.length)
 
-  $action: {
-    addTask: {
-      describe: 'Append a task with the given text.',
-      expose: { read: true },
-      handler: (args) => add(typeof args?.[0] === 'string' ? args[0] : String(args?.[0] ?? '')),
-    },
-    clearTasks: {
-      describe: 'Remove all tasks.',
-      expose: { read: true },
-      handler: () => setTasks([]),
-    },
-    setLabel: {
-      describe: 'Set the panel heading text.',
-      expose: { read: true },
-      handler: (args) => writeLabel(typeof args?.[0] === 'string' && args[0] ? args[0] : 'Tasks'),
-    },
-    setVariant: {
-      describe: "Set the visual variant: one of 'default', 'compact', 'danger'.",
-      expose: { read: true },
-      handler: (args) => {
-        const v = String(args?.[0] ?? 'default')
-        writeVariant(['default', 'compact', 'danger'].includes(v) ? v : 'default')
-      },
-    },
-  }
+  // Unexposed derived — pure view state for the human UI. The agent has no
+  // business knowing which filter chip a person happens to have clicked.
+  const visible = derived(() => filter === 'all'
+    ? tasks
+    : filter === 'open'
+      ? tasks.filter(t => !t.done)
+      : tasks.filter(t => t.done))
+  const allDone = derived(() => tasks.length > 0 && remaining() === 0)
+  const refused = derived(() => calls.filter(c => c.code >= 400).length)
+
+  // ── TIER 2 — GOVERNED WRITE ─────────────────────────────────────────────
+  // expose: 'read write' — the tier must match what the member DOES. These
+  // mutate state, so 'read' alone would be a lie the registry then publishes.
+  // For the agent every one of these is gated in server.ts by the tasks:write
+  // scope and the rate limit declared in the @agent block below. For the human
+  // they are ordinary click handlers: same code, same instance, no gate.
+  const addTask = action(
+    { describe: 'Append a task with the given text', expose: 'read write' },
+    (text: string) => {
+      const t = String(text ?? '').trim()
+      if (!t) return
+      tasks = [...tasks, { id: nextId, text: t, done: false }]
+      nextId = nextId + 1
+    })
+
+  const toggleTask = action(
+    { describe: 'Mark the task with this id done or not done', expose: 'read write' },
+    (id: number) => {
+      tasks = tasks.map(t => t.id === Number(id) ? { ...t, done: !t.done } : t)
+    })
+
+  const setLabel = action(
+    { describe: 'Set the panel heading text', expose: 'read write' },
+    (text: string) => { label = String(text ?? '').trim() || 'Tasks' })
+
+  const setVariant = action(
+    { describe: "Set the visual variant: one of 'default', 'compact', 'danger'",
+      expose: 'read write' },
+    (v: string) => {
+      const next = String(v ?? 'default')
+      variant = next === 'compact' || next === 'danger' ? next : 'default'
+    })
+
+  // ── TIER 3 — HUMAN ONLY ─────────────────────────────────────────────────
+  // No expose: key. Not "denied to the agent" — INVISIBLE to it. Destructive
+  // and view-only operations both live here: the first because an agent should
+  // not be able to wipe a person's list, the second because it is not the
+  // agent's concern.
+  const removeTask = action((id: number) => {
+    tasks = tasks.filter(t => t.id !== id)
+  })
+  const clearAll = action(() => { tasks = [] })
+  const setFilter = action((f: 'all' | 'open' | 'done') => { filter = f })
+  const addFromInput = action(() => {
+    addTask(draft)
+    draft = ''
+    // Refocus so rapid entry keeps the caret in place.
+    inputEl?.focus()
+  })
+
+  // ── ACCESSIBILITY ───────────────────────────────────────────────────────
+  // The human audience has requirements the agent does not: a screen reader is
+  // a third kind of reader, and it reads the DOM, not the registry.
+  aria({ role: 'region', label: 'Task list' })
+
+  // ── LIFECYCLE ───────────────────────────────────────────────────────────
+  onMount(() => {
+    // Durable across a refresh — and because the agent's approved calls drive
+    // these SAME signals, an agent's reskin survives the reload too.
+    try {
+      const saved = localStorage.getItem('aihu:task-list:v2')
+      if (saved) {
+        const p = JSON.parse(saved)
+        if (Array.isArray(p.tasks)) (tasks = p.tasks)
+        if (typeof p.nextId === 'number') (nextId = p.nextId)
+        if (typeof p.label === 'string') (label = p.label)
+        if (typeof p.variant === 'string') (variant = p.variant)
+      }
+    } catch {
+      // localStorage unavailable (private mode, blocked, corrupted) — start fresh.
+    }
+    // Poll the gate log. The browser never sees a REFUSED call over the bridge
+    // — the gate stops it server-side, which is the whole point — so the only
+    // way to show refusals on the page is to read the server's decision log.
+    const pull = () => {
+      fetch('/agent/log')
+        .then(r => r.json())
+        .then(rows => { if (Array.isArray(rows)) (calls = rows) })
+        .catch(() => {
+          // Bridge server down (\`bun run server\`); the human UI keeps working.
+        })
+    }
+    pull()
+    pollTimer = setInterval(pull, 2000)
+  })
+
+  onDispose(() => { clearInterval(pollTimer) })
+
+  effect(() => {
+    try {
+      localStorage.setItem(
+        'aihu:task-list:v2',
+        JSON.stringify({ tasks, nextId, label, variant }))
+    } catch {
+      // Quota / SecurityError — persistence is best-effort, never fatal.
+    }
+  })
 }
 
 @template {
-  <section class={['tl', variant()]}>
-    <header class="tl-head">
-      <h2 class="tl-title">{label}</h2>
-      <span class="tl-count">{tasks.length}</span>
+  <section class="tl flex flex-col gap-4 p-4 rounded-lg border border-border text-foreground mx-auto" class:compact={variant === 'compact'} class:danger={variant === 'danger'}>
+
+    <header class="flex items-center justify-between gap-3">
+      <h2 class="tl-title text-xl font-semibold text-primary">
+        {owner}'s {label}
+      </h2>
+      <span class="tl-count rounded-full px-3 py-1 text-sm font-semibold bg-primary text-primary-foreground">
+        {remaining} / {total}
+      </span>
     </header>
-    <div class="tl-add">
-      <label class="tl-srlabel" for="tl-new">New task</label>
+
+    <!-- show= keeps the node in the DOM and toggles [hidden]; if= removes it. -->
+    <p class="text-sm font-medium text-success" show={allDone()} role="status">
+      Everything done.
+    </p>
+
+    <!-- on:submit.prevent — the dotted event-modifier surface. ref= captures
+         the element into a signal so addFromInput can refocus it. -->
+    <form class="flex gap-2" on:submit.prevent={addFromInput}>
+      <label class="tl-sr" for="tl-new">New task</label>
       <input
         id="tl-new"
-        class="tl-input"
-        value={draft}
-        on:input={onDraft}
-        on:keydown={(e) => e.key === 'Enter' && addFromInput()}
+        class="tl-input flex-1 px-3 py-2 rounded border border-border"
+        bind:value={draft}
+        ref={inputEl}
         placeholder="Add a task and press Enter"
-      />
-      <button class="tl-btn" on:click={addFromInput}>Add</button>
-      <button class="tl-btn" on:click={() => setTasks([])}>Clear</button>
-    </div>
-    <ul class="tl-items">
-      <li each={task of tasks} key={task.id} class="tl-item">
-        <span class="tl-text">{task.text}</span>
+      >
+      <button class="tl-btn px-3 py-2 rounded border border-primary text-primary font-medium" type="submit">Add</button>
+    </form>
+
+    <ul class="tl-items flex flex-col gap-2">
+      <li
+        each={task of visible}
+        key={task.id}
+        class="tl-item flex items-center gap-3 px-3 py-2 rounded border border-border bg-muted"
+        class:done={task.done}
+      >
+        <input
+          type="checkbox"
+          checked={task.done}
+          on:change={() => toggleTask(task.id)}
+        >
+        <span class="tl-text flex-1 truncate">{task.text}</span>
+        <!-- Tier 3: a human may delete a single task. The agent has no such tool. -->
+        <button class="tl-x text-muted-foreground" on:click={() => removeTask(task.id)} aria-label="Remove task">×</button>
+      </li>
+      <!-- empty — the each-fallback, rendered only when the filter matches nothing. -->
+      <li empty class="px-3 py-2 text-sm text-muted-foreground">
+        Nothing here yet. Add one above, or ask your agent to.
       </li>
     </ul>
+
+    <footer class="flex items-center gap-2 flex-wrap" if={tasks.length > 0}>
+      <button class="tl-chip px-3 py-1 rounded text-sm text-muted-foreground" on:click={() => setFilter('all')}  class:sel={filter === 'all'}>All</button>
+      <button class="tl-chip px-3 py-1 rounded text-sm text-muted-foreground" on:click={() => setFilter('open')} class:sel={filter === 'open'}>Open</button>
+      <button class="tl-chip px-3 py-1 rounded text-sm text-muted-foreground" on:click={() => setFilter('done')} class:sel={filter === 'done'}>Done</button>
+
+      <!-- A destructive control, freely available to the person at the keyboard
+           and UNREACHABLE by the agent. Note what is NOT doing the work here:
+           there is no scope check, no permission flag, no hidden attribute on
+           this button. The only thing standing between an agent and this list
+           is that clearAll carries no expose: key, so the tool does not exist
+           to be called. Absence from the registry IS the enforcement. -->
+      <button class="tl-danger px-3 py-1 rounded text-sm font-medium border border-destructive text-destructive" on:click={clearAll}>
+        Clear all
+      </button>
+    </footer>
+
+    <!-- ── The gate, made visible ──────────────────────────────────────────
+         Every agent call server.ts decided on, refusals included. This is the
+         half of the story a component normally hides: the human sees WHAT the
+         agent tried, not only what it achieved. -->
+    <section class="tl-log flex flex-col gap-2" aria-label="Agent call log">
+      <h3 class="text-sm font-semibold">
+        Agent calls
+        <span class="text-sm font-semibold text-destructive" show={refused() > 0}>· {refused} refused</span>
+      </h3>
+
+      <group if={calls.length === 0}>
+        <p class="text-sm text-muted-foreground">
+          No agent calls yet. Drive this instance from another terminal and watch
+          the rows land here — the refused ones too.
+        </p>
+      </group><group else>
+        <ul class="tl-rows flex flex-col gap-2">
+          <li
+            each={call of calls}
+            key={call.at}
+            class="tl-row flex items-center gap-3 px-3 py-2 rounded border border-destructive text-sm"
+            class:ok={call.code < 400}
+          >
+            <code class="tl-code font-semibold">{call.code}</code>
+            <span class="flex-1 truncate">{call.tool}</span>
+            <!-- if / elseif / else — the agent's refusal, in the words a person
+                 needs, not the words the protocol uses. -->
+            <span class="text-muted-foreground" if={call.code === 404}>no such tool</span>
+            <span class="text-muted-foreground" elseif={call.code === 401}>no credential</span>
+            <span class="text-muted-foreground" elseif={call.code === 403}>missing tasks:write</span>
+            <span class="text-muted-foreground" elseif={call.code === 429}>rate limited</span>
+            <span class="text-muted-foreground" else>{call.note}</span>
+          </li>
+        </ul>
+      </group>
+    </section>
   </section>
 }
 
 @style {
+  /* Utility classes (src/theme.css tokens) carry layout, spacing and the whole
+     palette. What is left here is only what the utility vocabulary cannot say.
+
+     Three kinds of rule, and nothing else:
+       1. tokens with no utility keyword — card, input, and the *-subtle family
+          are not in the engine's hand-curated vocabulary, so they are written by
+          hand against the same tokens;
+       2. variant and state overrides (.compact, .danger, .done, .sel, .ok),
+          which need a compound selector;
+       3. pseudo-classes (:hover, :focus-visible) and the sr-only pattern. */
+
   .tl {
-    --tl-accent: #2b59ff;
-    --tl-border: #e2e2e2;
-    max-width: 32rem;
-    margin: 0 auto;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid var(--tl-border);
-    border-radius: 12px;
-    font-family: system-ui, -apple-system, sans-serif;
-    color: #1a1a1a;
+    max-width: 34rem;
+    background: var(--color-card, #ffffff);
+    font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
   }
-  .tl.compact {
-    padding: 0.6rem 0.8rem;
-    max-width: 24rem;
-    font-size: 0.85rem;
-  }
+  .tl.compact { max-width: 26rem; font-size: 0.9rem; }
   .tl.danger {
-    --tl-accent: #c0392b;
-    --tl-border: #c0392b;
-    background: #fff6f5;
+    border-color: var(--color-destructive, #b4232a);
+    background: var(--color-destructive-subtle, #fff6f5);
   }
-  .tl-head {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-  .tl-title {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--tl-accent);
-  }
-  .tl-count {
-    min-width: 1.5rem;
-    text-align: center;
-    padding: 0.1rem 0.45rem;
-    background: var(--tl-accent);
-    color: #fff;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
-  .tl-add {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-  .tl-srlabel {
+  .tl.danger .tl-title { color: var(--color-destructive, #b4232a); }
+  .tl.danger .tl-count { background: var(--color-destructive, #b4232a); }
+
+  /* Screen-reader-only: present for assistive tech, invisible on screen. The
+     agent reads the registry, a person reads the screen, and a screen-reader
+     user reads the DOM — three audiences, and this one is easiest to forget. */
+  .tl-sr {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
-    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
-  .tl-input {
-    flex: 1;
-    padding: 0.5rem 0.6rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font: inherit;
+
+  .tl-input { background: var(--color-input, #ffffff); color: inherit; font: inherit; }
+  .tl-input:focus-visible {
+    outline: 2px solid var(--color-ring, #2b59ff);
+    outline-offset: 1px;
   }
-  .tl-btn {
-    padding: 0.5rem 0.9rem;
-    cursor: pointer;
-    border: 1px solid var(--tl-accent);
-    border-radius: 8px;
-    background: #fff;
-    color: var(--tl-accent);
-    font: inherit;
+
+  .tl-btn { cursor: pointer; background: transparent; font: inherit; }
+  .tl-btn:hover { background: var(--color-primary-subtle, #eef2ff); }
+
+  .tl-item.done .tl-text {
+    text-decoration: line-through;
+    color: var(--color-muted-foreground, #71717a);
   }
-  .tl-items {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 0.4rem;
+
+  .tl-x { cursor: pointer; border: 0; background: transparent; font-size: 1.1rem; line-height: 1; }
+  .tl-x:hover { color: var(--color-destructive, #b4232a); }
+
+  .tl-chip { cursor: pointer; border: 1px solid transparent; background: transparent; font: inherit; }
+  .tl-chip:hover { border-color: var(--color-border, #e4e4e7); }
+  .tl-chip.sel {
+    border-color: var(--color-primary, #2b59ff);
+    color: var(--color-primary, #2b59ff);
+    font-weight: 600;
   }
-  .tl-item {
-    padding: 0.5rem 0.7rem;
-    background: #fafafa;
-    border: 1px solid #ececec;
-    border-radius: 8px;
+
+  .tl-danger { cursor: pointer; background: transparent; font: inherit; }
+
+  .tl-log { border-top: 1px solid var(--color-border, #e4e4e7); padding-top: 0.75rem; }
+
+  /* A refused call reads red, an approved one green. The log is the only place
+     in this UI where the agent's failures are as visible as its successes, and
+     that is deliberate: a gate nobody can see is a gate nobody trusts. */
+  .tl-row { background: var(--color-destructive-subtle, #fff6f5); }
+  .tl-row.ok {
+    border-color: var(--color-success, #1a7f4b);
+    background: var(--color-success-subtle, #f2fbf6);
   }
+  .tl-code { font-family: var(--font-mono, ui-monospace, monospace); }
+
 }
 
+// The REAL gate — enforced in server.ts against a signature-verified credential
+// before a call ever reaches this browser instance.
+//
+//   $scope       every exposed call needs this claim, or 403.
+//   $rate-limit  calls per minute per verified subject, or 429.
+//
+// Neither applies to the human clicking the page: same instance, same actions,
+// different governance. That asymmetry is the entire template.
 @agent {
-  action addTask()
-  action clearTasks()
-  action setLabel()
-  action setVariant()
+  $scope "tasks:write"
+  $rate-limit 60
 }
 `
+}
+
+/**
+ * src/theme.css — the project palette.
+ *
+ * `@theme` registers `--color-*` / `--font-*` tokens with `@aihu/css-engine`.
+ * Two consumers read them, which is why the file is worth having at all in a
+ * template this small:
+ *
+ *   1. Utility classes in the component's markup (`rounded-lg`, `border`, the
+ *      `bg-*` / `text-*` families) compile against these values.
+ *   2. The component's authored `@style` block references the same tokens as
+ *      `var(--color-primary, …)`, so one edit here retints both halves.
+ *
+ * vite.config.ts reads this file and hands the text to the compiler plugin, so
+ * the values become `var()` FALLBACKS: a stylesheet that sets the same tokens at
+ * `:root` still wins, and a component rendered with no theme loaded at all still
+ * looks right.
+ */
+export function agentThemeCss(): string {
+  const lines = [
+    "/* Project theme — the ONE place this app's palette is defined.",
+    ' *',
+    ' * The file carries the same tokens TWICE, on purpose, because they do two',
+    ' * different jobs and a single block cannot do both:',
+    ' *',
+    ' * Edit the block below and the whole app follows. It is read TWICE, by',
+    ' * vite.config.ts, for two different jobs:',
+    ' *',
+    ' *   BUILD TIME  @aihu/css-engine bakes each value in as the fallback in the',
+    ' *               `var(--name, <value>)` that a utility class like bg-primary',
+    ' *               compiles to. This is what renders if no stylesheet loads.',
+    ' *',
+    ' *   RUN TIME    the same text, with @theme rewritten to :root, is served as',
+    ' *               `virtual:aihu-theme.css` and imported by src/main.ts, so the',
+    ' *               properties are actually SET in the document. A set value',
+    ' *               beats every fallback, and custom properties inherit through',
+    ' *               shadow boundaries, so it reaches inside the component too.',
+    ' *',
+    ' * That second pass is why the authored rules in task-list.aihu (which write',
+    ' * their own var() fallbacks by hand) and the generated utility classes cannot',
+    ' * drift apart after you edit this file: at runtime neither fallback is used.',
+    ' *',
+    ' * IMPORTANT — do not put comments INSIDE the @theme block below.',
+    ' * @aihu/css-engine 0.7.0 does not accept them and fails SILENTLY: the entire',
+    ' * theme is dropped, every token reverts to the built-in aihu-default palette,',
+    ' * and the build still exits 0 with no warning. Comments before, between and',
+    ' * after the blocks are fine. Annotate out here instead.',
+    ' */',
+    '@theme {',
+    '  --color-primary: #2b59ff;',
+    '  --color-primary-foreground: #ffffff;',
+    '  --color-primary-subtle: #eef2ff;',
+    '  --color-background: #ffffff;',
+    '  --color-foreground: #18181b;',
+    '  --color-card: #ffffff;',
+    '  --color-input: #ffffff;',
+    '  --color-border: #e4e4e7;',
+    '  --color-ring: #2b59ff;',
+    '  --color-muted: #fafafa;',
+    '  --color-muted-foreground: #71717a;',
+    '  --color-success: #1a7f4b;',
+    '  --color-success-subtle: #f2fbf6;',
+    '  --color-destructive: #b4232a;',
+    '  --color-destructive-subtle: #fff6f5;',
+    '  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;',
+    '  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;',
+    '}',
+    '',
+    '/* Token roles, since the blocks above cannot carry them:',
+    ' *',
+    ' *   primary / primary-foreground / primary-subtle',
+    ' *     Brand. Heading, count badge, focus ring, Add button.',
+    ' *',
+    ' *   background / foreground / card / input / border / ring / muted',
+    ' *     Surfaces and chrome. muted-foreground carries de-emphasised text: the',
+    ' *     empty state, the filter chips, a completed task.',
+    ' *',
+    ' *   success / success-subtle        an APPROVED agent call in the call log.',
+    ' *   destructive / destructive-subtle',
+    " *     A REFUSED agent call, the Clear all button, and the 'danger' variant an",
+    ' *     agent can set via setVariant. The contrast with success is load-bearing:',
+    ' *     a refusal should be as visible as a success.',
+    ' *',
+    ' *   font-sans / font-mono            body text and the status codes.',
+    ' *',
+    ' * Note: card, input and the *-subtle family have no utility keyword in the',
+    " * engine's hand-curated vocabulary (bg-card and bg-primary-subtle emit",
+    ' * nothing), so task-list.aihu reaches them through authored CSS instead.',
+    ' */',
+    '',
+  ]
+  return lines.join('\n')
 }
 
 /** index.html — mounts <task-list> + the thesis copy and curl one-liner. */
@@ -920,19 +1355,36 @@ export function agentIndexHtml(name: string): string {
     '      body { font-family: system-ui, -apple-system, sans-serif; max-width: 40rem;',
     '        margin: 3rem auto; padding: 0 1rem; color: #1a1a1a; line-height: 1.5; }',
     '      .lede { color: #555; font-size: 0.95rem; margin-bottom: 2rem; }',
+    '      ul.lede { padding-left: 1.25rem; } ul.lede li { margin-bottom: 0.5rem; }',
     '      code { font-family: ui-monospace, monospace; background: #f3f3f3;',
     '        padding: 0.1rem 0.3rem; border-radius: 4px; }',
     '    </style>',
     '  </head>',
     '  <body>',
-    '    <h1>Agent-driven, durable component</h1>',
+    '    <h1>One component. Two callers. Two rulebooks.</h1>',
     '    <p class="lede">',
-    '      The &lt;task-list&gt; below is a real aihu custom element with durable signal',
-    '      state. Add tasks yourself — then drive AND reskin the same on-screen instance',
-    '      as an agent would (authorized + rate-limited, executed here in the browser):',
+    '      The &lt;task-list&gt; below is a real aihu custom element with durable state.',
+    '      Add tasks yourself — you are the ungoverned caller, you just click. Then',
+    '      drive the SAME on-screen instance as an agent, where every call is checked',
+    '      first:',
     '      <br /><br />',
     '      <code>curl -XPOST localhost:5208/agent/call -H \'content-type: application/json\' -d \'{"tool":"task-list/setVariant","params":["danger"],"userId":"u1","jwt":"tasks:write"}\'</code>',
     '    </p>',
+    '    <p class="lede">',
+    '      Now try the refusals — they are the interesting half, and they show up in',
+    "      the component's own call log as they happen:",
+    '    </p>',
+    '    <ul class="lede">',
+    '      <li><strong>403</strong> — drop the scope:',
+    '        <code>\'{"tool":"task-list/addTask","params":["x"],"userId":"u1","jwt":"tasks:read"}\'</code></li>',
+    '      <li><strong>401</strong> — drop the credential:',
+    '        <code>\'{"tool":"task-list/addTask","params":["x"],"userId":"u1","jwt":""}\'</code></li>',
+    '      <li><strong>404</strong> — ask for a human-only action. <code>clearAll</code> is',
+    '        real and on the page, but it carries no <code>expose:</code>, so no such tool',
+    '        exists to an agent:',
+    '        <code>\'{"tool":"task-list/clearAll","params":[],"userId":"u1","jwt":"tasks:write"}\'</code></li>',
+    '      <li><strong>429</strong> — past 60 calls a minute for one verified subject.</li>',
+    '    </ul>',
     '    <p class="lede">',
     '      An agent that has only this URL discovers the rest for itself:',
     '      <a href="/llms.txt">llms.txt</a> ·',
@@ -1000,7 +1452,7 @@ export function agentMcpTs(): string {
     '      actions: {',
     ...BINDING_ACTIONS,
     '      },',
-    '      reads: { length: () => twinLen(), count: () => twinLen() },',
+    '      reads: { owner: () => twinLen(), remaining: () => twinLen(), total: () => twinLen() },',
     '      writes: {},',
     '      scope: undefined,',
     '      rateLimit: undefined,',
@@ -1087,11 +1539,33 @@ export function agentReadme(name: string): string {
   const lines = [
     `# ${name}`,
     '',
-    'An **agent-drivable** aihu app: a durable `<task-list>` Web Component that a human',
-    'and an AI agent both drive — and that an agent can **reskin live** (set the heading',
-    'text, switch the visual variant). The agent reaches the *same visible instance* over',
-    'a server-mediated capability bridge — the server is the policy gate, the browser is',
-    'the executor. The UI the user sees is the UI the agent molds.',
+    'One `<task-list>` Web Component. Two callers. Two rulebooks.',
+    '',
+    'A human clicks it. An AI agent drives the **same visible instance** over a',
+    'server-mediated capability bridge — the server is the policy gate, the browser is the',
+    'executor. They are not equals, and the difference is the point of this template:',
+    'what each caller may do is decided by a four-tier ladder declared in',
+    '`src/task-list.aihu` and enforced by `server.ts`.',
+    '',
+    '## The tier ladder',
+    '',
+    '| Tier | Members | Human | Agent |',
+    '| --- | --- | --- | --- |',
+    '| 0 · public read | `owner` | reads | reads, no credential needed |',
+    '| 1 · derived read | `remaining`, `total` | reads | reads as an MCP resource |',
+    '| 2 · governed write | `addTask`, `toggleTask`, `setLabel`, `setVariant` | clicks freely | needs the `tasks:write` scope, under 60/min |',
+    '| 3 · human only | `clearAll`, `removeTask`, `setFilter`, `addFromInput` | clicks freely | **does not exist** |',
+    '',
+    'Tier 3 is the one worth studying. An action with no `expose:` key is not *forbidden*',
+    'to the agent, it is **invisible** to it: it never enters the registry, so it is not in',
+    '`llms.txt`, not in the MCP server card, not in the A2A card, and `/agent/call` answers',
+    '404 for it. There is no permission flag to misconfigure and no scope to leak, because',
+    'there is nothing to check. Absence from the registry IS the enforcement.',
+    '',
+    'Hiding a control in the UI is a different thing entirely, and never authorization —',
+    "anyone with devtools undoes it. `$scope` / `$rate-limit` in the component's agent",
+    'block is the boundary, checked in `server.ts` against a signature-verified credential',
+    'before a call ever reaches the browser.',
     '',
     '## Run it',
     '',
@@ -1100,9 +1574,10 @@ export function agentReadme(name: string): string {
     'bun run dev      # Bun bridge server (:5208) + Vite (:5108)',
     '```',
     '',
-    'Open the Vite URL, add tasks with the input — then drive + reskin the SAME instance',
-    'as an agent would. Actions are **authorized** (`tasks:write` scope) and **rate-limited**',
-    '(5/key), so you can see every guardrail:',
+    'Open the Vite URL and add tasks with the input — you are the ungoverned caller, you',
+    'just click. Then drive the SAME instance as an agent, where every call is checked',
+    'first. The component renders its own **call log**, refusals included, so you can watch',
+    'the gate work instead of reading about it:',
     '',
     '```bash',
     '# authorized — adds a task, then reskins the live component:',
@@ -1115,7 +1590,18 @@ export function agentReadme(name: string): string {
     "curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \\",
     '  -d \'{"tool":"task-list/addTask","params":["x"],"userId":"u1","jwt":"tasks:read"}\'',
     '',
-    '# more than 5 calls per key → 429 RATE_LIMITED.',
+    '# no credential → 401 AUTH_REQUIRED:',
+    "curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \\",
+    '  -d \'{"tool":"task-list/addTask","params":["x"],"userId":"u1","jwt":""}\'',
+    '',
+    '# a tier 3 action → 404. clearAll is real, and on the page, and has no expose: key:',
+    "curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \\",
+    '  -d \'{"tool":"task-list/clearAll","params":[],"userId":"u1","jwt":"tasks:write"}\'',
+    '',
+    '# past 60 calls a minute for one verified subject → 429 RATE_LIMITED.',
+    '',
+    '# every verdict above, as the page sees it:',
+    'curl -s localhost:5208/agent/log | jq .',
     '```',
     '',
     'The transport status is always 200 — the outcome is the `code` in the JSON body',
@@ -1125,6 +1611,19 @@ export function agentReadme(name: string): string {
     'The on-screen component re-titles + re-skins (try variants `default` / `compact` /',
     '`danger`). The gate (auth + rate-limit) lives in `server.ts` — demo-grade plugins you',
     'swap for `@aihu/auth` + a real store in production.',
+    '',
+    '## Theming',
+    '',
+    '`src/theme.css` is the whole palette, and `vite.config.ts` reads it twice: once as',
+    'build-time input to `@aihu/css-engine` (so utility classes like `bg-primary` compile',
+    'with your values baked in as `var()` fallbacks), and once rewritten to `:root` and',
+    'served as `virtual:aihu-theme.css` (so the properties are actually set at runtime).',
+    "Edit one block, rebuild, and both the utility classes and the component's authored",
+    'CSS follow.',
+    '',
+    '> **Do not put comments inside the `@theme { … }` block.** `@aihu/css-engine` 0.7.0',
+    '> drops the entire theme when it meets one, silently — the build still exits 0 and the',
+    '> page quietly renders the built-in palette instead of yours.',
     '',
     '## Discovery — how an agent finds all this',
     '',
