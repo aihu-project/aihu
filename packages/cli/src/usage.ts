@@ -37,6 +37,7 @@ export function usageText(): string {
     '  plugin <name>           Scaffold a plugin package',
     '  dev [options]           Start the dev server',
     '  build [options]         Production build',
+    '  deploy [options]        Deploy via the configured platform adapter',
     '  migrate <files...>      Migrate legacy SFC syntax to v1.0+ canonical forms',
     '  add <names...>          Copy styled recipes from @aihu/ui into ui.target',
     '  list [--installed]      List registry recipes (--installed: only copied ones)',
