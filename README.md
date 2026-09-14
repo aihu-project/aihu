@@ -11,24 +11,22 @@
   and the MCP tools their AI agent uses. Same instance. Same policy.
 </p>
 
-[![CI](https://github.com/aihu-project/aihu/actions/workflows/plan-a.yml/badge.svg)](https://github.com/aihu-project/aihu/actions/workflows/plan-a.yml)
-[![release](https://github.com/aihu-project/aihu/actions/workflows/release.yml/badge.svg)](https://github.com/aihu-project/aihu/actions/workflows/release.yml)
-[![@aihu/signals on npm](https://img.shields.io/npm/v/@aihu/signals.svg?label=@aihu/signals)](https://www.npmjs.com/package/@aihu/signals)
-[![MCP](https://img.shields.io/badge/MCP-compatible-blue?logo=anthropic)](#compliance)
-[![Agent Ready](https://img.shields.io/badge/agent--ready-yes-brightgreen)](#compliance)
-
----
-
 <p align="center">
   <a href="https://github.com/aihu-project/aihu/actions/workflows/plan-a.yml"><img src="https://github.com/aihu-project/aihu/actions/workflows/plan-a.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.npmjs.com/package/@aihu/runtime"><img src="https://img.shields.io/npm/v/@aihu/runtime.svg?label=@aihu/runtime" alt="npm"></a>
-  <img src="https://img.shields.io/badge/MCP-compatible-blue?logo=anthropic" alt="MCP">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
+  <a href="https://github.com/aihu-project/aihu/actions/workflows/release.yml"><img src="https://github.com/aihu-project/aihu/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+  <a href="#the-whole-idea-in-one-file"><img src="https://img.shields.io/badge/MCP-compatible-blue?logo=anthropic" alt="MCP compatible"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
 </p>
 
 <p align="center">
-  <!-- TODO: replace with the agent-visible-demo GIF (SPEC-agent-visible-demo §6) -->
-  <img src="brand/demo.gif" alt="A user types 'add milk, eggs, and bread' and an agent adds three rows to the list they are looking at" width="720">
+  <a href="https://www.npmjs.com/package/create-aihu"><img src="https://img.shields.io/npm/v/create-aihu?label=create-aihu" alt="create-aihu on npm"></a>
+  <a href="https://www.npmjs.com/package/@aihu/runtime"><img src="https://img.shields.io/npm/v/@aihu/runtime?label=%40aihu%2Fruntime" alt="@aihu/runtime on npm"></a>
+  <a href="https://www.npmjs.com/package/@aihu/compiler"><img src="https://img.shields.io/npm/v/@aihu/compiler?label=%40aihu%2Fcompiler" alt="@aihu/compiler on npm"></a>
+  <a href="https://www.npmjs.com/package/@aihu/cli"><img src="https://img.shields.io/npm/v/@aihu/cli?label=%40aihu%2Fcli" alt="@aihu/cli on npm"></a>
+</p>
+
+<p align="center">
+  <img src="brand/demo.gif" width="720" alt="A user types 'add milk, eggs, and bread' and an agent adds three rows to the list they are looking at">
 </p>
 
 ```bash
@@ -37,39 +35,100 @@ npx create-aihu my-app --template agent
 
 ---
 
-## The whole idea in 25 lines
-
+## The whole idea in one file
+ 
+A task list a person and their agent share. The person clicks; the agent calls tools. Same instance, same policy, one declaration.
+ 
 ```aihu
 @state {
-  let count = state(0)
-
-  const increment = action(
-    { describe: 'Add 1 to the counter', expose: 'read write' },
-    () => { count = count + 1 })
-  const reset = action(
-    { describe: 'Reset the counter to 0', expose: 'read write' },
-    () => { count = 0 })
+  let owner = prop({
+    default: '',
+    describe: 'Whose list this is',
+    expose: 'read' })
+ 
+  let tasks = state<{ id: number; text: string; done: boolean }[]>([])
+  let nextId = state(1)
+ 
+  // Exposed derived state becomes an MCP resource the agent can read.
+  const remaining = derived(
+    { describe: 'Count of tasks not yet done', expose: 'read' },
+    () => tasks.filter(t => !t.done).length)
+ 
+  // Exposed actions become MCP tools (and A2A skills).
+  const addTask = action(
+    { describe: 'Append a task with the given text', expose: 'read write' },
+    (text: string) => {
+      tasks = [...tasks, { id: nextId, text, done: false }]
+      nextId = nextId + 1 })
+ 
+  const toggleTask = action(
+    { describe: 'Mark the task with this id done or not done', expose: 'read write' },
+    (id: number) => { tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t) })
+ 
+  // No expose: people can click it; it does not exist to the agent.
+  const clearAll = action(() => { tasks = [] })
 }
-
+ 
 @template {
-  <section class="counter">
-    <h1>Count: {count}</h1>
-    <button on:click={reset}>Reset</button>
-    <button on:click={increment}>+</button>
-  </section>
+  <h2>{owner}'s tasks <small>{remaining} left</small></h2>
+  <group if={tasks.length === 0}>
+    <p>Nothing yet. Ask your agent to add something.</p>
+  </group><group else>
+    <ul>
+      <li each={task of tasks} key={task.id} data-done={task.done}>
+        <input type="checkbox" checked={task.done} on:change={() => toggleTask(task.id)}>
+        {task.text}
+      </li>
+    </ul>
+  </group>
+  <guard scope="admin">
+    <button on:click={clearAll}>Clear all</button>
+  </guard>
 }
-
-@style {
-  .counter { display: grid; gap: 0.75rem; }
+ 
+@agent {
+  $scope "authenticated"   // JWT claim required before any exposed call
+  $rate-limit 60           // calls per minute, enforced server-side
 }
 ```
-
-- `state(0)` is a reactive field. Read it as `count`, assign to write it, and the DOM updates on the touched node.
-- `action({ expose: 'read write' }, fn)` is an ordinary method. Because it carries `expose`, the compiler **also** emits an MCP tool schema for it, and an agent can call it on the live instance.
-- The template is plain HTML with `{expr}` bindings, type-checked as TypeScript.
-- The output is a standard custom element. No virtual DOM, no shipped framework, light DOM by default.
-
-Nothing is reachable by an agent unless you write `expose`. Entitlement is resolved server-side, and what you did not expose does not exist to the agent.
+ 
+### What that one file produces
+ 
+| You wrote | The compiler emits | Who uses it |
+|---|---|---|
+| The file | A standard custom element, `<task-list>`, no framework runtime shipped | The person's browser |
+| `action({ expose: 'read write' })` ×2 | MCP tools `task-list/addTask` and `task-list/toggleTask` | Claude, Cursor, any MCP client |
+| `prop` / `derived` with `expose: 'read'` ×2 | MCP resources `owner` and `remaining` | Same |
+| Those same actions | A2A skills with the same ids, plus `/.well-known/agent-card.json` | Other agents |
+| Every `expose:` | `task-list.agent-manifest.json`, which feeds `llms.txt` and the MCP server card | Crawlers and agent discovery |
+| `@agent { $scope, $rate-limit }` | A server-side gate that answers 404 → 401 → 403 → 429, in that fixed order | The server, as sole policy authority |
+| No `expose` on `clearAll` | Nothing. The agent cannot see it | |
+| `<guard scope="admin">` | The button renders only for people holding the claim | The person's browser |
+ 
+### How to read it
+ 
+- **`state`, `prop`, `derived`, `action`** are plain TypeScript to your editor and `tsc`. The compiler lowers them to reactive declarations. Reads are bare (`tasks`), writes are plain assignment.
+- **`expose` is a permission, not a comment.** `'read'` lets an agent read a value. `'read write'` lets it call an action. Anything without `expose` is not on the agent's map at all.
+- **Two audiences, two gates, one place.** `clearAll` is hidden from agents by omission and hidden from unprivileged people by `<guard>`. Both decisions live next to the code they protect.
+- **Policy never rides the wire.** The browser holds the live instance; the server holds the policy. An agent call is checked on the server, then dispatched to the mounted element the person is looking at.
+- **The agent surface costs the person nothing.** Client builds elide every schema, manifest, and agent path. Zero bytes.
+- **`<guard>` is UX, not authorization.** The server enforces the same scope. The template guard just keeps the button honest.
+### Try it against the live instance
+ 
+```bash
+npx create-aihu my-app --template agent
+cd my-app && bun install && bun run dev      # UI on :5108, agent bridge on :5208
+```
+ 
+```bash
+# Add a task from outside the browser and watch the row appear on screen
+curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \
+  -d '{"tool":"task-list/addTask","params":["Write the launch post"]}'
+ 
+# Try something that was never exposed and watch the gate refuse it
+curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \
+  -d '{"tool":"task-list/clearAll","params":[]}'
+```
 
 ---
 
