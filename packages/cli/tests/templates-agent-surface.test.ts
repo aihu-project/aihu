@@ -244,10 +244,16 @@ describe('agent template · theme.css', () => {
   })
 
   it('has NO comment inside the @theme block', () => {
-    // @aihu/css-engine 0.7.0 drops the ENTIRE theme when a comment appears
-    // inside the braces — silently, with a build that still exits 0 and a page
-    // that quietly renders the built-in palette. This guard is the only thing
-    // between that bug and a scaffold that looks fine and is not themed.
+    // @aihu/css-engine 0.7.0 and earlier dropped the ENTIRE theme when a comment
+    // appeared inside the braces — silently, with a build that still exited 0 and
+    // a page that quietly rendered the built-in palette. Fixed in 0.7.1 by this
+    // PR's mask_comments change in aihu-css-core.
+    //
+    // The assertion stays because the scaffold must be correct on the engine a
+    // user ACTUALLY installs, not only on the one in this workspace: the template
+    // pins `^0.7.0`, so a resolution that predates the fix is still reachable —
+    // from a stale lockfile, an offline cache, or a pinned platform binary. The
+    // prose lives outside the block either way, so keeping it costs nothing.
     const open = theme.indexOf('@theme {')
     const body = theme.slice(open, theme.indexOf('\n}', open))
     expect(body).not.toContain('/*')
