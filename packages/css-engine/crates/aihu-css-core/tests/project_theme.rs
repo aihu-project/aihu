@@ -34,6 +34,26 @@ fn project_theme_replaces_default_fallback_values() {
 }
 
 #[test]
+fn project_theme_with_a_comment_inside_the_block_is_not_silently_dropped() {
+    // End-to-end regression for aihu#848: "@aihu/css-engine 0.7.0 drops the
+    // entire theme when a comment appears inside @theme { }" — silently, with
+    // the build still exiting 0 and every token reverting to the built-in
+    // default. This reproduces the failure at the same observable level (the
+    // compiled utility class's fallback value) rather than only at the
+    // internal parser unit.
+    let css = compile_sfc_scoped(&sfc(
+        None,
+        r#","theme":"@theme {\n  /* project palette override */\n  --color-primary: #0a7;\n}""#,
+    ))
+    .unwrap();
+    assert!(
+        css.contains("background-color: var(--color-primary, #0a7)"),
+        "a comment inside the @theme block dropped the project override:\n{css}"
+    );
+    assert!(!css.contains("#1a1d24"), "fell back to the built-in default:\n{css}");
+}
+
+#[test]
 fn project_theme_accepts_a_bare_declaration_list() {
     let css = compile_sfc_scoped(&sfc(None, r#","theme":"--color-primary: #0a7;""#)).unwrap();
     assert!(css.contains("background-color: var(--color-primary, #0a7)"), "{css}");
