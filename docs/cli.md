@@ -184,6 +184,33 @@ bun run build
 bun run preview
 ```
 
+### `aihu deploy [options]`
+
+Deploy the production build via the platform adapter configured in
+`vite.config.ts` (`adapter: cloudflare(...)` or `adapter: vercel()` on
+`viteAihuPlugin`):
+
+- `cloudflare` → runs `wrangler deploy`
+- `vercel` → runs `vercel --prod`
+
+```bash
+aihu deploy
+```
+
+`@aihu/cli` has zero non-Node-builtin dependencies at build time — the
+adapter name is read structurally off the loaded config, and the platform
+CLI (`wrangler` or `vercel`) is resolved from the project's own
+`node_modules`/`PATH` at run time, the same way `aihu dev`/`aihu build`
+resolve Vite. If no adapter is configured, or the configured adapter isn't
+`cloudflare` or `vercel`, `aihu deploy` exits nonzero with a message naming
+the supported adapters.
+
+Flags:
+
+| Flag | Description |
+|------|-------------|
+| `--help`, `-h` | Show usage |
+
 ## Programmatic API
 
 All scaffold functions are exported for use in build scripts:

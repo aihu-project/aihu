@@ -179,7 +179,7 @@ aihu is a full meta-framework, not just a component library. Every layer is usab
 | **Deploy** | `@aihu/adapter-cloudflare`, `@aihu/adapter-vercel` | First-party adapters. |
 | **Tooling** | `@aihu/cli`, `create-aihu`, `@aihu/language-server`, `vscode-aihu` | Scaffolding, dev, build, migrations, diagnostics, completions. |
 
-Every browser-shipped package has an empty `dependencies` list. Per-package size budgets are enforced in CI (`bun run size`). Full package list and versions: [`docs/packages.md`](docs/packages.md).
+Every browser-shipped package has an empty `dependencies` list. Per-package size budgets are enforced in CI (`bun run size`). Full package list and versions: [`packages/`](packages/) (each package's `README.md` has its current version) and the [API reference](apps/docs/src/pages/api/index.aihu).
 
 ---
 
@@ -224,10 +224,10 @@ This is a solo-maintained, research-driven project. Each layer is pinned by a wr
 
 ## Docs
 
-- [Introduction](apps/docs/src/content/docs/introduction.md) · [Getting started](apps/docs/src/content/docs/getting-started.md) · [API reference](apps/docs/src/content/docs/api-reference.md)
-- Guides: [authoring components](apps/docs/src/content/docs/guides) · authoring agents · reactivity · SSR and hydration · routing · data · styling · deployment
+- [Introduction](apps/docs/src/pages/index.aihu) · [Getting started](apps/docs/src/pages/guides/getting-started.aihu) · [API reference](apps/docs/src/pages/api/index.aihu)
+- Guides: [authoring components](apps/docs/src/pages/guides) · authoring agents · reactivity · SSR and hydration · routing · data · styling · deployment
 - [CLI reference](docs/cli.md) · [Releasing](docs/RELEASING.md) · [Benchmarks (aihu-dom)](https://github.com/aihu-project/aihu-dom)
-- Compliance gates for `llms.txt`, MCP Server Card, and `robots.txt` run in `bun run test`: [`docs/compliance.md`](docs/compliance.md)
+- Compliance gates for `llms.txt`, MCP Server Card, and `robots.txt` run in `bun run test`: [`packages/plugin-agent-readiness/tests/compliance/`](packages/plugin-agent-readiness/tests/compliance/)
 
 ## License
 
