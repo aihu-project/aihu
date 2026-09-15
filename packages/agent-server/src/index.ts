@@ -13,6 +13,8 @@
  */
 
 export { BRIDGE_PROTOCOL_VERSION, createAgentServer } from './agent-server.ts'
+export type { BridgeUpgradeVerdict, VerifyBridgeUpgradeOptions } from './bridge-auth.ts'
+export { verifyBridgeUpgrade } from './bridge-auth.ts'
 export type { AgentDispatcher, BridgeClient, BridgeClientOptions } from './bridge-client.ts'
 export { createBridgeClient } from './bridge-client.ts'
 export { createComponentMcpServer, serveComponentMcp } from './mcp-server.ts'
