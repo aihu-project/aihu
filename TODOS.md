@@ -72,12 +72,12 @@ Re-verified still reproducing against current `aihu-dom` source
 
 ## Deferred from go-public eng review (2026-06-02)
 
-### WS capability-bridge auth/origin hardening (v1.x)
+### WS capability-bridge auth/origin hardening (v1.x) — ORIGIN CHECK LANDED; AUTH STILL OPEN
 - **What:** Add origin checks + WS authentication to the agent-server capability bridge so only the trusted server process can send approved action invocations to a browser-owned component instance, and only authorized viewers can connect to the state stream.
 - **Why:** The bridge topology's entire security argument is that the server is the *sole* policy-enforcement point and the *only* thing that can invoke the client-side opaque-ID dispatcher. A demo bridge that trusts localhost is fine for the launch recording, but in production an unauthenticated WS channel is an open remote-control surface for every mounted component.
 - **Context:** Chosen topology (go-public design) is a server-mediated capability bridge: compiler emits a narrow opaque-ID client dispatcher (NOT the raw `__agentBinding`), the browser mounts the real visible component and registers that dispatcher, and the server (holding auth/scope/rate-limit via `getAllAgentMetadata()` + agent-service) forwards only approved invocations over WS. The dispatcher exposes no policy info, so the server-side gate is load-bearing.
-- **Depends on:** the capability bridge + compiler opaque-ID dispatcher landing first.
-- **Start at:** `@aihu/agent-server` (new package) WS handler; reuse `@aihu/auth` for viewer/session checks; enforce server→client invocation signing or a shared per-session bridge token.
+- **Landed (2026-09-15):** `verifyBridgeUpgrade` in `@aihu/agent-server` (`packages/agent-server/src/bridge-auth.ts`) — a transport-agnostic, fail-closed `Origin` allowlist check consumers run before their runtime's `upgrade()`. Wired into `examples/agent-driven-demo/server.ts`'s `/bridge` handler (previously accepted every upgrade unconditionally, `srv.upgrade(req, …)` with no check at all). This closes the "any open tab can attach as the trusted browser peer" hole, since a WS upgrade is not subject to the same-origin policy the way `fetch` is.
+- **Still open — WS authentication:** `verifyBridgeUpgrade` constrains which *pages* may attach, not which *user/session* opened the page. Session-bound auth (confirming the viewer is an authorized principal, not just an allowlisted origin) needs `@aihu/auth` wired through the upgrade path plus a signing/token scheme for server→client invocations — that part still needs design (token issuance/rotation, where the browser client obtains its credential) and is left as the remaining scope of this item.
 
 ### ~~`$action`/`$computed`/`$prop` dispatcher lowering (CLIENT/bridge path)~~ — FIXED (branch fix/agent-action-computed-lowering)
 - **Resolved:** Two real bugs in the client/bridge dispatcher path, fixed + tested:

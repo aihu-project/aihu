@@ -39,7 +39,14 @@ directly.
 
 ---
 
-## TODO-003: `string!` required-attribute syntax
+## TODO-003: `string!` required-attribute syntax — ROUTED to aihu-compiler
+
+**2026-09-15:** the SFC compiler is now its own repo (`aihu-project/aihu-compiler`,
+extracted since this was filed). Routed as
+[`aihu-compiler#35`](https://github.com/aihu-project/aihu-compiler/issues/35),
+with the spec excerpt this repo can't read inlined into that issue. Leaving
+this entry here (rather than deleting) as the pointer, per this doc's own
+convention for routed items.
 
 **What:** Design and implement `input label: string!` syntax for inputs that are required (no default, must always be provided by the HTML author or MCP caller).
 
