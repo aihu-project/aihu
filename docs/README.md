@@ -27,11 +27,11 @@ The four aihu spec quartet documents and three amendments have been **ratified a
 
 ### v1 framework plan (ratified 2026-05-02)
 
-[`superpowers/plans/2026-05-02-aihu-v1-framework.md`](superpowers/plans/2026-05-02-aihu-v1-framework.md) — covers v0.2 → v1.0 milestones with all 12 ratified decisions baked in (Q3:A layouts, Q5:B path, Q6:A middleware provisional, Q8 collapse, Q10:D Shield, Q6 router middleware Option 1, Interpretation A full syntax migration, etc.) and Director's 6 polish notes applied inline.
+[`plans/2026-05-02-aihu-v1-framework.md`](plans/2026-05-02-aihu-v1-framework.md) — covers v0.2 → v1.0 milestones with all 12 ratified decisions baked in (Q3:A layouts, Q5:B path, Q6:A middleware provisional, Q8 collapse, Q10:D Shield, Q6 router middleware Option 1, Interpretation A full syntax migration, etc.) and Director's 6 polish notes applied inline.
 
 ### v0 plan (archival)
 
-[`superpowers/plans/2026-04-24-aihu-v0-plan-a-ts-runtime.md`](superpowers/plans/2026-04-24-aihu-v0-plan-a-ts-runtime.md) — TypeScript runtime family (signals → arbor → runtime → agent). All five v0 phases shipped + Rounds N+1 / N+2 / N+3 perf work. Retained for archival reference; current state lives in `state-plan-a.md` at the repo root.
+[`plans/2026-04-24-aihu-v0-plan-a-ts-runtime.md`](plans/2026-04-24-aihu-v0-plan-a-ts-runtime.md) — TypeScript runtime family (signals → arbor → runtime → agent). All five v0 phases shipped + Rounds N+1 / N+2 / N+3 perf work. Retained for archival reference; current state lives in `state-plan-a.md` at the repo root.
 
 ---
 

@@ -301,7 +301,7 @@ Create `packages/css-engine/README.md`:
 
 > aihu CSS engine — a hard fork of Tailwind v4 with Web-Component-native scoped output, AST-aware scanning, and progressive feature emission.
 
-**Status:** v0 — bootstrap. The fork's identity, perf optimizations, and scoped emitter are all under construction. See [`docs/superpowers/specs/2026-05-10-aihu-css-engine-and-primitives-design.md`](../../docs/superpowers/specs/2026-05-10-aihu-css-engine-and-primitives-design.md) for the full design.
+**Status:** v0 — bootstrap. The fork's identity, perf optimizations, and scoped emitter are all under construction. See [`docs/superpowers/specs/2026-05-10-aihu-css-engine-and-primitives-design.md`](../specs/2026-05-10-aihu-css-engine-and-primitives-design.md) for the full design.
 
 ## Status by capability (Plan 1 bootstrap)
 

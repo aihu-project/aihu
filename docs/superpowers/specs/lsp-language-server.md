@@ -178,7 +178,7 @@ Compiles to:
 const name = computed(() => expr)
 ```
 
-[v2 collection-form spec](docs/superpowers/specs/2026-05-05-spec-macro-vocabulary-v2.md)
+[v2 collection-form spec](2026-05-05-spec-macro-vocabulary-v2.md)
 ```
 
 ### Completion provider
