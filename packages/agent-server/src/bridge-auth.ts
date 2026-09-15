@@ -15,9 +15,7 @@
  */
 
 /** Result of {@link verifyBridgeUpgrade}. */
-export type BridgeUpgradeVerdict =
-  | { ok: true }
-  | { ok: false; status: number; reason: string }
+export type BridgeUpgradeVerdict = { ok: true } | { ok: false; status: number; reason: string }
 
 export interface VerifyBridgeUpgradeOptions {
   /**
