@@ -66,6 +66,15 @@ export const EXPORTS: readonly ApiExport[] = [
     agent: true,
   },
   {
+    name: 'verifyBridgeUpgrade',
+    kind: 'function',
+    signature:
+      'function verifyBridgeUpgrade( req: Request, options: VerifyBridgeUpgradeOptions, ): BridgeUpgradeVerdict',
+    summary:
+      'Decide whether an HTTP upgrade request for the capability bridge should be accepted, based on its `Origin` header.',
+    agent: true,
+  },
+  {
     name: 'BRIDGE_PROTOCOL_VERSION',
     kind: 'const',
     signature: 'const BRIDGE_PROTOCOL_VERSION',
@@ -168,6 +177,14 @@ export const EXPORTS: readonly ApiExport[] = [
     agent: true,
   },
   {
+    name: 'VerifyBridgeUpgradeOptions',
+    kind: 'interface',
+    signature:
+      'interface VerifyBridgeUpgradeOptions {\n  /**\n   * Origins allowed to open the capability-bridge WebSocket, exact string\n   * match against the `Origin` request header (e.g. `http://localhost:5108`).\n   * There is no wildcard support — a bridge that trusts every origin is the\n   * vulnerability this function exists to close.\n   */\n  allowedOrigins: readonly string[]\n}',
+    summary: '',
+    agent: true,
+  },
+  {
     name: 'BridgeClientMessage',
     kind: 'type',
     signature:
@@ -180,6 +197,14 @@ export const EXPORTS: readonly ApiExport[] = [
     kind: 'type',
     signature: 'type BridgeServerMessage = BridgeInvokeMessage',
     summary: 'Any message the server may send to a client over the bridge.',
+    agent: true,
+  },
+  {
+    name: 'BridgeUpgradeVerdict',
+    kind: 'type',
+    signature:
+      'type BridgeUpgradeVerdict = { ok: true } | { ok: false; status: number; reason: string }',
+    summary: '',
     agent: true,
   },
 ]
