@@ -45,6 +45,15 @@ name: Build and publish platform native packages
         description: 'Passthrough of the top-level workflow_dispatch `dry_run` input (false on any other trigger)'
         required: true
         type: boolean
+
+# Least-privilege default for jobs below that declare no permissions of their
+# own (build-native, build-css-native — checkout + build + upload-artifact,
+# none of which need write access). publish-native and publish-css-native
+# already declare their own job-level `permissions:` (contents: read,
+# id-token: write for npm provenance) which takes precedence over this.
+permissions:
+  contents: read
+
 # Mirrors release.yml's own env block — see there for the full rationale.
 # Workflow-level `env:` does not cross a workflow_call boundary, so every
 # `cargo build`/`cross build` step in this file needs its own copy.
