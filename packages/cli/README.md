@@ -21,6 +21,7 @@ aihu page about         # add a page
 aihu component Button   # add a component
 aihu dev                # start the dev server
 aihu build              # build for production
+aihu deploy             # deploy via the configured platform adapter
 ```
 
 The CLI also ships `aihu migrate`, the mechanical codemod that rewrites legacy
