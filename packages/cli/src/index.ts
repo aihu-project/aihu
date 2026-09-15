@@ -33,6 +33,7 @@ import {
   agentReadinessTs,
   agentReadme,
   agentServerTs,
+  agentThemeCss,
   agentTsConfig,
   agentViteConfig,
 } from './templates-agent.js'
@@ -870,6 +871,9 @@ export function scaffoldApp(
       ['readiness.ts', agentReadinessTs(name)],
       ['src/main.ts', agentMainTs()],
       ['src/task-list.aihu', agentComponentAihu()],
+      // The @aihu/css-engine palette. vite.config.ts reads it at config time and
+      // hands the text to the compiler, so it must exist before the first `vite`.
+      ['src/theme.css', agentThemeCss()],
       ['src/aihu-modules.d.ts', agentModuleShim()],
       ['README.md', agentReadme(name)],
       ['.vscode/extensions.json', appVscodeExtensions()],

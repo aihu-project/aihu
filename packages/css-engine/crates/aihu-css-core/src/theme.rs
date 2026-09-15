@@ -290,19 +290,62 @@ fn var_is_referenced(body: &str, name: &str) -> bool {
     false
 }
 
+/// A same-length copy of `s` with every `/* ... */` comment span overwritten
+/// with ASCII spaces. Byte offsets into the mask line up exactly with `s` (an
+/// unterminated `/*` blanks to the end of the string, mirroring a real CSS
+/// comment rather than looping forever), so structural scanning — finding
+/// `@theme`, matching `{`/`}` — can run against the mask, where a comment can
+/// never produce a spurious keyword match or an unbalanced brace, while
+/// content is still sliced out of the real `s` untouched.
+///
+/// Every replaced byte becomes the single-byte ASCII space `b' '`, and every
+/// byte outside a comment span is copied verbatim from valid UTF-8 `s`, so
+/// the result is valid UTF-8 with `s`'s exact length and char boundaries.
+fn mask_comments(s: &str) -> String {
+    let mut mask = s.as_bytes().to_vec();
+    let mut i = 0usize;
+    while i + 1 < mask.len() {
+        if &mask[i..i + 2] == b"/*" {
+            let close = s[i + 2..]
+                .find("*/")
+                .map_or(mask.len(), |rel| i + 2 + rel + 2);
+            for b in &mut mask[i..close] {
+                *b = b' ';
+            }
+            i = close;
+        } else {
+            i += 1;
+        }
+    }
+    String::from_utf8(mask).expect("masking only replaces bytes with the ASCII space 0x20")
+}
+
 /// Extract the body of every `@theme { ... }` directive from a style-block
 /// string, returning the concatenated declaration text.
+///
+/// A `/* ... */` comment anywhere in `style_content` — before, inside, or
+/// between blocks — is skipped while locating `@theme` and matching braces
+/// (via [`mask_comments`]), so it can neither be mistaken for a real `@theme`
+/// occurrence nor desync the brace-depth count. A stray unmatched `{`/`}`
+/// inside a comment used to do the latter: depth never returned to zero at
+/// the real closing brace, so `end` stayed at its initial value and the
+/// entire block silently extracted as empty text.
 pub fn extract_theme_blocks(style_content: &str) -> String {
+    let mask = mask_comments(style_content);
     let mut bodies = String::new();
-    let mut rest = style_content;
-    while let Some(at) = rest.find("@theme") {
-        let after = &rest[at + "@theme".len()..];
-        let Some(open) = after.find('{') else { break };
-        // Find the matching close brace.
+    let mut cursor = 0usize;
+    while let Some(at_rel) = mask[cursor..].find("@theme") {
+        let after = cursor + at_rel + "@theme".len();
+        let Some(open_rel) = mask[after..].find('{') else {
+            break;
+        };
+        let open = after + open_rel;
+        // Find the matching close brace, scanning the mask so a brace inside
+        // a comment never counts.
         let body_start = open + 1;
         let mut depth = 1u32;
         let mut end = body_start;
-        for (i, c) in after[body_start..].char_indices() {
+        for (i, c) in mask[body_start..].char_indices() {
             match c {
                 '{' => depth += 1,
                 '}' => {
@@ -315,16 +358,22 @@ pub fn extract_theme_blocks(style_content: &str) -> String {
                 _ => {}
             }
         }
-        bodies.push_str(&after[body_start..end]);
+        bodies.push_str(&style_content[body_start..end]);
         bodies.push('\n');
-        rest = &after[end + 1..];
+        cursor = end + 1;
     }
     bodies
 }
 
-/// Parse `--name: value;` declarations from a CSS body. Tolerates whitespace,
-/// comments are NOT stripped (kept simple); values keep `oklch(...)` intact.
+/// Parse `--name: value;` declarations from a CSS body. Tolerates whitespace;
+/// values keep `oklch(...)` intact. `/* ... */` comments are blanked before
+/// splitting (via [`mask_comments`]) so a comment sharing a `;`-delimited
+/// segment with a declaration — the common case of a comment on its own line
+/// directly above a `--token: value;` line, with no semicolon between them —
+/// cannot glue onto the declaration's name and make it fail the `--` prefix
+/// check below, nor can a `:`/`;` inside comment prose split somewhere bogus.
 fn parse_theme_declarations(body: &str) -> Vec<(String, String)> {
+    let body = mask_comments(body);
     let mut out = Vec::new();
     for decl in body.split(';') {
         let decl = decl.trim();
@@ -541,5 +590,79 @@ mod tests {
         );
         // Palette entries register as defaults, so nothing is declared.
         assert_eq!(registry.emit_declared_tokens(css, TokenScope::Shadow), "");
+    }
+
+    // Regression coverage for the "comments break @theme compilation" bug:
+    // aihu#848 documented it as "@aihu/css-engine 0.7.0 drops the entire
+    // theme when a comment appears inside @theme { }" and worked around it by
+    // telling authors never to comment inside the block, rather than fixing
+    // the scanner. These exercise `mask_comments` through both of its callers.
+
+    #[test]
+    fn stray_brace_in_a_theme_comment_no_longer_drops_the_block() {
+        // Before the fix: the comment's lone `}` decremented depth to 0
+        // early, so `extract_theme_blocks` returned the empty string instead
+        // of reaching the real closing brace — "the entire theme is dropped"
+        // exactly as reported.
+        let css = "@theme {\n  /* legacy note: closing brace } lives here */\n  \
+                    --color-primary: blue;\n}\n";
+        let body = extract_theme_blocks(css);
+        assert!(
+            body.contains("--color-primary: blue;"),
+            "theme body should survive a stray brace inside a comment:\n{body:?}"
+        );
+        let mut registry = ThemeRegistry::empty();
+        assert_eq!(registry.apply_theme_block(&body), 1);
+        assert_eq!(registry.get("--color-primary"), Some("blue"));
+    }
+
+    #[test]
+    fn a_theme_mentioned_in_a_leading_comment_is_not_mistaken_for_the_real_block() {
+        // A doc comment that explains the directive in prose — e.g. "the
+        // same text, with @theme rewritten to :root" — used to be matched by
+        // the plain `str::find("@theme")` this scanner ran on raw text, and
+        // whatever `{` came next (real or not) became the assumed block
+        // start. Also covers a comment `{` appearing before the genuine one.
+        let css = "/* see: with @theme rewritten to :root, and an example \
+                    block { like this } for illustration */\n\
+                    @theme {\n  --color-accent: teal;\n}\n";
+        let body = extract_theme_blocks(css);
+        assert_eq!(body.trim(), "--color-accent: teal;");
+    }
+
+    #[test]
+    fn a_comment_directly_above_a_declaration_no_longer_eats_it() {
+        // CSS comments are not `;`-terminated, so a comment on its own line
+        // immediately above a declaration shares that declaration's
+        // `;`-delimited segment. Before the fix, `decl.split_once(':')`
+        // still found the declaration's own colon, but the leftover comment
+        // text stayed attached to `name`, failing the `--` prefix check and
+        // silently dropping an otherwise well-formed token.
+        let body = "\n  /* Brand palette overrides */\n  --color-primary: #1a1d24;\n  \
+                     --color-accent: #c8543a;\n";
+        let mut registry = ThemeRegistry::empty();
+        assert_eq!(registry.apply_theme_block(body), 2);
+        assert_eq!(registry.get("--color-primary"), Some("#1a1d24"));
+        assert_eq!(registry.get("--color-accent"), Some("#c8543a"));
+    }
+
+    #[test]
+    fn mask_comments_preserves_length_and_boundaries_including_multibyte() {
+        // The mask must line up byte-for-byte with the original so callers
+        // can slice the original string at offsets found in the mask.
+        let s = "a/* café café */b";
+        let masked = mask_comments(s);
+        assert_eq!(masked.len(), s.len());
+        assert_eq!(&masked[..1], "a");
+        assert_eq!(&masked[s.len() - 1..], "b");
+        assert!(masked[1..s.len() - 1].chars().all(|c| c == ' '));
+
+        // An unterminated comment blanks to the end of the file rather than
+        // looping forever — matching a real CSS parser, everything from `/*`
+        // onward (including what would have been the closing brace) is
+        // comment, so no token can be recovered from it.
+        let unterminated = "@theme { /* oops\n--color-primary: blue; }";
+        assert_eq!(mask_comments(unterminated).len(), unterminated.len());
+        assert!(extract_theme_blocks(unterminated).trim().is_empty());
     }
 }
