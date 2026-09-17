@@ -1,6 +1,11 @@
 {
   "name": "@aihu/server-darwin-arm64",
   "version": "0.1.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
+    "directory": "packages/server/npm/darwin-arm64"
+  },
   "license": "MIT",
   "os": [
     "darwin"

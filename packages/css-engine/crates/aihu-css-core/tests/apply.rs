@@ -202,7 +202,7 @@ fn global_apply_allows_media_variant() {
 #[test]
 fn end_to_end_scoped_with_theme_preamble() {
     let css = scoped(".btn { @apply inline-flex hover:bg-accent; }");
-    assert!(css.contains(":host {"), "theme tokens present: {css}");
+    assert!(css.contains("var(--color-accent, #c8543a)"), "default token fallback present: {css}");
     assert!(css.contains("display: inline-flex"));
     assert!(css.contains("&:hover"));
 }

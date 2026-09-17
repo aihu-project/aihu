@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/runtime',
   slug: 'runtime',
   tier: 'Runtime core',
-  version: '6.1.0',
+  version: '6.1.1',
   tagline:
     'Single File Component (.aihu) runtime — registers custom elements compiled by @aihu/compiler.',
   note: '',

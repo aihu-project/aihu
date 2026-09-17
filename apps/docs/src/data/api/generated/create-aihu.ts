@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: 'create-aihu',
   slug: 'create-aihu',
   tier: 'Compiler & tooling',
-  version: '0.1.11',
+  version: '0.1.12',
   tagline:
     'Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli.',
   note: 'create-aihu exposes no importable API — it is a CLI / editor-tooling package. See its README.',

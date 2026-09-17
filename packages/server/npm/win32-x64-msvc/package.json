@@ -1,6 +1,11 @@
 {
   "name": "@aihu/server-win32-x64-msvc",
   "version": "0.1.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
+    "directory": "packages/server/npm/win32-x64-msvc"
+  },
   "license": "MIT",
   "os": [
     "win32"

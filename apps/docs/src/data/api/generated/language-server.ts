@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/language-server',
   slug: 'language-server',
   tier: 'Compiler & tooling',
-  version: '0.4.1',
+  version: '0.4.2',
   tagline:
     'Cross-editor Language Server (aihu-language-server) for .aihu Single File Components — diagnostics, hover, completion, and quick-fix code actions.',
   note: '',

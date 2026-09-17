@@ -205,17 +205,17 @@ fn recipe_variant_has_its_own_hover_not_the_base_neutral_hover() {
     // darker primary. Each variant now carries its own `&:hover`.
     let css = compile_sfc_scoped(&sfc("btn btn-primary")).unwrap();
     assert!(
-        css.contains("color-mix(in oklab, var(--color-primary) 90%, black)"),
+        css.contains("color-mix(in oklab, var(--color-primary, #1a1d24) 90%, black)"),
         "btn-primary must darken ITS OWN color on hover, not the base neutral:\n{css}"
     );
 }
 
 #[test]
-fn recipe_radius_tokens_tree_shake_into_the_token_block() {
+fn recipe_radius_tokens_resolve_without_a_pack() {
     // Regression (Opus review of #187dbf57): --radius-* previously existed
     // only in the shipped style-pack CSS, not the Rust ThemeRegistry, so a
     // component using `.btn`/`.card`/`.badge` with no pack loaded rendered
     // square-cornered with no signal anything was wrong.
     let css = compile_sfc_scoped(&sfc("btn")).unwrap();
-    assert!(css.contains("--radius-md: 8px;"), "{css}");
+    assert!(css.contains("var(--radius-md, 8px)"), "{css}");
 }

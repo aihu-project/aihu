@@ -1,5 +1,27 @@
 # @aihu/app
 
+## 10.1.1
+
+### Patch Changes
+
+- [#844](https://github.com/aihu-project/aihu/pull/844) [`d257f63`](https://github.com/aihu-project/aihu/commit/d257f63c7710c5c654260684333e2a51b17c396e) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fix the `@aihu/runtime` peer pin. `@aihu/app` 10.1.0 imports `@aihu/runtime/app` but pinned `@aihu/runtime` to 6.1.0, which predates that export, so installing the declared peers failed to resolve the import. The workspace runtime version now matches the published 6.1.1 that provides `./app`, so this release pins `@aihu/runtime` 6.1.1 ([#843](https://github.com/aihu-project/aihu/issues/843)).
+
+## 10.1.0
+
+### Minor Changes
+
+- [#838](https://github.com/aihu-project/aihu/pull/838) [`a11112b`](https://github.com/aihu-project/aihu/commit/a11112bdcd4eadaa3fbb9a366c6b692e4e74ecea) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add project-level theme controls for `@aihu/css-engine`.
+
+  - `css.theme` on `viteAihuPlugin` takes a CSS file with an `@theme { … }` block (relative to the Vite root) or a `defineStylePack()` result. Its values replace the built-in `aihu-default` palette as the `var()` fallback values in every component, so components render the app palette without a per-file `@theme`, while tokens set at `:root` still win. The dev server restarts when the theme file changes.
+  - `css.hostTokens: false` compiles token references to bare `var(--name)` with no fallback, for apps that always load their tokens at `:root`. Combining it with `css.theme` is a config error, since the theme would have no effect.
+  - `compileSfc()` accepts these as a fourth `options` argument (`{ theme, hostTokens }`).
+
+  Forwarding from `@aihu/app` needs an `@aihu/compiler` release with the matching `css` plugin option.
+
+### Patch Changes
+
+- [#810](https://github.com/aihu-project/aihu/pull/810) [`37a0a2e`](https://github.com/aihu-project/aihu/commit/37a0a2e83611c7654c41e43dce1ac930a23698be) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Resolve compiler integrations through the published `@aihu/compiler` package instead of the monorepo source tree. `@aihu/app` now declares the compiler as a runtime dependency so its public Vite integration installs correctly for consumers.
+
 ## 10.0.0
 
 ### Minor Changes

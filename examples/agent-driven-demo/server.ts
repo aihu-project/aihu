@@ -25,12 +25,27 @@
 
 import { registerAgentMetadata } from '@aihu/agent'
 import type { BridgeChannel } from '@aihu/agent-server'
-import { createAgentServer } from '@aihu/agent-server'
+import { createAgentServer, verifyBridgeUpgrade } from '@aihu/agent-server'
 import { branch, leaf } from '@aihu/arbor'
 import { type Signal, signal } from '@aihu/signals'
 
 const TAG = 'task-list'
 const PORT = 5208
+const VITE_PORT = 5108
+
+// Origins allowed to open the `/bridge` WebSocket and become the trusted
+// browser peer. A WS upgrade is not subject to the same-origin policy the way
+// `fetch` is, so this allowlist is the only thing standing between "the
+// component's own page" and "any page the user has open in another tab" —
+// see `verifyBridgeUpgrade`'s doc comment for why this check must run before
+// `srv.upgrade`, not after. Override via `BRIDGE_ALLOWED_ORIGINS` (comma
+// separated) for a non-default dev port or a real deployment origin.
+const ALLOWED_BRIDGE_ORIGINS = (
+  process.env.BRIDGE_ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) ?? [
+    `http://localhost:${VITE_PORT}`,
+    `http://127.0.0.1:${VITE_PORT}`,
+  ]
+).filter(Boolean)
 
 // ── Register the component's agent metadata (the @agent surface). ─────────────
 // In a full app this comes from the compiler manifest sidecar + the
@@ -107,6 +122,11 @@ Bun.serve<{ bridge: boolean }>({
 
     // WS upgrade for the browser capability bridge.
     if (url.pathname === '/bridge') {
+      const verdict = verifyBridgeUpgrade(req, { allowedOrigins: ALLOWED_BRIDGE_ORIGINS })
+      if (!verdict.ok) {
+        console.warn(`[agent-driven-demo] ${verdict.reason}`)
+        return new Response(verdict.reason, { status: verdict.status })
+      }
       if (srv.upgrade(req, { data: { bridge: true } })) return undefined
       return new Response('expected websocket', { status: 426 })
     }

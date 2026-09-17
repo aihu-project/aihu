@@ -38,7 +38,7 @@ npx create-aihu my-app
 bun create aihu my-app
 ```
 
-<sub><i>Auto-generated against `create-aihu@0.1.11`.</i></sub>
+<sub><i>Auto-generated against `create-aihu@0.1.12`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -49,12 +49,12 @@ bun create aihu my-app
 
 | | |
 |---|---|
-| **Version** | `0.1.11` |
+| **Version** | `0.1.12` |
 | **Tier** | D — Toolchain — `npm create aihu` scaffolder entry point |
 | **Published files** | 3 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `create-aihu@0.1.11`.</i></sub>
+<sub><i>Auto-generated against `create-aihu@0.1.12`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -65,7 +65,7 @@ bun create aihu my-app
 
 _No `exports` field in `package.json`. Main entry: `unset`._
 
-<sub><i>Auto-generated against `create-aihu@0.1.11`.</i></sub>
+<sub><i>Auto-generated against `create-aihu@0.1.12`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -78,7 +78,7 @@ _No `exports` field in `package.json`. Main entry: `unset`._
 
 - `@aihu/cli` — `workspace:*`
 
-<sub><i>Auto-generated against `create-aihu@0.1.11`.</i></sub>
+<sub><i>Auto-generated against `create-aihu@0.1.12`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -91,7 +91,7 @@ _No `exports` field in `package.json`. Main entry: `unset`._
 - [docs/cli.md](../../docs/cli.md)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `create-aihu@0.1.11`.</i></sub>
+<sub><i>Auto-generated against `create-aihu@0.1.12`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -102,6 +102,6 @@ _No `exports` field in `package.json`. Main entry: `unset`._
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `create-aihu@0.1.11`.</i></sub>
+<sub><i>Auto-generated against `create-aihu@0.1.12`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

@@ -188,16 +188,16 @@ fn long_tail_fixed_utilities() {
     assert!(one("sr-only").contains("position: absolute"));
 }
 
-// ── Palette injection: referenced palette tokens resolve at :host ────────────
+// ── Palette injection: referenced palette tokens resolve via var() fallback ──
 
 #[test]
 fn scoped_injects_used_palette_tokens() {
     let out = compile_sfc_scoped(&sfc("bg-amber-500 text-stone-300")).unwrap();
-    // The utility refs the palette token…
-    assert!(out.contains("background-color: var(--color-amber-500)"));
-    // …and the scoped emitter registers its oklch value at :host.
-    assert!(out.contains("--color-amber-500: oklch("));
-    assert!(out.contains("--color-stone-300: oklch("));
+    // The utility refs the palette token with its oklch value as the fallback,
+    // so an app-level `--color-amber-500` still wins inside the component.
+    assert!(out.contains("background-color: var(--color-amber-500, oklch("), "{out}");
+    assert!(out.contains("color: var(--color-stone-300, oklch("), "{out}");
+    assert!(!out.contains("--color-amber-500: oklch("), "{out}");
     // Only USED palette tokens are injected — an unrelated family is absent.
     assert!(!out.contains("--color-rose-500"));
 }

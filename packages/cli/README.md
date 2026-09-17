@@ -21,6 +21,7 @@ aihu page about         # add a page
 aihu component Button   # add a component
 aihu dev                # start the dev server
 aihu build              # build for production
+aihu deploy             # deploy via the configured platform adapter
 ```
 
 The CLI also ships `aihu migrate`, the mechanical codemod that rewrites legacy
@@ -42,7 +43,7 @@ bunx @aihu/cli app my-app
 bun add -g @aihu/cli
 ```
 
-<sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/cli@1.3.1`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -53,12 +54,12 @@ bun add -g @aihu/cli
 
 | | |
 |---|---|
-| **Version** | `1.3.0` |
+| **Version** | `1.3.1` |
 | **Tier** | D — Toolchain — `aihu` / `create-aihu` CLI |
 | **Published files** | 3 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/cli@1.3.1`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -72,7 +73,7 @@ bun add -g @aihu/cli
 | `.` | `./dist/index.js` | `—` |
 | `./template-manifest` | `./dist/template-manifest.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/cli@1.3.1`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -85,7 +86,7 @@ bun add -g @aihu/cli
 
 - `@aihu/mcp` — `workspace:*`
 
-<sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/cli@1.3.1`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -98,7 +99,7 @@ bun add -g @aihu/cli
 - [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/cli@1.3.1`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -109,6 +110,6 @@ bun add -g @aihu/cli
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/cli@1.3.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/cli@1.3.1`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

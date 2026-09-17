@@ -16,8 +16,6 @@
   },
   "ignore": [
     "aihu-docs",
-    "@aihu/bench-arbor",
-    "@aihu/bench-signals",
     "@aihu/example-blog-loader",
     "@aihu/example-blog-router",
     "@aihu/example-color-theme",

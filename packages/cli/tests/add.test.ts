@@ -310,14 +310,14 @@ describe('resolveItems — transitive deps + cycle guard (R8)', () => {
 // ─── error paths (R6) ──────────────────────────────────────────────────────────
 
 describe('aihu add — error paths (R6)', () => {
-  it('no aihu.config.ts → exits nonzero with actionable message', async () => {
+  it('no aihu.config.ts / vite.config.ts → exits nonzero with actionable message', async () => {
     const fs = makeFs({})
     const io = makeIo(fs.files)
     const resolve = makeResolveDeps({ fs, hasUi: false }) // load() returns null
     await expect(
       add(['button'], { cwd: '/proj', fs, io, resolve, exit: makeExit() }),
     ).rejects.toThrow('__exit__:1')
-    expect(io.err).toContain('No aihu.config.ts found')
+    expect(io.err).toContain('No aihu project config found')
   })
 
   it('@aihu/ui not installed → exits nonzero with `bun add -D`', async () => {

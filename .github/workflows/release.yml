@@ -43,10 +43,15 @@ name: Release Aihu packages
         type: boolean
         default: false
       dry_run:
-        description: 'Canary only: pack + validate with npm publish --dry-run (no network write). Set to false to publish for real.'
+        description: 'Canary / platforms_only: no network write unless set to false.'
         required: false
         type: boolean
         default: true
+      platforms_only:
+        description: 'Build (and, with dry_run=false, publish) ONLY the @aihu/server-* and @aihu/css-engine-* platform packages from the dispatched ref, so a PR can pin versions that already exist. No JS packages, no GitHub Release.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -76,6 +81,9 @@ jobs:
   # binaries are owned by the standalone aihu-compiler repository.
   lockfile-integrity:
     name: Lockfile integrity
+    # A platforms_only run exists precisely because the ref pins platform
+    # versions npm does not have yet, so its lock cannot agree until after.
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.platforms_only) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -105,9 +113,13 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    # platforms_only (docs/plans/2026-08-10-platforms-before-pins.md): publish
+    # the platform packages at the ref's manifest versions before the PR that
+    # pins them merges. dry_run=true (the default) builds without publishing.
+    # Already-published versions are skipped, so unchanged families no-op.
     with:
-      is_release: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.canary) }}
-      canary: ${{ github.event_name == 'workflow_dispatch' && inputs.canary || false }}
+      is_release: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && (inputs.platforms_only && !inputs.dry_run || !inputs.platforms_only && inputs.canary)) }}
+      canary: ${{ github.event_name == 'workflow_dispatch' && !inputs.platforms_only && inputs.canary || false }}
       dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
     secrets: inherit
 
@@ -231,7 +243,7 @@ jobs:
     timeout-minutes: 30
     # Tag push (stable) OR canary workflow_dispatch. In canary mode the needed
     # publish-* jobs above all run (canary condition), so `needs` still chains.
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.canary)
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.canary && !inputs.platforms_only)
     permissions:
       contents: read
       id-token: write

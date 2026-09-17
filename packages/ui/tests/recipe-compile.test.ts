@@ -4,7 +4,8 @@
  * This is the FIRST non-trivial `@style`/`.aihu` workload the css-engine
  * scanner consumes end-to-end. For each Phase 1 recipe we call
  * `@aihu/css-engine` `compileSfc(source, id)` and assert the emitted CSS is:
- *   (a) SCOPED shadow-DOM CSS (a `:host {` token block — not a global sheet);
+ *   (a) SCOPED shadow-DOM CSS (no global `:root` sheet, and no `:host` block
+ *       of default tokens that would shadow the app theme — #836);
  *   (b) referencing `var(--color-*)` for semantic tokens (NOT baked color
  *       literals) — protecting §6.9's swap-without-recompile promise (R4);
  *   (c) PACK-INVARIANT — see the note below for the verified engine reality.
@@ -33,10 +34,11 @@
  *      what makes assertion (b) true today. (`@apply` on the base utility line
  *      is preserved verbatim in output as authored source the consumer owns.)
  *
- *   3. `compileSfc(source, id?)` takes NO style-pack parameter — the `:host`
- *      token DEFINITIONS are always the binary's baked default pack, and there
- *      is no API path to compile under `aihu-graphite`. Pack-invariance (R4)
- *      is therefore TRIVIALLY true at this layer (the pack is not a compile
+ *   3. `compileSfc(source, id?)` takes NO style-pack parameter — the baked
+ *      default pack only supplies `var(--token, <default>)` fallbacks, and the
+ *      pack the app loads at `:root` is inherited into the shadow root at
+ *      runtime (#836). Pack-invariance (R4) of the compiled output is
+ *      therefore TRIVIALLY true at this layer (the pack is not a compile
  *      input), and is asserted as "the same source compiles byte-identically on
  *      repeat" rather than across two non-selectable packs.
  *
@@ -75,11 +77,12 @@ const RECIPES = ['button', 'card', 'badge', 'separator'] as const
 describe('Plan 5 Task 5 — recipe-compile (scoped, var(), pack-invariant)', () => {
   for (const name of RECIPES) {
     describe(name, () => {
-      it('compiles to SCOPED shadow-DOM CSS (a :host block, not a global sheet)', () => {
+      it('compiles to SCOPED shadow-DOM CSS (no token block, not a global sheet)', () => {
         const css = compileSfc(recipeSource(name), `${name}.aihu`)
-        // Scoped emission emits theme tokens at :host so var(--color-*) resolves
-        // inside the shadow root — there is no global utility stylesheet.
-        expect(css).toContain(':host {')
+        // No `:host` block of default tokens: those would override the app
+        // theme inherited from the document (#836). Defaults are var() fallbacks.
+        expect(css).not.toMatch(/:host \{\s*--color-/)
+        expect(css).toMatch(/var\(--color-[a-z-]+, [^)]/)
         // Sanity: a global @layer / :root utility dump would signal a leak.
         expect(css).not.toContain(':root {')
       })
@@ -89,8 +92,8 @@ describe('Plan 5 Task 5 — recipe-compile (scoped, var(), pack-invariant)', () 
         // The variant/visual rules reference design tokens by var(), so swapping
         // the style pack at runtime restyles without recompiling (§6.9).
         expect(css).toContain('var(--color-')
-        // No baked hex color in the AUTHORED rule bodies. (The :host block legitimately
-        // defines the token VALUES as literals; the rules that USE them must not bake.)
+        // No baked hex color in the AUTHORED rule bodies. (A default may appear as
+        // a var() FALLBACK literal, `var(--color-x, #hex)`, but never as the value.)
         const authored = css.slice(css.indexOf('authored @style'))
         expect(authored).not.toMatch(/:\s*#[0-9a-fA-F]{3,8}\b/)
       })

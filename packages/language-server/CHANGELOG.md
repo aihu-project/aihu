@@ -1,5 +1,14 @@
 # @aihu/language-server
 
+## 0.4.2
+
+### Patch Changes
+
+- [#810](https://github.com/aihu-project/aihu/pull/810) [`37a0a2e`](https://github.com/aihu-project/aihu/commit/37a0a2e83611c7654c41e43dce1ac930a23698be) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Resolve compiler integrations through the published `@aihu/compiler` package instead of the monorepo source tree. `@aihu/app` now declares the compiler as a runtime dependency so its public Vite integration installs correctly for consumers.
+
+- Updated dependencies [[`37a0a2e`](https://github.com/aihu-project/aihu/commit/37a0a2e83611c7654c41e43dce1ac930a23698be)]:
+  - @aihu/tsc@0.3.4
+
 ## 0.4.1
 
 ### Patch Changes

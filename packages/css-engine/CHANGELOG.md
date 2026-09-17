@@ -1,5 +1,27 @@
 # @aihu/css-engine
 
+## 0.7.0
+
+### Minor Changes
+
+- [#838](https://github.com/aihu-project/aihu/pull/838) [`a11112b`](https://github.com/aihu-project/aihu/commit/a11112bdcd4eadaa3fbb9a366c6b692e4e74ecea) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add project-level theme controls for `@aihu/css-engine`.
+
+  - `css.theme` on `viteAihuPlugin` takes a CSS file with an `@theme { … }` block (relative to the Vite root) or a `defineStylePack()` result. Its values replace the built-in `aihu-default` palette as the `var()` fallback values in every component, so components render the app palette without a per-file `@theme`, while tokens set at `:root` still win. The dev server restarts when the theme file changes.
+  - `css.hostTokens: false` compiles token references to bare `var(--name)` with no fallback, for apps that always load their tokens at `:root`. Combining it with `css.theme` is a config error, since the theme would have no effect.
+  - `compileSfc()` accepts these as a fourth `options` argument (`{ theme, hostTokens }`).
+
+  Forwarding from `@aihu/app` needs an `@aihu/compiler` release with the matching `css` plugin option.
+
+### Patch Changes
+
+- [#803](https://github.com/aihu-project/aihu/pull/803) [`2bc58cf`](https://github.com/aihu-project/aihu/commit/2bc58cfaba2289fd39ef7cc55a1cffc8cffb5a3a) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Move dependency-free progressive positioning to `@aihu/arbor/progressive` so
+  headless primitives no longer depend on the CSS provider. The CSS provider
+  continues to export its existing positioning API as a compatibility façade.
+
+- [#810](https://github.com/aihu-project/aihu/pull/810) [`37a0a2e`](https://github.com/aihu-project/aihu/commit/37a0a2e83611c7654c41e43dce1ac930a23698be) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Resolve compiler integrations through the published `@aihu/compiler` package instead of the monorepo source tree. `@aihu/app` now declares the compiler as a runtime dependency so its public Vite integration installs correctly for consumers.
+
+- [#837](https://github.com/aihu-project/aihu/pull/837) [`ae74013`](https://github.com/aihu-project/aihu/commit/ae7401308c48dcb3283cb648c2f9651ac361b36f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Let app themes reach shadow-scoped components. The scoped compiler no longer writes a `:host { --color-*: … }` block of built-in default tokens into every component, which overrode any theme pack or `:root` tokens the component inherited from the document. References to default tokens now carry the default as a fallback (`var(--color-muted-foreground, #8a8880)`), so the app theme wins at any nesting depth and a component rendered without one still gets the default palette. Tokens set by a component's own `@theme` block are still declared at its `:host` (or `:root` in light mode).
+
 ## 0.6.1
 
 ### Patch Changes

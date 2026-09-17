@@ -1,5 +1,12 @@
 # @aihu/ui
 
+## 0.1.2
+
+### Patch Changes
+
+- [#821](https://github.com/aihu-project/aihu/pull/821) [`95bf123`](https://github.com/aihu-project/aihu/commit/95bf1232ce3df85a5b4b373b79d760aba098d46b) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Expose the UI registry catalog types from `@aihu/ui/registry` and make the CLI
+  consume that public contract instead of importing the UI package's source tree.
+
 ## 0.1.1
 
 ### Patch Changes
@@ -185,40 +192,41 @@ client` on `card.aihu` emits, in this order:
 
   **Two fixes, in two packages, and neither is sufficient alone.**
 
-  1. `@aihu/primitives` — all 17 `defineX()` registration entry points now return
-     early when `typeof customElements === 'undefined'`. Fixed ONCE for every
-     caller, rather than as ~18 edits across recipes, examples and consumer code
-     that does not exist yet.
+  1.  `@aihu/primitives` — all 17 `defineX()` registration entry points now return
+      early when `typeof customElements === 'undefined'`. Fixed ONCE for every
+      caller, rather than as ~18 edits across recipes, examples and consumer code
+      that does not exist yet.
 
-     **The no-op is deliberate, and it is not a new policy.** The filed note
-     raised it as an open behavior decision ("silently skipping registration").
-     Three things settle it. Registration is a pure side effect on
-     `window.customElements` with no return value and no server-side consumer: an
-     SSR render resolves children through the compiler's module registry
-     (`virtual:aihu-server-components`), never through `customElements`, and a
-     server render never mounts — so nothing observable is lost. The compiler
-     ALREADY emits every compiled component's own registration as
-     `if (typeof HTMLElement !== 'undefined' && typeof customElements !==
-'undefined') defineElement(…)`, so "no DOM → skip registration" is what aihu
+           **The no-op is deliberate, and it is not a new policy.** The filed note
+           raised it as an open behavior decision ("silently skipping registration").
+           Three things settle it. Registration is a pure side effect on
+           `window.customElements` with no return value and no server-side consumer: an
+           SSR render resolves children through the compiler's module registry
+           (`virtual:aihu-server-components`), never through `customElements`, and a
+           server render never mounts — so nothing observable is lost. The compiler
+           ALREADY emits every compiled component's own registration as
+           `if (typeof HTMLElement !== 'undefined' && typeof customElements !==
+
+      'undefined') defineElement(…)`, so "no DOM → skip registration" is what aihu
      does everywhere it controls the registration; this extends it to the ones a
      primitive owns. And a better-worded throw would help nobody: the `defineX()`
-     call is correct code that happens to also run on the server, and there is no
-     edit the author could make in response.
+      call is correct code that happens to also run on the server, and there is no
+      edit the author could make in response.
 
-     This is the opposite answer to `HTMLElementBase`'s throw-on-CONSTRUCT, for a
-     reason stated in that file's docblock: construction hands back an object the
-     caller will use and find broken, so it fails loud. Unlike the conditional
-     base, the check here is per CALL, so a host that installs a DOM shim late
-     still gets real registration.
+           This is the opposite answer to `HTMLElementBase`'s throw-on-CONSTRUCT, for a
+           reason stated in that file's docblock: construction hands back an object the
+           caller will use and find broken, so it fails loud. Unlike the conditional
+           base, the check here is per CALL, so a host that installs a DOM shim late
+           still gets real registration.
 
-  2. `@aihu/ui` — `card`, `badge`, `separator` and `button` wrap their `@state`
-     class + registration in the same `typeof HTMLElement !== 'undefined' &&
+  2.  `@aihu/ui` — `card`, `badge`, `separator` and `button` wrap their `@state`
+      class + registration in the same `typeof HTMLElement !== 'undefined' &&
 typeof customElements !== 'undefined'` condition the compiler puts on its own
-     `defineElement` call a few lines below in the emitted module. This one has to
-     live in authored source: no shared function is involved, the compiler emits
-     what the author wrote, and these recipes are copied verbatim into consumer
-     projects by `aihu add`. Documented in `packages/ui/README.md` §"Authoring a
-     recipe: `@state` runs on the SERVER too".
+      `defineElement` call a few lines below in the emitted module. This one has to
+      live in authored source: no shared function is involved, the compiler emits
+      what the author wrote, and these recipes are copied verbatim into consumer
+      projects by `aihu add`. Documented in `packages/ui/README.md` §"Authoring a
+      recipe: `@state` runs on the SERVER too".
 
   No compiler change was needed. The `@style` block's own `new CSSStyleSheet()`
   is already elided at the server target (`emit_ssr_css_export`, `emit.rs`); only

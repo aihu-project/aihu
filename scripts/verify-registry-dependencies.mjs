@@ -34,17 +34,49 @@ for (const [group, dependencies] of dependencyGroups) {
   }
 }
 
-for (const [name, { group, range }] of internal) {
-  const spec = `${name}@${range}`
-  let version = ''
+// A dependency published moments earlier in the same release train is often
+// not resolvable yet: npm accepts the publish before `npm view` can see it
+// ("may take a few minutes to become available"). Failing on the first miss
+// aborted v0.4.65 at create-aihu, seconds after @aihu/cli published. So wait
+// for visibility, and only fail once the whole window has been used.
+const attempts = Math.max(1, Number(process.env.VERIFY_REGISTRY_ATTEMPTS ?? 12))
+const delayMs = Math.max(0, Number(process.env.VERIFY_REGISTRY_DELAY_MS ?? 15_000))
+
+/** One `npm view`: `{ version }` when it resolves, else `{ reason }`. */
+function query(spec) {
   try {
-    version = execFileSync('npm', ['view', spec, 'version', '--json'], {
+    const version = execFileSync('npm', ['view', spec, 'version', '--json'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     }).trim()
+    return !version || version === 'null' ? { reason: 'unpublished' } : { version }
   } catch (error) {
     const stderr = String(error.stderr ?? '')
-    if (/ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET/.test(stderr)) {
+    return {
+      reason: /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET/.test(stderr)
+        ? 'unreachable'
+        : 'unpublished',
+    }
+  }
+}
+
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+}
+
+for (const [name, { group, range }] of internal) {
+  const spec = `${name}@${range}`
+  let result = query(spec)
+  for (let attempt = 1; !result.version && attempt < attempts; attempt++) {
+    const what = result.reason === 'unreachable' ? 'npm unreachable for' : 'not visible on npm yet'
+    console.error(
+      `… ${manifest.name}: ${spec} ${what} (attempt ${attempt}/${attempts}); retrying in ${Math.round(delayMs / 1000)}s`,
+    )
+    sleep(delayMs)
+    result = query(spec)
+  }
+  if (!result.version) {
+    if (result.reason === 'unreachable') {
       console.error(`✗ ${manifest.name}: could not query npm for ${spec}.`)
       console.error(
         '  The registry must be reachable before a release can verify its dependency contract.',
@@ -57,12 +89,5 @@ for (const [name, { group, range }] of internal) {
     }
     process.exit(1)
   }
-  if (!version || version === 'null') {
-    console.error(`✗ ${manifest.name}: ${group} ${spec} is not published on npm.`)
-    console.error(
-      '  Release its source package first, confirm the version is visible, then retry this dependent.',
-    )
-    process.exit(1)
-  }
-  console.log(`✓ ${manifest.name}: ${name}@${range} resolves in npm (${version})`)
+  console.log(`✓ ${manifest.name}: ${name}@${range} resolves in npm (${result.version})`)
 }

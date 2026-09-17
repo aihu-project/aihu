@@ -607,8 +607,9 @@ fn gradient_stop(prefix: &str, color: &str) -> Option<String> {
 /// register each one the theme does not already define with its Tailwind v4
 /// oklch value. Palette utilities compile to `var(--color-*)` refs; Tailwind
 /// ships the palette in its default theme, so the scoped emitter calls this to
-/// make the referenced colors resolve at `:host` (without bloating every shadow
-/// root with all 286 entries — only the ones a component actually uses).
+/// give the referenced colors a `var()` fallback (only the ones a component
+/// actually uses, not all 286). They register as defaults, not declarations,
+/// so an app-level `--color-red-500` still wins inside the component.
 pub fn register_used_palette(css: &str, theme: &mut crate::theme::ThemeRegistry) {
     const NEEDLE: &str = "var(--color-";
     let mut decls = String::new();
@@ -632,7 +633,7 @@ pub fn register_used_palette(css: &str, theme: &mut crate::theme::ThemeRegistry)
         }
     }
     if !decls.is_empty() {
-        theme.apply_theme_block(&decls);
+        theme.register_defaults(&decls);
     }
 }
 

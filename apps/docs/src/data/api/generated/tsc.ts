@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/tsc',
   slug: 'tsc',
   tier: 'Compiler & tooling',
-  version: '0.3.3',
+  version: '0.3.4',
   tagline:
     'aihu-tsc — `tsc` for projects containing .aihu Single File Components. Type-checks .aihu sources as virtual TypeScript, with no .aihu.ts files written to disk.',
   note: '',

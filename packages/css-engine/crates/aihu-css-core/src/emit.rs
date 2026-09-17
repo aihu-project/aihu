@@ -389,6 +389,18 @@ impl ScopedCssChannels {
 pub fn emit_sfc_scoped_channels(ast: &SfcAst) -> Result<ScopedCssChannels, CompileError> {
     let mut theme = ThemeRegistry::with_aihu_defaults();
 
+    // Project-level theme (`css.theme`) replaces the built-in default values
+    // before per-SFC `@theme` blocks apply. It registers as defaults, not
+    // declarations: the values reach the CSS only as `var()` fallbacks, so an
+    // inherited document theme still wins (#836).
+    if let Some(project) = &ast.theme {
+        if project.contains("@theme") {
+            theme.register_defaults(&extract_theme_blocks(project));
+        } else {
+            theme.register_defaults(project);
+        }
+    }
+
     // Parse @theme directives from the authored style block first so utilities
     // and breakpoints see overrides.
     if let Some(style) = &ast.style {
@@ -493,17 +505,32 @@ pub fn emit_sfc_scoped_channels(ast: &SfcAst) -> Result<ScopedCssChannels, Compi
     referenced.push_str(&authored);
     crate::tokens::register_used_palette(&referenced, &mut theme);
 
-    // Theme tokens (now incl. used palette), scoped to :host (shadow) or
-    // :root (light) per whether the compiler resolved this SFC to light-DOM
-    // mode (LDF §10 step 2 — fixes the live bug where a light-mode
-    // component's tokens were emitted as a `:host {}` block that matches
-    // nothing, since a light-DOM host has no shadow root).
+    // Only tokens this SFC's own `@theme` declares are emitted as
+    // declarations, scoped to :host (shadow) or :root (light) per whether the
+    // compiler resolved this SFC to light-DOM mode (LDF §10 step 2 — a
+    // light-DOM host has no shadow root, so `:host {}` would match nothing).
+    // Engine defaults (brand tokens, used palette) become `var()` fallbacks
+    // below instead (#836): a `:host` declaration of a default would override
+    // the app theme the component inherits from the document.
     let token_scope = if ast.light_scope_id.is_some() {
         crate::theme::TokenScope::Light
     } else {
         crate::theme::TokenScope::Shadow
     };
-    let tokens = theme.emit_used_tokens(&referenced, token_scope);
+    // `hostTokens: false` skips the fallbacks: the app guarantees every token
+    // at `:root`, so references stay bare `var(--name)`.
+    let fallbacks = ast.host_tokens != Some(false);
+    let finish = |css: &str| {
+        if fallbacks {
+            theme.with_default_fallbacks(css)
+        } else {
+            css.to_string()
+        }
+    };
+    let tokens = finish(&theme.emit_declared_tokens(&referenced, token_scope));
+    let components = finish(&components);
+    let utilities = finish(&utilities);
+    let authored = finish(&authored);
     // Light mode's `:root` token block competes in the SAME global cascade as
     // every app-authored `:root {}`/`.dark {}` rule (both are unlayered,
     // (0,1,0) specificity — the winner would otherwise come down to

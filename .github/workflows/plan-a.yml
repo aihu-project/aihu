@@ -91,6 +91,11 @@ jobs:
       # green throughout. Has already bitten ui, seo, store, editor and magna.
       # Reads only manifest text, so it runs with the other cheap guards.
       - run: bun run check:publish-manifest
+      # Guard (#843): every @aihu/* subpath a publishable package imports must be
+      # exported by the version it publishes against. A workspace pin whose
+      # version is already on npm ships npm's manifest, not the workspace copy,
+      # so a new export needs a version bump before a dependent can use it.
+      - run: bun run check:published-exports
       # Keep the root-owned LSP registry generated from @aihu/use sources.
       # Compiler auto-import registration is maintained and released by the
       # standalone aihu-compiler repository; this check covers the published

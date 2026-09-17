@@ -469,23 +469,69 @@ const requestedAllLocalPkgs = localPkgsRaw.length === 1 && localPkgsRaw[0] === '
  * its workspace resolver spin indefinitely, while testing unrelated packages
  * in that cell adds no release evidence.  The other template rows still use
  * the full `--local-pkg all` set.
+ *
+ * Only the roots are hand-written; everything they reach through `workspace:`
+ * edges is derived from disk. Packing turns `workspace:^` into `^<version>`, so
+ * a sibling left out of the set resolves from the registry at a version
+ * `changeset version` may have just moved past what is published: the Version
+ * PR failed exactly that way on `@aihu/runtime` -> `@aihu/primitives@^0.2.4`
+ * while the hand-written list still named packages extracted to other repos.
  */
-const CF_TEAM_LOCAL_PKGS = [
+const CF_TEAM_ROOT_PKGS = [
   'adapter-cloudflare',
   'app',
-  'arbor',
-  'compiler',
   'plugin-agent-readiness',
   'router',
   'runtime',
   'server',
-  'signals',
 ] as const
+
+/** Package dirs reachable from `roots` through non-dev `workspace:` edges. */
+function workspaceClosure(roots: readonly string[]): Set<string> {
+  const pkgsDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'packages')
+  const dirByName = new Map<string, string>()
+  const edgesByDir = new Map<string, string[]>()
+  for (const entry of readdirSync(pkgsDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name === 'node_modules') continue
+    const manifest = join(pkgsDir, entry.name, 'package.json')
+    if (!existsSync(manifest)) continue
+    try {
+      const pkg = JSON.parse(readFileSync(manifest, 'utf8')) as {
+        name?: string
+        dependencies?: Record<string, string>
+        peerDependencies?: Record<string, string>
+        optionalDependencies?: Record<string, string>
+      }
+      if (!pkg.name) continue
+      dirByName.set(pkg.name, entry.name)
+      const edges = { ...pkg.dependencies, ...pkg.peerDependencies, ...pkg.optionalDependencies }
+      edgesByDir.set(
+        entry.name,
+        Object.entries(edges)
+          .filter(([, range]) => range.startsWith('workspace:'))
+          .map(([name]) => name),
+      )
+    } catch {
+      // Unparseable manifest: skip, same as discoverAllLocalPkgs().
+    }
+  }
+  const out = new Set<string>()
+  const queue = [...roots]
+  for (let dir = queue.pop(); dir !== undefined; dir = queue.pop()) {
+    if (out.has(dir)) continue
+    out.add(dir)
+    for (const name of edgesByDir.get(dir) ?? []) {
+      const next = dirByName.get(name)
+      if (next !== undefined && !out.has(next)) queue.push(next)
+    }
+  }
+  return out
+}
 
 function localPkgsForCell(spec: TemplateSpec): readonly string[] {
   if (!requestedAllLocalPkgs || spec.id !== 'cf-team') return localPkgs
-  const wanted = new Set(CF_TEAM_LOCAL_PKGS)
-  return localPkgs.filter((pkg) => wanted.has(pkg as (typeof CF_TEAM_LOCAL_PKGS)[number]))
+  const wanted = workspaceClosure(CF_TEAM_ROOT_PKGS)
+  return localPkgs.filter((pkg) => wanted.has(pkg))
 }
 
 const wantPms = (flagValue('pm')

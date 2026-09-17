@@ -29,3 +29,10 @@ updates:
           - "*"
     labels:
       - tooling
+    ignore:
+      # changesets/action v2 requires @changesets/cli v3; this repo pins CLI v2
+      # (package.json). Dependabot moved the action 1 -> 2 on 2026-08-17 and
+      # every Release PR run since then died in changesets/action. Drop this
+      # ignore when the CLI is deliberately upgraded to v3.
+      - dependency-name: "changesets/action"
+        update-types: ["version-update:semver-major"]

@@ -42,6 +42,19 @@ pub struct SfcAst {
     /// until the selector-rewrite pass (LDF §10 step 3) consumes it.
     #[serde(default, rename = "lightScopeId")]
     pub light_scope_id: Option<String>,
+    /// Project-level theme (`css.theme` in `@aihu/app`): CSS containing
+    /// `@theme { … }` blocks, or a bare `--name: value;` declaration list.
+    /// Replaces the built-in default token values before this SFC's own
+    /// `@theme` applies. The values ship only as `var()` fallbacks, so a theme
+    /// the component inherits from the document still wins. Additive field.
+    #[serde(default)]
+    pub theme: Option<String>,
+    /// `css.hostTokens` in `@aihu/app`. `Some(false)` drops the default-value
+    /// fallbacks: token references compile to bare `var(--name)`, for apps
+    /// that always supply their tokens at `:root`. Tokens an SFC's own
+    /// `@theme` sets are still declared. Absent means `true`. Additive field.
+    #[serde(default, rename = "hostTokens")]
+    pub host_tokens: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
