@@ -213,7 +213,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     name: '@aihu/context',
     slug: 'context',
     tier: 'Runtime core',
-    version: '0.2.0',
+    version: '0.2.1',
     tagline: 'Async-context-friendly request/SSR context primitives for aihu.',
     note: '',
     exportCount: 10,

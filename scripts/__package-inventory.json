@@ -97,7 +97,7 @@
   },
   {
     "name": "@aihu/context",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "dir": "packages/context",
     "isPlatform": false
   },

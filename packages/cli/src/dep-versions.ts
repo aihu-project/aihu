@@ -29,7 +29,7 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
   '@aihu/app': '^10.1.1',
   '@aihu/auth': '^6.0.0',
   '@aihu/cli': '^1.3.1',
-  '@aihu/context': '^0.2.0',
+  '@aihu/context': '^0.2.1',
   '@aihu/css-engine': '^0.7.0',
   '@aihu/editor': '^0.1.2',
   '@aihu/language-server': '^0.4.2',
