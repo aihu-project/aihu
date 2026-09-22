@@ -62,6 +62,11 @@ bun run dev
 
 Open <http://localhost:5108>. The `<task-list>` mounts and connects its bridge.
 
+The server only accepts `/bridge` WebSocket upgrades from an allowlisted
+`Origin` (via `verifyBridgeUpgrade` from `@aihu/agent-server`), defaulting to
+the Vite dev origin above. Set `BRIDGE_ALLOWED_ORIGINS` (comma separated) to
+override it for a different port or a real deployment origin.
+
 ### Record the proof
 
 1. Load <http://localhost:5108>. The list is empty. Open the DOM inspector and
