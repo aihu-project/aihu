@@ -105,7 +105,7 @@ _No `exports` field in `package.json`. Main entry: `./template.config.js`._
 <!-- BEGIN_AUTOGEN: deps -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
-_Zero runtime dependencies_ (per the [dep-free thesis](../../../README.md#project-posture))_._
+_Zero runtime dependencies_ (per the [dep-free thesis](../../README.md#project-posture))_._
 
 <sub><i>Auto-generated against `@aihu/templates-cf-team@3.1.0`.</i></sub>
 
@@ -116,8 +116,8 @@ _Zero runtime dependencies_ (per the [dep-free thesis](../../../README.md#projec
 <!-- BEGIN_AUTOGEN: see-also -->
 <!-- regenerate: bun scripts/sync-readme.ts (also runs in pre-commit + CI) -->
 
-- [@aihu/adapter-cloudflare](../../adapter-cloudflare)
-- [@aihu/cli](../../cli)
+- [@aihu/adapter-cloudflare](../adapter-cloudflare)
+- [@aihu/cli](../cli)
 - [Aihu framework root](../../../README.md)
 
 <sub><i>Auto-generated against `@aihu/templates-cf-team@3.1.0`.</i></sub>
