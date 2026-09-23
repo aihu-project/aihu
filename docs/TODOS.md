@@ -27,7 +27,13 @@ directly.
 
 ---
 
-## TODO-002: `batch()` wrapping for initial attribute parsing
+## TODO-002: `batch()` wrapping for initial attribute parsing — ROUTED to aihu-compiler
+
+**2026-09-23:** the SFC compiler is now its own repo (`aihu-project/aihu-compiler`,
+extracted since this was filed). Routed as
+[`aihu-compiler#40`](https://github.com/aihu-project/aihu-compiler/issues/40).
+Leaving this entry here (rather than deleting) as the pointer, per this doc's own
+convention for routed items (see TODO-003 below).
 
 **What:** Investigate whether the compiler-emitted `connectedCallback` should wrap initial attribute set operations in `batch()` from `@aihu/signals`.
 
