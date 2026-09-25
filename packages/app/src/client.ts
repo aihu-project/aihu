@@ -264,7 +264,11 @@ export function createApp(config?: AppConfig): AppHandle {
   // context (instead of falling back to a full page load) and drives a real
   // outlet re-render through `renderNav`.
   const [readMatch, writeMatch] = signal<MatchResult | null>(null)
-  const routeContext: RouteContextValue = { router, current: readMatch }
+  const routeContext: RouteContextValue = {
+    router,
+    current: readMatch,
+    viewTransitions: config?.router?.viewTransitions,
+  }
   bindRouteSignalWriter(routeContext, renderNav)
   _withOwnerContext(outlet, () => {
     provideRouteContext(routeContext)
