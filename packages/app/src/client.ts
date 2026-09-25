@@ -100,6 +100,13 @@ export interface AppConfig {
    * navigations while route-only tags are cleaned up.
    */
   head?: HeadConfig
+  /**
+   * Router-related runtime config. Mirrors `AihuConfig.router` — when a
+   * project has no hand-written `src/main.ts`, `router.viewTransitions` set
+   * in `aihu.config.ts` reaches here via the generated `virtual:aihu-entry`
+   * (`entrySource()`); a hand-written `main.ts` can also pass it directly.
+   */
+  router?: { viewTransitions?: boolean }
 }
 
 /**
@@ -267,7 +274,12 @@ export function createApp(config?: AppConfig): AppHandle {
   const routeContext: RouteContextValue = {
     router,
     current: readMatch,
-    viewTransitions: config?.router?.viewTransitions,
+    // Conditionally spread, not `viewTransitions: config?.router?.viewTransitions`:
+    // exactOptionalPropertyTypes rejects an explicit `undefined` for an
+    // optional `boolean` field.
+    ...(config?.router?.viewTransitions !== undefined
+      ? { viewTransitions: config.router.viewTransitions }
+      : {}),
   }
   bindRouteSignalWriter(routeContext, renderNav)
   _withOwnerContext(outlet, () => {

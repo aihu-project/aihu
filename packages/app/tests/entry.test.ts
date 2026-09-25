@@ -23,6 +23,7 @@ import {
   ENTRY_RESOLVED_ID,
   ENTRY_SOURCE,
   ENTRY_VIRTUAL_ID,
+  entrySource,
   injectEntryScript,
 } from '../src/entry.ts'
 import { viteAihuPlugin } from '../src/vite-plugin.ts'
@@ -66,6 +67,30 @@ describe('injectEntryScript — injection & escape hatches', () => {
   })
 })
 
+describe('entrySource — config threading', () => {
+  it('is byte-identical to ENTRY_SOURCE when neither option is set', () => {
+    expect(entrySource()).toBe(ENTRY_SOURCE)
+    expect(entrySource(undefined, undefined)).toBe(ENTRY_SOURCE)
+  })
+
+  it('threads outletId alone, matching the pre-existing single-field shape', () => {
+    expect(entrySource('root')).toBe(
+      'import { createApp } from \'@aihu/app/client\'\n\ncreateApp({ outletId: "root" })\n',
+    )
+  })
+
+  it('threads router.viewTransitions alone', () => {
+    const out = entrySource(undefined, true)
+    expect(out).toContain('createApp({ router: { viewTransitions: true } })')
+  })
+
+  it('threads both outletId and router.viewTransitions together', () => {
+    const out = entrySource('root', true)
+    expect(out).toContain('outletId: "root"')
+    expect(out).toContain('router: { viewTransitions: true }')
+  })
+})
+
 describe('aihu-entry plugin — hooks are registered', () => {
   it('viteAihuPlugin() includes an aihu-entry plugin with resolveId/load/transformIndexHtml', () => {
     const plugins = viteAihuPlugin()
@@ -89,6 +114,22 @@ describe('aihu-entry plugin — hooks are registered', () => {
     expect(resolveId.call({}, ENTRY_VIRTUAL_ID)).not.toBeNull()
     expect(resolveId.call({}, `/${ENTRY_VIRTUAL_ID}`)).not.toBeNull()
     expect(resolveId.call({}, `${ENTRY_VIRTUAL_ID}?x=1`)).toBeNull()
+  })
+
+  it('load() forwards config.router.viewTransitions into the generated entry', () => {
+    const plugins = viteAihuPlugin({ router: { viewTransitions: true } })
+    const entry = plugins.find((p) => (p as Plugin).name === 'aihu-entry') as Plugin
+    // biome-ignore lint/suspicious/noExplicitAny: exercising the raw hook fn
+    const load = entry.load as any
+    expect(load.call({}, ENTRY_RESOLVED_ID)).toContain('router: { viewTransitions: true }')
+  })
+
+  it('load() omits router entirely when not configured (byte-identical default)', () => {
+    const plugins = viteAihuPlugin()
+    const entry = plugins.find((p) => (p as Plugin).name === 'aihu-entry') as Plugin
+    // biome-ignore lint/suspicious/noExplicitAny: exercising the raw hook fn
+    const load = entry.load as any
+    expect(load.call({}, ENTRY_RESOLVED_ID)).toBe(ENTRY_SOURCE)
   })
 })
 
