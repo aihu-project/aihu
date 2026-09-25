@@ -289,10 +289,8 @@ export interface AihuConfig {
   /**
    * Router-related app config (arch-5 M1).
    *
-   * WARNING: `router.viewTransitions` is declared but NOT wired — nothing
-   * forwards it from here to the router runtime, so setting it has no effect.
-   * `defineConfig` warns when you do. The working lever is the
-   * `<router viewTransitions>` prop. Tracked for wiring or removal.
+   * `router.viewTransitions` sets the app-wide default; an individual
+   * `<router viewTransitions>` prop instance still overrides it.
    */
   readonly router?: RouterConfig
   /** Compiler options forwarded to `aihuCompilerPlugin`. */
@@ -390,11 +388,7 @@ const SCHEMA: Record<string, v.Validator> = {
   agentReadiness: v.orFalse(v.passthrough),
   adapter: v.anything,
   router: v.object({
-    // Declared, documented, and read by NOTHING: `viteAihuPlugin` forwards
-    // only pagesDir/layoutsDir/compileRouteMeta to the router. Warn rather
-    // than silently accept — a config file advertised as THE customization
-    // surface must not contain fields that quietly do nothing.
-    viewTransitions: v.notYetImplemented(v.boolean, 'use the <router viewTransitions> prop'),
+    viewTransitions: v.boolean,
   }),
   compiler: v.object({
     target: v.list(['client', 'server', 'universal'], 'INVALID_COMPILER_TARGET'),
