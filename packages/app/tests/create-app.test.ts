@@ -69,6 +69,7 @@ vi.mock('@aihu/runtime/app', () => ({
   _withOwnerContext: vi.fn((_node: object, fn: () => unknown) => fn()),
 }))
 
+import { provideRouteContext } from '@aihu/router'
 import { _setHydrate, _setMount, _setSignal } from '@aihu/runtime/app'
 import { createApp } from '../src/client.ts'
 
@@ -152,6 +153,28 @@ describe('createApp — provide', () => {
     createApp({ provide: { testProvided: 42 } })
     // biome-ignore lint/suspicious/noExplicitAny: test assertion needs dynamic globalThis access
     expect((globalThis as any).testProvided).toBe(42)
+  })
+})
+
+// ─── Router config ───────────────────────────────────────────────────────────
+
+describe('createApp — router.viewTransitions', () => {
+  afterEach(() => document.body.replaceChildren())
+
+  it('forwards config.router.viewTransitions into the provided RouteContext', () => {
+    makeOutlet()
+    createApp({ router: { viewTransitions: true } })
+    expect(provideRouteContext).toHaveBeenCalledWith(
+      expect.objectContaining({ viewTransitions: true }),
+    )
+  })
+
+  it('leaves viewTransitions undefined when not configured', () => {
+    makeOutlet()
+    createApp()
+    const mock = provideRouteContext as ReturnType<typeof vi.fn>
+    const call = mock.mock.calls.at(-1)?.[0]
+    expect(call.viewTransitions).toBeUndefined()
   })
 })
 

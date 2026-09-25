@@ -30,25 +30,28 @@ export const ENTRY_RESOLVED_ID = `\0${ENTRY_VIRTUAL_ID}`
 export const ENTRY_SOURCE = "import { createApp } from '@aihu/app/client'\n\ncreateApp()\n"
 
 /**
- * Source served for `ENTRY_RESOLVED_ID`, given the config's `app.outletId`.
+ * Source served for `ENTRY_RESOLVED_ID`, given the config's `app.outletId`
+ * and `router.viewTransitions`.
  *
- * With no configured id this returns {@link ENTRY_SOURCE} unchanged, so the
- * default path is byte-identical to what it has always emitted. With one, the
- * virtual entry passes it to `createApp` — otherwise a project that set
- * `app.outletId` would get a prerender/Worker splicing the configured id and a
- * client still mounting `#outlet`, which is the same class of divergence this
- * key exists to remove.
+ * With neither configured this returns {@link ENTRY_SOURCE} unchanged, so the
+ * default path is byte-identical to what it has always emitted. With either
+ * set, the virtual entry passes it to `createApp` — otherwise a project with
+ * no hand-written `src/main.ts` (the case this virtual entry exists for)
+ * would have `aihu.config.ts`'s `router.viewTransitions` silently do nothing,
+ * the same class of divergence `outletId` threading exists to remove.
  *
- * The id is embedded with `JSON.stringify`, not interpolated: it comes from a
- * config file, and an apostrophe in it would otherwise emit a syntax error into
- * the module graph.
+ * Values are embedded with `JSON.stringify`, not interpolated: they come from
+ * a config file, and e.g. an apostrophe in `outletId` would otherwise emit a
+ * syntax error into the module graph.
  */
-export function entrySource(outletId?: string): string {
-  if (outletId === undefined) return ENTRY_SOURCE
-  return (
-    "import { createApp } from '@aihu/app/client'\n\n" +
-    `createApp({ outletId: ${JSON.stringify(outletId)} })\n`
-  )
+export function entrySource(outletId?: string, viewTransitions?: boolean): string {
+  if (outletId === undefined && viewTransitions === undefined) return ENTRY_SOURCE
+  const opts: string[] = []
+  if (outletId !== undefined) opts.push(`outletId: ${JSON.stringify(outletId)}`)
+  if (viewTransitions !== undefined) {
+    opts.push(`router: { viewTransitions: ${JSON.stringify(viewTransitions)} }`)
+  }
+  return "import { createApp } from '@aihu/app/client'\n\n" + `createApp({ ${opts.join(', ')} })\n`
 }
 
 /**

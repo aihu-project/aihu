@@ -207,9 +207,9 @@ describe("output: 'ssr' requires css.shadowMode", () => {
 })
 
 describe('declared-but-not-wired fields warn instead of lying', () => {
-  it('warns on router.viewTransitions but still accepts it', () => {
+  it('warns on ui.style but still accepts it', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    expect(() => defineConfig({ router: { viewTransitions: true } })).not.toThrow()
+    expect(() => defineConfig({ ui: { style: 'daisyui' } })).not.toThrow()
     expect(warn).toHaveBeenCalledOnce()
     expect(warn.mock.calls[0]?.[0]).toContain('not yet wired up')
     warn.mockRestore()
@@ -217,16 +217,25 @@ describe('declared-but-not-wired fields warn instead of lying', () => {
 
   it('warns only once per key, so a rebuild loop does not train people to ignore it', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    defineConfig({ router: { viewTransitions: true } })
-    defineConfig({ router: { viewTransitions: true } })
-    defineConfig({ router: { viewTransitions: true } })
+    defineConfig({ ui: { style: 'daisyui' } })
+    defineConfig({ ui: { style: 'daisyui' } })
+    defineConfig({ ui: { style: 'daisyui' } })
     expect(warn).toHaveBeenCalledOnce()
     warn.mockRestore()
   })
 
   it('stays silent when the dead field is not set', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    defineConfig({ router: {} })
+    defineConfig({ ui: {} })
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+  })
+})
+
+describe('router.viewTransitions — wired via RouteContext', () => {
+  it('is accepted with no warning (no longer a declared-but-dead field)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    expect(() => defineConfig({ router: { viewTransitions: true } })).not.toThrow()
     expect(warn).not.toHaveBeenCalled()
     warn.mockRestore()
   })
