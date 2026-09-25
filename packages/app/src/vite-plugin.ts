@@ -363,10 +363,13 @@ export function viteAihuPlugin(config?: AihuConfig): PluginOption[] {
       return id === ENTRY_VIRTUAL_ID || id === `/${ENTRY_VIRTUAL_ID}` ? ENTRY_RESOLVED_ID : null
     },
     load(id) {
-      // `app.outletId` threaded through, so a project that moved off `#outlet`
+      // `app.outletId` / `router.viewTransitions` threaded through, so a
+      // project that moved off `#outlet` or wants view-transition navigation
       // states it once in the config rather than being forced into a
       // hand-written `src/main.ts` just to tell the client.
-      return id === ENTRY_RESOLVED_ID ? entrySource(config?.app?.outletId) : null
+      return id === ENTRY_RESOLVED_ID
+        ? entrySource(config?.app?.outletId, config?.router?.viewTransitions)
+        : null
     },
     transformIndexHtml: {
       // Run before Vite's core HTML processing (which resolves <script> src

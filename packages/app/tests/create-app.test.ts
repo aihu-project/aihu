@@ -169,12 +169,12 @@ describe('createApp — router.viewTransitions', () => {
     )
   })
 
-  it('leaves viewTransitions undefined when not configured', () => {
+  it('omits viewTransitions entirely when not configured', () => {
     makeOutlet()
     createApp()
-    expect(provideRouteContext).toHaveBeenCalledWith(
-      expect.objectContaining({ viewTransitions: undefined }),
-    )
+    const mock = provideRouteContext as ReturnType<typeof vi.fn>
+    const call = mock.mock.calls.at(-1)?.[0]
+    expect(call).not.toHaveProperty('viewTransitions')
   })
 })
 
