@@ -7,6 +7,15 @@ memory of the session that produced it.
 
 **Last reconciled:** 2026-07-26, against `origin/main` @ `9286182f`.
 
+**2026-09-26 partial pass (daily build-router):** this file is now two months
+stale and most of §3's per-track detail predates the satellite-repo
+extractions (compiler, signals/arbor, agent packages, etc. — see AGENTS.md).
+Did not attempt a full reconciliation; re-verified only the three §3/§4 items
+below against current code and PR history, since they were being treated as
+open work by the build-router routine. Everything else in this file should
+still be re-verified before acting on it, per the "Verify before trusting"
+note.
+
 **Where this lives.** `docs/TOPOLOGY.md`, committed. The repo's `state-<track>.md`
 convention is gitignored — fine for one agent's scratch state, useless for a
 shared record, because a file that is not committed cannot survive a cleared
@@ -104,20 +113,55 @@ Landed on the branch:
   bypass the config), `compiler.target`, `build.bundler`, `dev.*`, `typecheck.*`.
 
 **Next actions**
-1. `aihu add` / `registry-resolve.ts` → shared loader (third private loader).
+1. ~~`aihu add` / `registry-resolve.ts` → shared loader (third private loader).~~
+   **DONE, re-verified 2026-09-26.** `registry-resolve.ts`'s `realConfigLoader`
+   now calls `loadProjectConfig()` (`packages/cli/src/load-project-config.ts`),
+   the same shared reader `aihu build`/`aihu dev` use, which itself delegates to
+   `@aihu/app`'s `loadAihuConfig()` for the canonical `vite.config.ts` path. That
+   module's own doc comment narrates this exact consolidation in the past
+   tense ("aihu build and aihu dev each had a private loadConfig(); aihu add
+   had a third... that is how build.bundler came to be read by two commands").
+   No third private loader remains.
 2. `packages/language-server` + `packages/vscode-aihu` → `loadAihuConfig()`.
+   Unverified this pass — per AGENTS.md both packages are now owned by the
+   extracted `aihu-project/aihu-language` repo; a matching item is already
+   open there (`aihu-language#12`, routed from this file by the build-router
+   routine).
 3. Roll `declareAihuModule` across the 9 packages with real project-wide config:
    compiler, router, css-engine, ui, auth, agent-readiness, both adapters, store.
    `@aihu/auth` is the biggest win — its config is repeated at three call sites.
-4. Deprecate `@aihu/server`'s `AihuConfig`. **Seven fields, none read by its own
-   package.** Its `plugins` types against a contract whose dispatcher is a
-   documented no-op. Two same-named interfaces is the root confusion.
+4. ~~Deprecate `@aihu/server`'s `AihuConfig`. Seven fields, none read by its own
+   package. Its `plugins` types against a contract whose dispatcher is a
+   documented no-op. Two same-named interfaces is the root confusion.~~
+   **MISCHARACTERIZED, re-verified 2026-09-26.** `@aihu/server`'s `AihuConfig`
+   (`packages/server/src/config.ts`) is not dead code duplicating `@aihu/app`'s
+   `AihuConfig` — the two serve different concerns under the same name.
+   `@aihu/server`'s is the `defineAihuConfig()` contract a project's
+   `aihu.config.ts` default-exports (rendering mode, plugins, agent-readiness,
+   `ui` recipe options); `@aihu/app`'s is `viteAihuPlugin({...})`'s inline
+   argument shape (dev/build/compiler options). Every field in the server
+   version is now documented in-source with its actual consumer (`build` read
+   by "the compiler/build tooling", `ui` "consumed by the `aihu add` CLI and
+   the css-engine scanner", `agent`'s type owned by
+   `agent-readiness-config.ts` and explicitly called "the SINGLE source of
+   truth"). Whatever prompted this note in July looks to have been fixed by
+   the time of this pass — no action taken; not re-flagging without a fresh
+   repro.
 5. Retire the `aihu.config.ts` fallback in `loadProjectConfig` once nothing
-   depends on it. It is transitional, not permanent.
+   depends on it. It is transitional, not permanent. **Still blocked,
+   re-verified 2026-09-26:** `examples/cf-adapter`, `examples/ssg-site`,
+   `examples/plugin-demo`, and `examples/auth-magna-seo` all still ship a real
+   `aihu.config.ts` with no `vite.config.ts` beside it — the fallback is still
+   load-bearing.
 
 **Known gaps**
 - `router.viewTransitions` and `ui.style` are declared and read by nothing. They
   now warn when set rather than lying silently. Wire or remove.
+  **`router.viewTransitions` half is in flight:** PR
+  [#866](https://github.com/aihu-project/aihu/pull/866) wires it end-to-end
+  (`createApp()`'s `RouteContext` + the generated `virtual:aihu-entry`) and
+  removes its `notYetImplemented` schema wrapper; open, not yet merged as of
+  2026-09-26. `ui.style` is untouched by that PR and still in this state.
 - `css.shadowMode` is project-wide, so `--shadow light` flips leaves too, contra
   DA4. The shape that fixes it is `{ pages, layouts, leaves }`, needing compiler
   vocabulary that does not exist. **Design the surface capable of it now**;
@@ -168,9 +212,11 @@ were broken on **every** template) · #606 stop fabricating `shadowMode` ·
 Neither of us restructures `packages/cli/src/index.ts` further until the shape
 is agreed.
 
-**Open:** #613 fixes the `agent` TS7006 regression (#595 fixed it, #601
+**Open:** ~~#613 fixes the `agent` TS7006 regression (#595 fixed it, #601
 reintroduced it at `templates-agent.ts:570`) and switches matrix PR runs to
-`--mode local`.
+`--mode local`.~~ **MERGED, re-verified 2026-09-26** — PR #613
+("fix(cli): agent template TS7006 regression + matrix tests the diff, not
+npm") is closed/merged.
 
 ---
 
@@ -289,8 +335,9 @@ FEL-402 (dep-check subpath purity evaded by computed dynamic imports).
 - **FEL-420** `@aihu/plugin` is 0.1.1 on npm, 0.1.0 in the repo — a published
   version with no source.
 - `scaffold-matrix` merged red and **has never passed on any branch**, including
-  its own. #613 switches PR runs to `--mode local` and skips cells that cannot
-  run. Until then it is a red X that gates nothing.
+  its own. #613 (merged, see T3) switched PR runs to `--mode local` and skips
+  cells that cannot run — unverified this pass whether that alone was enough
+  to turn `scaffold-matrix` green; re-check before trusting this line.
 - Known blind spots: `ci-ok` gates one job; the binary-bump guard misses
   `npm-native/`; `bench` produces both false positives and negatives.
 
