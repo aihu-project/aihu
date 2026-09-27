@@ -10,6 +10,7 @@
  * This ordering is a security invariant — do NOT reorder.
  */
 import type { AgentMetadata } from '@aihu/agent'
+import type { Actor } from './actor.ts'
 import {
   decideEmission,
   isScopeValue,
@@ -116,6 +117,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
   const rateLimitPlugin = options?.rateLimitPlugin
   const getRegistry = options?.getRegistry
   const authDiscoveryUrl = options?.authDiscoveryUrl
+  const actorResolver = options?.actorResolver
 
   /**
    * Run the security gate (RFC §5 steps 1-4: 404 → 401 → 403 → 429) WITHOUT
@@ -137,7 +139,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
     toolName: string,
     requestContext?: RequestContext,
   ): Promise<
-    | { ok: true; binding: LiveBinding; tag: string; action: string }
+    | { ok: true; binding: LiveBinding; tag: string; action: string; actor?: Actor }
     | { ok: false; envelope: ReturnType<typeof jsonrpcError> }
   > {
     const slash = toolName.indexOf('/')
@@ -261,6 +263,21 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
     }
     const verifiedSub: string | null = principal.class === 'anonymous' ? null : principal.sub
 
+    // ── Step 2b: tenant-aware actor resolution (#870) ─────────────────────
+    //
+    // Runs AFTER the principal is verified and the static call-axis meet
+    // passed, so `actorResolver` is never consulted for an anonymous or
+    // refused caller. Fail-closed by construction: `actor` starts undefined
+    // and stays that way unless a resolver is configured AND returns a
+    // non-null result for this exact principal. Nothing downstream in THIS
+    // gate reads `actor` yet — it is surfaced to callers (`authorize()`) for
+    // a host's own authorization layer to consult; the framework makes no
+    // enforcement decision from it (that is the remaining scope of #871).
+    let actor: Actor | undefined
+    if (actorResolver && principal.class !== 'anonymous') {
+      actor = (await actorResolver.resolveActor(principal)) ?? undefined
+    }
+
     // ── Step 3b: live entitlement (GX Phase 4 #466, 70-spec §4.6) ─────────
     //
     // AFTER the static meet, BEFORE the rate limit. For every scope in the
@@ -363,7 +380,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
       }
     }
 
-    return { ok: true, binding, tag, action }
+    return { ok: true, binding, tag, action, ...(actor ? { actor } : {}) }
   }
 
   return {
@@ -410,7 +427,12 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
       // action. Used by the capability bridge so the visible browser instance
       // is the sole executor while the server stays the policy authority.
       const gated = await runGate(toolName, requestContext)
-      return gated.ok ? { authorized: true } : gated.envelope
+      if (!gated.ok) return gated.envelope
+      // #870: surface the resolved actor (when an `actorResolver` produced
+      // one) so a capability-bridge host can layer its own session-bound
+      // authorization on top. Omitted entirely when absent — never a `null`
+      // placeholder a caller might mistake for "resolved to no actor".
+      return gated.actor ? { authorized: true, actor: gated.actor } : { authorized: true }
     },
 
     asMiddleware(): (req: Request) => Promise<Response | null> {

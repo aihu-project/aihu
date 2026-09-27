@@ -10,6 +10,7 @@
 export type { ActionSchema, InputSchema } from '@aihu/agent'
 
 import type { AgentMetadata } from '@aihu/agent'
+import type { Actor, ActorResolver } from './actor.ts'
 import type { EntitlementMemo, EntitlementsHandle } from './entitlements.ts'
 
 // ─── v0.3.0 — LiveBinding (RFC §2.2) ─────────────────────────────────────────
@@ -233,6 +234,17 @@ export interface AgentServiceOptions {
    * posture as `resolveAuth`: no ambient state, trivially testable).
    */
   entitlements?: EntitlementsHandle
+  /**
+   * Tenant-aware actor resolution (#870): the same injected posture as
+   * `entitlements`/`resolveAuth`. When present, `runGate` resolves the
+   * calling {@link Actor} for every non-anonymous principal that reaches
+   * dispatch, and `authorize()` surfaces it to callers (e.g. the
+   * capability-bridge in `@aihu/agent-server`) alongside the `authorized`
+   * verdict. ABSENT (or a resolver returning `null` for a given principal)
+   * ⇒ no `actor` is produced — byte-identical to today's behavior for every
+   * existing caller, since nothing before #870 reads this field.
+   */
+  actorResolver?: ActorResolver
 }
 
 /**
