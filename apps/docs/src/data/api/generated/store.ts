@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/store',
   slug: 'store',
   tier: 'Runtime core',
-  version: '0.1.2',
+  version: '0.1.3',
   tagline:
     'Pinia-style global stores on aihu signals — defineStore, SSR-safe per-request instances, registry-based serialize/hydrate, plugins.',
   note: '',

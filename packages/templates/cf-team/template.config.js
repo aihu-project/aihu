@@ -89,9 +89,9 @@ export const config = {
     '@aihu/runtime': '^6.1.1',
     '@aihu/arbor': '^4.1.2',
     '@aihu/signals': '^0.5.1',
-    '@aihu/router': '^0.5.0',
+    '@aihu/router': '^0.5.1',
     '@aihu/server': '^0.6.0',
-    '@aihu/adapter-cloudflare': '^14.0.1',
+    '@aihu/adapter-cloudflare': '^14.0.2',
   },
   appPeerDepsConditional: {
     'better-auth': { version: '^1.0.0', when: 'auth === "better-auth"' },
