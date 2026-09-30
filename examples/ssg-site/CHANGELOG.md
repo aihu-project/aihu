@@ -1,5 +1,13 @@
 # @aihu/example-ssg-site
 
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies [[`334bb32`](https://github.com/aihu-project/aihu/commit/334bb328cdd36de4dd0424d3cc0541a7b4c0101d)]:
+  - @aihu/router@0.5.1
+  - @aihu/app@10.1.2
+
 ## 0.0.10
 
 ### Patch Changes

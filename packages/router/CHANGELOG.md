@@ -1,5 +1,11 @@
 # @aihu/router
 
+## 0.5.1
+
+### Patch Changes
+
+- [#890](https://github.com/aihu-project/aihu/pull/890) [`334bb32`](https://github.com/aihu-project/aihu/commit/334bb328cdd36de4dd0424d3cc0541a7b4c0101d) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Name the copyright holder in the MIT license file. The holder line now reads Shane McGuirt instead of Fellwork. The license terms are unchanged.
+
 ## 0.5.0
 
 ### Minor Changes

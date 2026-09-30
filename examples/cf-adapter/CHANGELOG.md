@@ -1,5 +1,13 @@
 # @aihu/example-cf-adapter
 
+## 0.0.36
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/app@10.1.2
+  - @aihu/adapter-cloudflare@14.0.2
+
 ## 0.0.35
 
 ### Patch Changes

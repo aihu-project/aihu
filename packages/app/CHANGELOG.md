@@ -1,5 +1,13 @@
 # @aihu/app
 
+## 10.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`334bb32`](https://github.com/aihu-project/aihu/commit/334bb328cdd36de4dd0424d3cc0541a7b4c0101d)]:
+  - @aihu/router@0.5.1
+  - @aihu/store@0.1.3
+
 ## 10.1.1
 
 ### Patch Changes
