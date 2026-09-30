@@ -159,6 +159,7 @@ export function createAgentReadinessRoutes(
       // GX Phase 3: per-route directives derived from compiled `extract.read`.
       ...(config.routes !== undefined ? { routes: config.routes } : {}),
       ...(config.sitemap !== undefined ? { sitemap: config.sitemap } : {}),
+      ...(config.agentMap !== undefined ? { agentMap: config.agentMap } : {}),
       ...(config.wildcard !== undefined ? { wildcard: config.wildcard } : {}),
     })
     return new Response(txt, {

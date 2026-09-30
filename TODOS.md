@@ -252,10 +252,12 @@ Re-verified still reproducing against current `aihu-dom` source
      documented choice, not a silent spec-compliance bug — no further action
      needed unless the project wants to drop them outright.
 
-### Adopt ARD (`/.well-known/ai-catalog.json` + robots.txt `Agentmap:`)
+### Adopt ARD (`/.well-known/ai-catalog.json` + robots.txt `Agentmap:`) — `Agentmap:` PARTIALLY LANDED
 - **What:** [Agentic Resource Discovery](https://agenticresourcediscovery.org/spec), announced 2026-06-17 by Google, Microsoft, GitHub, Hugging Face, Cisco, Databricks, NVIDIA, Salesforce, ServiceNow, Snowflake. A `/.well-known/ai-catalog.json` listing `application/a2a-agent-card+json` and `application/mcp-server-card+json` entries, plus an **`Agentmap:` robots.txt directive mirroring `Sitemap:`**.
 - **Why it matters here:** `Agentmap:` is the single clearest technical convergence point between the crawler and agent worlds — the one place the two audiences share a mechanism *by design* rather than by our construction. It is the standards-backed version of the unified-discoverability surface we were about to design ourselves.
 - **Status:** v0.9 draft, one month old, Apache-2.0. Real backing, but do not over-index. Track it; don't bet the design on it yet.
+- **Landed (2026-09-30):** the `Agentmap:` robots.txt directive — `RobotsConfig.agentMap` / `AgentReadinessConfig.agentMap` (`packages/plugin-agent-readiness/src/robots.ts`, `packages/server/src/agent-readiness-config.ts`) emits `Agentmap: <url>` immediately after `Sitemap:`, byte-mirroring that directive's existing shape. This part of the spec is unambiguous regardless of the draft's other details, so it carries no over-index risk.
+- **Still open — `/.well-known/ai-catalog.json` itself:** NOT implemented this pass. The draft spec's exact JSON shape (field names beyond the two media types named above) could not be confirmed — `agenticresourcediscovery.org` is blocked by this session's network egress policy — and the doc's own "don't bet the design on it yet" caution argues against guessing a shape that may still move. Generate this once the spec is fetchable and, per the dependency note below, once the A2A/MCP card endpoints it references are confirmed stable.
 - **Depends on:** the endpoint-correctness item above (ARD entries reference the A2A and MCP cards, so those paths must be right first).
 
 ### Bare boolean attributes are stripped in templates (bug) — FIXED

@@ -404,6 +404,14 @@ export interface RobotsConfig {
   readonly routes?: ReadonlyArray<RouteReadPolicy>
   readonly sitemap?: string
   /**
+   * Agentic Resource Discovery (ARD, agenticresourcediscovery.org, v0.9 draft)
+   * `Agentmap:` directive — mirrors `Sitemap:` in both syntax and placement,
+   * pointing at the `/.well-known/ai-catalog.json` document that lists this
+   * site's agent-card / MCP-server-card resources. Emitted verbatim; this
+   * package does not validate the URL or generate the catalog document.
+   */
+  readonly agentMap?: string
+  /**
    * The trailing `User-agent: * / Allow: /` block is ALWAYS emitted for
    * predictable output — set `wildcard: false` to suppress it. It is also
    * skipped automatically when one of your own rules already targets `*`
@@ -518,5 +526,6 @@ export function generateRobotsTxt(config: RobotsConfig = {}): string {
 
   let output = blocks.join('\n\n')
   if (config.sitemap) output += `\n\nSitemap: ${config.sitemap}`
+  if (config.agentMap) output += `\n\nAgentmap: ${config.agentMap}`
   return output.trimEnd()
 }
