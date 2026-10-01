@@ -706,6 +706,14 @@ const PACKAGE_TIERS: Record<string, TierInfo> = {
       { label: '@aihu/cli', href: '../cli' },
     ],
   },
+  '@aihu/templates-cf-solo': {
+    tier: 'E',
+    label: 'Starter — Cloudflare Workers single-package solo template',
+    seeAlso: [
+      { label: '@aihu/adapter-cloudflare', href: '../adapter-cloudflare' },
+      { label: '@aihu/cli', href: '../cli' },
+    ],
+  },
   // Tier B — meta-framework (server / data capabilities)
   '@aihu/auth': {
     tier: 'B',

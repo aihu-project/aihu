@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noEmit": true,
+    "composite": false,
+    "paths": {
+      "@aihu/cli/template-manifest": ["../../cli/src/template-manifest.ts"]
+    }
+  },
+  "include": ["template.config.ts"],
+  "exclude": ["template/**", "node_modules", "dist"]
+}

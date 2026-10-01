@@ -1,0 +1,40 @@
+# Cloudflare Workers config for __APP_NAME__.
+# https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "__APP_NAME__"
+# Points at source, not a build output: wrangler bundles the Worker entry
+# itself (its own esbuild step, run by `wrangler dev`/`wrangler deploy`) —
+# there is no separate build step that produces a worker bundle.
+main = "src/main.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Static assets emitted by `vite build` (client-only — see vite.config.ts;
+# the Worker entry above is bundled separately).
+[assets]
+directory = "dist/client"
+binding = "ASSETS"
+
+# ─── Bindings (uncomment + configure as needed) ───────────────────────────────
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "__APP_NAME__-db"
+# database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# [[r2_buckets]]
+# binding = "BUCKET"
+# bucket_name = "__APP_NAME__-bucket"
+
+# ─── Environments ─────────────────────────────────────────────────────────────
+
+[env.production]
+name = "__APP_NAME__"
+# Production-only bindings + vars override here. Inherits top-level config.
+
+[env.preview]
+name = "__APP_NAME__-preview"

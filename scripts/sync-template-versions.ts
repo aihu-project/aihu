@@ -53,7 +53,7 @@
  *
  * `TEMPLATE_VERSIONS_PACKAGES_DIR` repoints the version SOURCE at a fixture
  * tree and `TEMPLATE_VERSIONS_TS_TARGET` repoints the generated-module TARGET.
- * Setting the target override also SKIPS the cf-team targets — they read the
+ * Setting the target override also SKIPS the template-package targets — they read the
  * real workspace and would mismatch a fixture source unconditionally, which
  * would make the fixture red for the wrong reason (a gate that says "no" to
  * everything proves nothing). Never set either by hand.
@@ -71,9 +71,35 @@ const TS_TARGET = resolve(ROOT, TS_TARGET_OVERRIDE ?? 'packages/cli/src/dep-vers
 /** Fixture mode: only the generated module is compared. See the docblock. */
 const FIXTURE_MODE = TS_TARGET_OVERRIDE !== undefined
 
-const CF_TEAM_TMPL = resolve(ROOT, 'packages/templates/cf-team/template/apps/web/package.json.tmpl')
-const CF_TEAM_CONFIG_TS = resolve(ROOT, 'packages/templates/cf-team/template.config.ts')
-const CF_TEAM_CONFIG_JS = resolve(ROOT, 'packages/templates/cf-team/template.config.js')
+/**
+ * Every `@aihu/templates-*` package whose `appPeerDeps` / scaffolded
+ * `package.json.tmpl` this generator keeps in sync. Add a row here when a
+ * new template package lands under `packages/templates/` (arch-6 §10 Round
+ * B2 stamps out more of these) — the generator does not auto-discover them
+ * because each package's scaffolded manifest can live at a different
+ * sub-path (cf-team's is nested under `apps/web/`; a single-package template
+ * like cf-solo has its own `package.json.tmpl` at the template root).
+ */
+const TEMPLATE_PACKAGES: ReadonlyArray<{
+  readonly tmpl: string
+  readonly configTs: string
+  readonly configJs: string
+}> = [
+  {
+    tmpl: 'packages/templates/cf-team/template/apps/web/package.json.tmpl',
+    configTs: 'packages/templates/cf-team/template.config.ts',
+    configJs: 'packages/templates/cf-team/template.config.js',
+  },
+  {
+    tmpl: 'packages/templates/cf-solo/template/package.json.tmpl',
+    configTs: 'packages/templates/cf-solo/template.config.ts',
+    configJs: 'packages/templates/cf-solo/template.config.js',
+  },
+].map((t) => ({
+  tmpl: resolve(ROOT, t.tmpl),
+  configTs: resolve(ROOT, t.configTs),
+  configJs: resolve(ROOT, t.configJs),
+}))
 
 /**
  * EXTERNAL ranges a scaffold pins, kept here rather than typed into each
@@ -329,15 +355,17 @@ function buildTargets(): Target[] {
   const targets: Target[] = [{ path: TS_TARGET, next: renderModule(packages, EXTERNAL_RANGES) }]
   if (FIXTURE_MODE) return targets
 
-  targets.push({
-    path: CF_TEAM_TMPL,
-    next: rewriteManifestRanges(readFileSync(CF_TEAM_TMPL, 'utf8'), ranges),
-  })
-  for (const config of [CF_TEAM_CONFIG_TS, CF_TEAM_CONFIG_JS]) {
+  for (const pkg of TEMPLATE_PACKAGES) {
     targets.push({
-      path: config,
-      next: rewriteAppPeerDeps(readFileSync(config, 'utf8'), ranges),
+      path: pkg.tmpl,
+      next: rewriteManifestRanges(readFileSync(pkg.tmpl, 'utf8'), ranges),
     })
+    for (const config of [pkg.configTs, pkg.configJs]) {
+      targets.push({
+        path: config,
+        next: rewriteAppPeerDeps(readFileSync(config, 'utf8'), ranges),
+      })
+    }
   }
   return targets
 }

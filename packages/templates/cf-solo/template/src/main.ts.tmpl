@@ -1,0 +1,51 @@
+/**
+ * __APP_NAME__ — Cloudflare Workers entry.
+ *
+ * Scaffolded by @aihu/templates-cf-solo on __SCAFFOLD_DATE__.
+ * The app's root SFC lives in `./aihu-app.aihu` and is mounted CLIENT-SIDE
+ * only, referenced directly from `index.html` — never imported here. This
+ * file is bundled for the Workers runtime (by wrangler's own esbuild step,
+ * pointed at this file via `main` in wrangler.toml), which has no `.aihu`
+ * loader; a `.aihu` import in this module would fail to bundle.
+ */
+
+import { createRequestRouter, defineRoute, defineRoutes, json } from '@aihu/server'
+import { createAgentReadinessRoutes } from '@aihu-plugin/agent-readiness'
+
+/** Shape returned by the worker's health route. */
+interface AppStatus {
+  readonly app: string
+  readonly status: 'ok' | 'degraded'
+}
+
+function appStatus(app: string, healthy = true): AppStatus {
+  return { app, status: healthy ? 'ok' : 'degraded' }
+}
+
+// Agent-readiness endpoints — served automatically on every aihu app.
+// Configure name, endpoint, and llmsSections in aihu.config.ts under `agent:`.
+const ar = createAgentReadinessRoutes({
+  name: '__APP_NAME__',
+  // endpoint: 'https://__APP_NAME__.workers.dev/mcp',  // uncomment to enable MCP card
+})
+
+const router = createRequestRouter({
+  routes: [
+    // Agent-readiness: /llms.txt, /llms-full.txt, /.well-known/mcp/server-card.json, /robots.txt
+    defineRoutes([
+      { pattern: '/llms.txt', handler: ar.llmsTxt },
+      { pattern: '/llms-full.txt', handler: ar.llmsFullTxt },
+      { pattern: '/.well-known/mcp/server-card.json', handler: ar.mcpServerCard },
+      { pattern: '/robots.txt', handler: ar.robotsTxt },
+    ]),
+
+    // App routes
+    defineRoute('/', () => json(appStatus('__APP_NAME__'))),
+  ],
+})
+
+export default {
+  fetch(request: Request): Promise<Response> {
+    return router(request)
+  },
+}

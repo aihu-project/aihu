@@ -1,0 +1,55 @@
+// 7GUIs #1 — minimum viable aihu SFC.
+// State + event + reactive text update.
+// v2 agent surface: per-entry `describe:`/`expose:` on @state macros.
+
+@state {
+  $prop: {
+    count: {
+      default: 0,
+      type: "number",
+      describe: "Current counter value",
+      expose: { read: true, write: true },
+    }
+  }
+
+  $action: {
+    increment: {
+      describe: "Add 1 to the counter",
+      expose: { read: true, write: true },
+      handler: () => { count++ },
+    },
+    decrement: {
+      describe: "Subtract 1 from the counter",
+      expose: { read: true, write: true },
+      handler: () => { count-- },
+    },
+    reset: {
+      describe: "Reset the counter to 0",
+      expose: { read: true, write: true },
+      handler: () => { count = 0 },
+    },
+  }
+}
+
+@template {
+  <section class="counter">
+    <h1>Count: {count}</h1>
+    <div class="controls">
+      <button on:click={decrement}>-</button>
+      <button on:click={reset}>Reset</button>
+      <button on:click={increment}>+</button>
+    </div>
+  </section>
+}
+
+@style {
+  .counter  { display: grid; gap: 0.75rem; padding: 1.5rem; max-width: 18rem; background: var(--panel-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--card-shadow); }
+  h1        { margin: 0; font-variant-numeric: tabular-nums; color: var(--fg); }
+  .controls { display: flex; gap: 0.5rem; }
+  button    { flex: 1; padding: 0.5rem 0.75rem; cursor: pointer; background: var(--btn-bg); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-size: 1rem; transition: background 0.1s; }
+  button:hover { background: var(--hover-bg); }
+}
+
+@agent {
+  $rate-limit 100
+}

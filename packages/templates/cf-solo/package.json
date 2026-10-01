@@ -1,0 +1,31 @@
+{
+  "name": "@aihu/templates-cf-solo",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "description": "Cloudflare Workers single-package solo template for Aihu",
+  "main": "./template.config.js",
+  "types": "./template.config.ts",
+  "files": [
+    "template",
+    "template.config.ts",
+    "template.config.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@aihu/cli": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aihu-project/aihu.git",
+    "directory": "packages/templates/cf-solo"
+  },
+  "homepage": "https://github.com/aihu-project/aihu/tree/main/packages/templates/cf-solo#readme",
+  "bugs": "https://github.com/aihu-project/aihu/issues"
+}
