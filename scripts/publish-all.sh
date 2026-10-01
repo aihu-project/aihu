@@ -70,6 +70,9 @@ PKGS=(
                        # can now dev/build/typecheck across all 4 package managers).
                        # Unset `private` alongside restoring this entry — see
                        # docs/lessons for the removal history.
+  "templates/cf-solo" # @aihu/templates-cf-solo — the solo-dev escape hatch (arch-6 §1.3).
+                       # Zero @aihu/* runtime deps, same as cf-team (templates have no
+                       # runtime deps at all — see scripts/sync-template-versions.ts).
   "css-engine"        # build-time CSS engine; consumes the published compiler
   "primitives"        # headless UI primitives; depends on css-engine + signals + arbor (must follow them)
   "ui"                # @aihu/ui styled-recipe registry; aihu add resolves it from npm (must follow primitives)
