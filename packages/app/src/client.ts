@@ -12,6 +12,7 @@ import {
   bindRouteSignalWriter,
   createRouter,
   provideRouteContext,
+  scrollAfterNavigation,
   shouldInterceptLinkClick,
 } from '@aihu/router'
 import { _setHydrate, _setMount, _setSignal, _withOwnerContext } from '@aihu/runtime/app'
@@ -534,6 +535,7 @@ export function createApp(config?: AppConfig): AppHandle {
       e.preventDefault()
       history.pushState({}, '', href)
       renderNav(router.match(location.pathname))
+      scrollAfterNavigation(location.hash)
     },
     { signal: listeners.signal },
   )

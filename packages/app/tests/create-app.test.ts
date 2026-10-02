@@ -60,6 +60,8 @@ vi.mock('@aihu/router', async (importOriginal) => ({
   // intercepts, so the guard must not be stubbed.
   shouldInterceptLinkClick: (await importOriginal<typeof import('@aihu/router')>())
     .shouldInterceptLinkClick,
+  scrollAfterNavigation: (await importOriginal<typeof import('@aihu/router')>())
+    .scrollAfterNavigation,
   createRouter: vi.fn(() => ({ match: mockMatch })),
   bindRouteSignalWriter: vi.fn(),
   provideRouteContext: vi.fn(),
@@ -565,6 +567,23 @@ describe('createApp — SPA navigation', () => {
     expect(pushStateSpy).toHaveBeenCalledTimes(1)
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('second-page')
     pushStateSpy.mockRestore()
+  })
+
+  it('scrolls to the top after an intercepted link navigation', async () => {
+    const route: RouteStub = { name: 'top-page', module: vi.fn().mockResolvedValue(undefined) }
+    createApp()
+    await flushPromises()
+
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const a = document.createElement('a')
+    a.setAttribute('href', '/top')
+    document.body.appendChild(a)
+    mockMatch.mockReturnValue({ route, params: undefined })
+    a.click()
+    await flushPromises()
+
+    expect(scrollSpy).toHaveBeenCalledWith(0, 0)
+    scrollSpy.mockRestore()
   })
 
   it('does not intercept mailto: links', async () => {
