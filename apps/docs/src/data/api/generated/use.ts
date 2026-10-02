@@ -13,6 +13,13 @@ export const PKG: ApiPackage = {
 
 export const EXPORTS: readonly ApiExport[] = [
   {
+    name: 'createFocusTrap',
+    kind: 'function',
+    signature:
+      'function createFocusTrap( container: ContainerTarget, options: CreateFocusTrapOptions = {}, ): FocusTrap',
+    summary: '',
+  },
+  {
     name: 'toValue',
     kind: 'function',
     signature: 'function toValue<T>(v: MaybeGetter<T>): T',
@@ -583,11 +590,24 @@ export const EXPORTS: readonly ApiExport[] = [
       'Alias — VueUse names this composable `onClickOutside`; both names are exported so callers can use either the house `useX` convention or the upstream-familiar spelling.',
   },
   {
+    name: 'CreateFocusTrapOptions',
+    kind: 'interface',
+    signature:
+      'interface CreateFocusTrapOptions {\n  initialFocus?: FocusTarget\n  returnFocus?: FocusTarget\n  inertTargets?: HTMLElement[]\n  onEscape?: () => void\n}',
+    summary: '',
+  },
+  {
     name: 'FieldCell',
     kind: 'interface',
     signature:
       "interface FieldCell {\n  column: number\n  row: number\n  x: number\n  y: number\n  /** The glyph currently drawn — mutated in place by `'drift'`. */\n  char: string\n  /** Index into the resolved character set, the drift base. */\n  index: number\n  /** Phase offset in radians, so the field does not animate in unison. */\n  phase: number\n  /** Per-cell speed multiplier, `[0.5, 1.5)`. */\n  rate: number\n  /** Alpha last drawn with. */\n  opacity: number\n}",
     summary: "One grid cell's mutable state.",
+  },
+  {
+    name: 'FocusTrap',
+    kind: 'interface',
+    signature: 'interface FocusTrap {\n  activate(): void\n  deactivate(): void\n}',
+    summary: '',
   },
   {
     name: 'Particle',
@@ -1387,6 +1407,12 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'Dispose',
     kind: 'type',
     signature: 'type Dispose',
+    summary: '',
+  },
+  {
+    name: 'FocusTarget',
+    kind: 'type',
+    signature: 'type FocusTarget = HTMLElement | null | (() => HTMLElement | null)',
     summary: '',
   },
   {
