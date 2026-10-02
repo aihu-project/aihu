@@ -24,13 +24,19 @@ bun run bench                # benchmark suite (cellx, dynamic-deps, etc.)
   `aihu-project/aihu-compiler` repository) emits vanilla JS, a type-check
   sidecar for `tsc`/the editor, and SSR/route metadata. This repository tests
   the released artifact as a consumer and does not own compiler source.
-- Workspace packages under `packages/`:
-  - `@aihu/signals` — push-based signals/computeds/effects (≤ 1.7 kB gz)
-  - `@aihu/arbor` — `branch`/`leaf`/`mount` DOM primitives
+- `@aihu/signals` (push-based signals/computeds/effects) and `@aihu/arbor`
+  (`branch`/`leaf`/`mount` DOM primitives) are released by the standalone
+  `aihu-project/aihu-dom` repository — same relationship as the compiler
+  above. Neither lives under `packages/` anymore; this repo consumes them
+  as published dependencies.
+- Workspace packages under `packages/` (non-exhaustive — 30+ packages live
+  here, several already published by standalone satellite repos during an
+  in-progress extraction, see `docs/TOPOLOGY.md` and issue #809):
   - `@aihu/runtime` — runtime layer
   - `@aihu/tsc` / `@aihu/language-server` — type-checking (`aihu-tsc`) and
     editor support for `.aihu` files
-  - `@aihu/agent` + `agent-readiness` — agent/MCP compliance helpers
+  - `@aihu/agent` + `@aihu-plugin/agent-readiness` — agent/MCP compliance
+    helpers
 
 ## Conventions
 
