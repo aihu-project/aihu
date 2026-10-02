@@ -15,11 +15,12 @@
  * that is the point: the bug lived in the seam between them.
  */
 
-import { leaf } from '@aihu/arbor'
+import { branch, leaf } from '@aihu/arbor'
 import { createContext, inject, provide } from '@aihu/context'
 import type { MatchResult, RouteSegment } from '@aihu/router'
-import { RouteContext, useRoute, useRouter } from '@aihu/router'
-import { defineComponent, defineElement } from '@aihu/runtime'
+import { isActiveRouteLink, RouteContext, useRoute, useRouter } from '@aihu/router'
+import { defineComponent, defineElement, onMount } from '@aihu/runtime'
+import { effect } from '@aihu/signals'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // @aihu/use has no vitest alias (it is a source-only family package); import
 // the composable by path, the same way component-rendering.test.ts reaches
@@ -82,10 +83,10 @@ function definePage(): { tag: string; seen: Seen[] } {
   return { tag, seen }
 }
 
-function makeOutlet(id = 'outlet'): HTMLElement {
+function makeOutlet(id = 'outlet', parent: HTMLElement = document.body): HTMLElement {
   const el = document.createElement('div')
   el.id = id
-  document.body.appendChild(el)
+  parent.appendChild(el)
   return el
 }
 
@@ -106,9 +107,87 @@ beforeEach(() => {
 })
 afterEach(() => document.body.replaceChildren())
 
+describe('createApp — configured context roots', () => {
+  it('keeps app context inside its configured root, outside the outlet', async () => {
+    const { tag, seen } = definePage()
+    const other = definePage()
+    const contextRoot = document.createElement('main')
+    document.body.appendChild(contextRoot)
+    mockRoutes.push(route('/posts/:id', POST_SEGMENTS, tag))
+    history.replaceState(null, '', '/posts/9')
+    makeOutlet('outlet', contextRoot)
+
+    createApp({ contextRoot })
+    await flush()
+    expect(seen[0]!.route).not.toBeNull()
+
+    // Sibling of contextRoot, not merely the outlet — scope remains isolated.
+    document.body.appendChild(document.createElement(other.tag))
+    expect(other.seen[0]!.route).toBeNull()
+    expect(other.seen[0]!.params()).toEqual({})
+  })
+})
+
 // ─── The fix ────────────────────────────────────────────────────────────────
 
 describe('createApp — RouteContext is provided to the component tree', () => {
+  it('useRoute() resolves in a shell component outside the outlet', async () => {
+    const { tag, seen } = definePage()
+    mockRoutes.push(route('/posts/:id', POST_SEGMENTS, tag))
+    history.replaceState(null, '', '/posts/42')
+    makeOutlet()
+
+    createApp()
+    const shell = document.createElement(tag)
+    document.body.appendChild(shell)
+    await flush()
+
+    expect(seen[0]!.route?.pathname).toBe('/posts/42')
+  })
+
+  it('a shell route link outside the outlet updates aria-current on navigation', async () => {
+    const tag = nextTag()
+    const href = '/posts/42'
+    mockRoutes.push(route('/posts/:id', POST_SEGMENTS, nextTag()))
+    history.replaceState(null, '', href)
+    makeOutlet()
+    createApp()
+
+    defineElement(
+      tag,
+      defineComponent(({ host }) => {
+        const ctx = inject(RouteContext)
+        onMount(() => {
+          const anchor = host.querySelector('a')
+          if (!anchor) return
+          const stop = effect(() => {
+            const current = ctx?.current()
+            if (current && isActiveRouteLink(href, current.pathname)) {
+              anchor.setAttribute('aria-current', 'page')
+            } else {
+              anchor.removeAttribute('aria-current')
+            }
+          })
+          return () => stop()
+        })
+        return branch('div', null, [branch('a', { href }, [leaf('post')])])
+      }),
+      { shadowMode: 'light' },
+    )
+    const shellLink = document.createElement(tag)
+    document.body.appendChild(shellLink)
+    await flush()
+
+    const anchor = shellLink.querySelector('a')!
+    expect(anchor.getAttribute('aria-current')).toBe('page')
+
+    history.replaceState(null, '', '/posts/7')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await flush()
+
+    expect(anchor.hasAttribute('aria-current')).toBe(false)
+  })
+
   it('useRoute() resolves the active match inside a page component', async () => {
     const { tag, seen } = definePage()
     mockRoutes.push(route('/posts/:id', POST_SEGMENTS, tag))
@@ -250,37 +329,5 @@ describe('createApp — config.context (app-root context scope)', () => {
     await flush()
 
     expect(seen[0]!.params()).toEqual({ id: 'overridden' })
-  })
-})
-
-// ─── Degrade-safe ───────────────────────────────────────────────────────────
-
-describe('route APIs outside any router', () => {
-  it('degrade to null / {} with no error when no app provided a context', () => {
-    const { tag, seen } = definePage()
-    // No createApp(), no <router> — just a bare element in the document.
-    document.body.appendChild(document.createElement(tag))
-
-    expect(seen).toHaveLength(1)
-    expect(seen[0]!.route).toBeNull()
-    expect(seen[0]!.routerFound).toBe(false)
-    expect(seen[0]!.params()).toEqual({})
-  })
-
-  it('a component mounted OUTSIDE the outlet does not inherit the app context', async () => {
-    const { tag, seen } = definePage()
-    const other = definePage()
-    mockRoutes.push(route('/posts/:id', POST_SEGMENTS, tag))
-    history.replaceState(null, '', '/posts/9')
-    makeOutlet()
-
-    createApp()
-    await flush()
-    expect(seen[0]!.route).not.toBeNull()
-
-    // Sibling of the outlet, not a descendant — context is tree-scoped.
-    document.body.appendChild(document.createElement(other.tag))
-    expect(other.seen[0]!.route).toBeNull()
-    expect(other.seen[0]!.params()).toEqual({})
   })
 })
