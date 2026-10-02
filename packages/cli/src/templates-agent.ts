@@ -63,6 +63,8 @@ export function agentPackageJson(name: string, pm: PkgManager = 'bun'): string {
         // time — not only at `vite build` time.
         '@aihu-plugin/agent-readiness': aihuDep('@aihu-plugin/agent-readiness'),
         '@aihu/agent': aihuDep('@aihu/agent'),
+        // ^0.5.0 makes arbor a peer. Older agent-server releases install their
+        // own arbor 4.1.1, giving `node` two incompatible type identities.
         '@aihu/agent-server': aihuDep('@aihu/agent-server'),
         '@aihu/agent-service': aihuDep('@aihu/agent-service'),
         '@aihu/arbor': aihuDep('@aihu/arbor'),
