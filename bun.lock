@@ -608,7 +608,7 @@
     },
     "packages/cli": {
       "name": "@aihu/cli",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "bin": {
         "aihu": "./dist/bin.js",
         "create-aihu": "./dist/create.js",
@@ -626,7 +626,7 @@
     },
     "packages/create-aihu": {
       "name": "create-aihu",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "bin": {
         "create-aihu": "./bin.mjs",
       },
