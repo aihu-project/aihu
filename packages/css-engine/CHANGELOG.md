@@ -1,5 +1,11 @@
 # @aihu/css-engine
 
+## 0.7.1
+
+### Patch Changes
+
+- [#897](https://github.com/aihu-project/aihu/pull/897) [`3295e76`](https://github.com/aihu-project/aihu/commit/3295e76e4b0e2cbc17f794750f3aa8a46b0f1474) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Pass compiler input as a temporary file instead of piping it through stdin, which could stall for the full timeout under load. CSS compile errors now name the component path.
+
 ## 0.7.0
 
 ### Minor Changes

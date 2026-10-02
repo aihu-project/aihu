@@ -23,7 +23,7 @@ npm install @aihu/plugin-demo
 bun add @aihu/plugin-demo
 ```
 
-<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
+<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.5`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -34,12 +34,12 @@ bun add @aihu/plugin-demo
 
 | | |
 |---|---|
-| **Version** | `0.1.4` |
+| **Version** | `0.1.5` |
 | **Tier** | E — Held private (unmapped tier) |
 | **Published files** | 2 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
+<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.5`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -52,7 +52,7 @@ bun add @aihu/plugin-demo
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
+<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.5`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -66,7 +66,7 @@ bun add @aihu/plugin-demo
 - `@aihu/plugin` — `workspace:*`
 - `@aihu/signals` — `^0.5.1`
 
-<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
+<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.5`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -78,7 +78,7 @@ bun add @aihu/plugin-demo
 - [Aihu framework root](../../README.md)
 - [v1.1 roadmap](../../docs/roadmap/SUMMARY.md)
 
-<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
+<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.5`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -89,6 +89,6 @@ bun add @aihu/plugin-demo
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.4`.</i></sub>
+<sub><i>Auto-generated against `@aihu/plugin-demo@0.1.5`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

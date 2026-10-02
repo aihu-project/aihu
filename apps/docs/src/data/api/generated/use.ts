@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/use',
   slug: 'use',
   tier: 'Plugins',
-  version: '2.0.0',
+  version: '2.1.0',
   tagline:
     'aihu utility/sensor/state composables — SSR-safe, scope-aware, per-composable subpath entries.',
   note: '',

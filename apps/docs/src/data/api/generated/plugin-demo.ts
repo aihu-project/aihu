@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/plugin-demo',
   slug: 'plugin-demo',
   tier: 'Plugins',
-  version: '0.1.4',
+  version: '0.1.5',
   tagline:
     'Canonical proof-of-life for the @aihu/plugin API — exercises macros, middleware, and transforms.',
   note: '',

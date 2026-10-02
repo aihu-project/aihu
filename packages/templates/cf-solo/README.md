@@ -74,7 +74,7 @@ npm install @aihu/templates-cf-solo
 bun add @aihu/templates-cf-solo
 ```
 
-<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.1.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.2.0`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -85,12 +85,12 @@ bun add @aihu/templates-cf-solo
 
 | | |
 |---|---|
-| **Version** | `0.1.0` |
+| **Version** | `0.2.0` |
 | **Tier** | E — Starter — Cloudflare Workers single-package solo template |
 | **Published files** | 5 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.1.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.2.0`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -101,7 +101,7 @@ bun add @aihu/templates-cf-solo
 
 _No `exports` field in `package.json`. Main entry: `./template.config.js`._
 
-<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.1.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.2.0`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -112,7 +112,7 @@ _No `exports` field in `package.json`. Main entry: `./template.config.js`._
 
 _Zero runtime dependencies_ (per the [dep-free thesis](../../README.md#project-posture))_._
 
-<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.1.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.2.0`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -125,7 +125,7 @@ _Zero runtime dependencies_ (per the [dep-free thesis](../../README.md#project-p
 - [@aihu/cli](../cli)
 - [Aihu framework root](../../../README.md)
 
-<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.1.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.2.0`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -136,6 +136,6 @@ _Zero runtime dependencies_ (per the [dep-free thesis](../../README.md#project-p
 
 MIT — see [LICENSE](../../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.1.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/templates-cf-solo@0.2.0`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

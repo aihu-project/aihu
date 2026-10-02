@@ -1,5 +1,12 @@
 # @aihu/plugin-demo
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3)]:
+  - @aihu/plugin@0.1.2
+
 ## 0.1.4
 
 ### Patch Changes

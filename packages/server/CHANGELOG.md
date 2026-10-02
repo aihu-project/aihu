@@ -1,5 +1,16 @@
 # @aihu/server
 
+## 0.6.1
+
+### Patch Changes
+
+- [#894](https://github.com/aihu-project/aihu/pull/894) [`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Reconcile `@aihu/plugin`'s source version with npm (0.1.1 was published from a source that recorded 0.1.0). Deprecate `@aihu/server`'s duplicate `AihuConfig` type and `defineAihuConfig` helper in favor of `@aihu/app`'s `AihuConfig` and `defineConfig`; both remain exported for compatibility.
+
+- [#889](https://github.com/aihu-project/aihu/pull/889) [`04da84c`](https://github.com/aihu-project/aihu/commit/04da84ca60390fb7198588afe3a5872ab134defe) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add validated Agentmap URL configuration for robots.txt discovery.
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3)]:
+  - @aihu/plugin@0.1.2
+
 ## 0.6.0
 
 ### Minor Changes
