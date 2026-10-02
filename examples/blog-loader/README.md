@@ -9,7 +9,7 @@ as a parallel data channel, and an `@agent` block for agentic discoverability.
   `.loader.ts` file (`src/pages/posts/[slug].loader.ts`).
 - **Server → SFC handoff** — the loader's return value is delivered to the
   SFC via the `route.data` prop. See the "Server loaders → SFC handoff"
-  section of [the Data Fetching guide](../../apps/docs/src/data/guide-data-fetching.ts).
+  section of [the Data Fetching guide](https://aihu.dev/guides/data-fetching#server-loaders-sfc-handoff).
 - **`<suspense>`** — the suspense boundary holds the fallback while the
   payload is in-flight (relevant during streaming SSR / client-side
   re-validation).
