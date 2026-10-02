@@ -1,5 +1,13 @@
 # @aihu/css-engine
 
+## 0.7.2
+
+### Patch Changes
+
+- [#898](https://github.com/aihu-project/aihu/pull/898) [`87a6eb9`](https://github.com/aihu-project/aihu/commit/87a6eb9dbcf97ba8e55e7e84a4ba50fcf50d1188) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Comments inside `@theme { }` no longer drop the whole project theme. A bare `:root { --token: value }` block used in place of `@theme` is now a compile error that points to `@theme`. Compound selectors such as `:root.dark` remain ordinary CSS.
+
+- [#911](https://github.com/aihu-project/aihu/pull/911) [`d39ea3f`](https://github.com/aihu-project/aihu/commit/d39ea3feead3b9f19c55d1f2917be0ebfa82c8ed) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Record the native source identity on published css-engine platform packages so release preparation can reuse builds of unchanged native source.
+
 ## 0.7.1
 
 ### Patch Changes

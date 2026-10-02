@@ -1,5 +1,18 @@
 # @aihu/app
 
+## 10.2.1
+
+### Patch Changes
+
+- [#905](https://github.com/aihu-project/aihu/pull/905) [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee) Thanks [@srmcguirt](https://github.com/srmcguirt)! - The app's delegated link handler now defers to `@aihu/router`'s `shouldInterceptLinkClick`, so Ctrl/Cmd/Shift/Alt and middle clicks, `target`/`download` links, other origins and same-page fragments stay native instead of navigating the current tab. A second `createApp()` on the same document (dev HMR re-running the entry) now replaces the previous app's document listeners instead of stacking them.
+
+- [#866](https://github.com/aihu-project/aihu/pull/866) [`9076898`](https://github.com/aihu-project/aihu/commit/9076898dbc4e271d836f5d7aab9d9359a9e50b7b) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fix router view transition wiring and keep the Vite hook tests narrowly typed.
+
+- [#905](https://github.com/aihu-project/aihu/pull/905) [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee) Thanks [@srmcguirt](https://github.com/srmcguirt)! - A push navigation (a clicked link, or `navigate()` without `replace`) now scrolls the new page to its `#fragment` target, or to the top when there is none, instead of leaving it at the previous page's scroll offset. Replace navigations keep the scroll position, and back/forward keep the browser's own scroll restoration.
+
+- Updated dependencies [[`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee)]:
+  - @aihu/router@0.5.3
+
 ## 10.2.0
 
 ### Minor Changes
