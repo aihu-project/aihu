@@ -29,6 +29,7 @@ export {
   navigate,
   provideRouteContext,
   RouteContext,
+  scrollAfterNavigation,
   shouldInterceptLinkClick,
   useRoute,
   useRouter,

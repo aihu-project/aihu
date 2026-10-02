@@ -202,7 +202,10 @@ async function navigateWithContext(
     if (opts.replace) SAFE_WINDOW.history.replaceState(null, '', href)
     else SAFE_WINDOW.history.pushState(null, '', href)
     setRouteSignal(ctx, target)
-    navigateToFragment(url.hash)
+    // A replace (filters, query updates) keeps the reader's place; a push lands
+    // at the #fragment target or the top, as a full page load would.
+    if (opts.replace) navigateToFragment(url.hash)
+    else scrollAfterNavigation(url.hash)
   }
 
   const useVT =
@@ -255,6 +258,17 @@ export function shouldInterceptLinkClick(event: MouseEvent, anchor: HTMLAnchorEl
 export function isActiveRouteLink(href: string, pathname: string): boolean {
   const base = SAFE_WINDOW?.location.href ?? 'http://localhost/'
   return new URL(href, base).pathname === pathname
+}
+
+/**
+ * @internal — Scroll after an in-app push navigation: to the `#fragment`
+ * target when the URL has one, otherwise to the top of the page. Without this
+ * an SPA navigation leaves the new page at the previous page's scroll offset.
+ * Back/forward don't call it, so the browser's own scroll restoration applies.
+ */
+export function scrollAfterNavigation(hash: string): void {
+  if (hash && hash !== '#') navigateToFragment(hash)
+  else SAFE_WINDOW?.scrollTo(0, 0)
 }
 
 function navigateToFragment(hash: string): void {

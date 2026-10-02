@@ -72,6 +72,28 @@ describe('<a> — click intercepts and SPA-navigates', () => {
     dispose()
   })
 
+  it('a push navigation scrolls the new page to the top', async () => {
+    const { map, dispose } = makeContext([userRoute('/'), userRoute('/about')])
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    await runWithContext(map, async () => {
+      await navigate('/about')
+    })
+    expect(scrollSpy).toHaveBeenCalledWith(0, 0)
+    scrollSpy.mockRestore()
+    dispose()
+  })
+
+  it('a replace navigation keeps the scroll position', async () => {
+    const { map, dispose } = makeContext([userRoute('/'), userRoute('/about')])
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    await runWithContext(map, async () => {
+      await navigate('/about', { replace: true })
+    })
+    expect(scrollSpy).not.toHaveBeenCalled()
+    scrollSpy.mockRestore()
+    dispose()
+  })
+
   it('keeps current-route matching for relative, query, and fragment hrefs', () => {
     expect(isActiveRouteLink('/x?tab=one', '/x')).toBe(true)
     expect(isActiveRouteLink('/x#details', '/x')).toBe(true)

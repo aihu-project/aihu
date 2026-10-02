@@ -158,6 +158,12 @@ export const EXPORTS: readonly ApiExport[] = [
     summary: '',
   },
   {
+    name: 'scrollAfterNavigation',
+    kind: 'function',
+    signature: 'function scrollAfterNavigation(hash: string): void',
+    summary: '',
+  },
+  {
     name: 'shouldInterceptLinkClick',
     kind: 'function',
     signature:

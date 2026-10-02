@@ -55,7 +55,13 @@ vi.mock('@aihu/signals', () => ({
     ]
   }),
 }))
-vi.mock('@aihu/router', () => ({
+vi.mock('@aihu/router', async (importOriginal) => ({
+  // The real click policy: these tests are about which clicks the app
+  // intercepts, so the guard must not be stubbed.
+  shouldInterceptLinkClick: (await importOriginal<typeof import('@aihu/router')>())
+    .shouldInterceptLinkClick,
+  scrollAfterNavigation: (await importOriginal<typeof import('@aihu/router')>())
+    .scrollAfterNavigation,
   createRouter: vi.fn(() => ({ match: mockMatch })),
   bindRouteSignalWriter: vi.fn(),
   provideRouteContext: vi.fn(),
@@ -492,6 +498,92 @@ describe('createApp — SPA navigation', () => {
 
     expect(pushStateSpy).not.toHaveBeenCalled()
     pushStateSpy.mockRestore()
+  })
+
+  it.each([
+    ['ctrlKey', { ctrlKey: true }],
+    ['metaKey', { metaKey: true }],
+    ['shiftKey', { shiftKey: true }],
+    ['altKey', { altKey: true }],
+    ['middle button', { button: 1 }],
+  ])('leaves a %s click to the browser', async (_label, init) => {
+    createApp()
+    await flushPromises()
+
+    const pushStateSpy = vi.spyOn(history, 'pushState')
+    const a = document.createElement('a')
+    a.setAttribute('href', '/about')
+    document.body.appendChild(a)
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      ...init,
+    })
+    a.dispatchEvent(event)
+    await flushPromises()
+
+    expect(event.defaultPrevented).toBe(false)
+    expect(pushStateSpy).not.toHaveBeenCalled()
+    pushStateSpy.mockRestore()
+  })
+
+  it.each([
+    ['target="_blank"', (a: HTMLAnchorElement) => a.setAttribute('target', '_blank')],
+    ['download', (a: HTMLAnchorElement) => a.setAttribute('download', '')],
+  ])('leaves a %s link to the browser', async (_label, decorate) => {
+    createApp()
+    await flushPromises()
+
+    const pushStateSpy = vi.spyOn(history, 'pushState')
+    const a = document.createElement('a')
+    a.setAttribute('href', '/about')
+    decorate(a)
+    document.body.appendChild(a)
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, composed: true })
+    a.dispatchEvent(event)
+    await flushPromises()
+
+    expect(event.defaultPrevented).toBe(false)
+    expect(pushStateSpy).not.toHaveBeenCalled()
+    pushStateSpy.mockRestore()
+  })
+
+  it("a second createApp replaces the first app's document listeners", async () => {
+    const route: RouteStub = { name: 'second-page', module: vi.fn().mockResolvedValue(undefined) }
+    createApp()
+    await flushPromises()
+    createApp()
+    await flushPromises()
+
+    const pushStateSpy = vi.spyOn(history, 'pushState')
+    const a = document.createElement('a')
+    a.setAttribute('href', '/second')
+    document.body.appendChild(a)
+    mockMatch.mockReturnValue({ route, params: undefined })
+    a.click()
+    await flushPromises()
+
+    expect(pushStateSpy).toHaveBeenCalledTimes(1)
+    expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('second-page')
+    pushStateSpy.mockRestore()
+  })
+
+  it('scrolls to the top after an intercepted link navigation', async () => {
+    const route: RouteStub = { name: 'top-page', module: vi.fn().mockResolvedValue(undefined) }
+    createApp()
+    await flushPromises()
+
+    const scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const a = document.createElement('a')
+    a.setAttribute('href', '/top')
+    document.body.appendChild(a)
+    mockMatch.mockReturnValue({ route, params: undefined })
+    a.click()
+    await flushPromises()
+
+    expect(scrollSpy).toHaveBeenCalledWith(0, 0)
+    scrollSpy.mockRestore()
   })
 
   it('does not intercept mailto: links', async () => {
