@@ -89,12 +89,26 @@ describe('invalid values keep their specific error codes', () => {
     [{ compiler: { target: 'edge' } }, 'INVALID_COMPILER_TARGET'],
     [{ dev: { port: '3000' } }, 'INVALID_TYPE'],
     [{ dir: { pages: 42 } }, 'INVALID_TYPE'],
+    [{ dir: { components: ['src/components', 3] } }, 'INVALID_TYPE'],
   ] as const)('%j -> %s', (config, code) => {
     expect(err(config)?.code).toBe(code)
   })
 
   it('reports the received value so the message is actionable', () => {
     expect(err({ output: 'hybrid' })?.message).toContain('received "hybrid"')
+  })
+
+  it('validates static HTML format and accepts shared component directories', () => {
+    expect(err({ output: 'static', static: { format: 'flat' } })?.field).toBe(
+      'config.static.format',
+    )
+    expect(
+      defineConfig({
+        output: 'static',
+        static: { format: 'file' },
+        dir: { components: ['src/components', '../shared'] },
+      }).static?.format,
+    ).toBe('file')
   })
 
   it('phrases a three-option list as "one of"', () => {

@@ -1,0 +1,10 @@
+@route {
+  path: "/about",
+  name: "static-about",
+  layout: "site",
+  head: { title: "Static about title", description: "Static about description" }
+}
+
+@template {
+  <main><h1>Static about content</h1></main>
+}

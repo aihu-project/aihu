@@ -1,0 +1,14 @@
+@route {
+  path: "/",
+  name: "static-home",
+  layout: "site",
+  head: { title: "Static home title", description: "Static home description" }
+}
+
+@template {
+  <main>
+    <h1>Static home content</h1>
+    <shared-chip />
+    <shared-banner><span slot="header">Projected header content</span></shared-banner>
+  </main>
+}

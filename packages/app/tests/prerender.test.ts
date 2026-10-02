@@ -233,6 +233,71 @@ describe('runPrerender — static routes', () => {
     expect(aboutHtml).toContain('src="/assets/main-abc123.js"')
   })
 
+  it('fails with both route pattern and source file when route loading fails', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'broken.ts', null)
+    await expect(
+      runPrerender({
+        resolvedViteConfig: fx.resolvedViteConfig,
+        config: { output: 'static', dir: { pages: 'pages' } },
+        loadModule: async () => {
+          throw new Error('fixture load failure')
+        },
+        warn: fx.warn,
+      }),
+    ).rejects.toThrow(/failed to load route \/broken .*pages\/broken\.ts.*fixture load failure/)
+  })
+
+  it('fails with route context when rendering throws', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'broken.ts', null)
+    await expect(
+      runPrerender({
+        resolvedViteConfig: fx.resolvedViteConfig,
+        config: { output: 'static', dir: { pages: 'pages' } },
+        loadModule: async () => ({
+          default: {
+            toHtml: () => {
+              throw new Error('fixture render failure')
+            },
+          },
+        }),
+        warn: fx.warn,
+      }),
+    ).rejects.toThrow(
+      /render failed for route \/broken .*pages\/broken\.ts.*fixture render failure/,
+    )
+  })
+
+  it('writes file-format paths when configured', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'about.ts', null)
+    const result = await runPrerender({
+      resolvedViteConfig: fx.resolvedViteConfig,
+      config: { output: 'static', static: { format: 'file' }, dir: { pages: 'pages' } },
+      loadModule: async () => ({ default: { toHtml: () => '<main>About file route</main>' } }),
+      warn: fx.warn,
+    })
+    expect(result.written).toEqual(['about.html'])
+    expect(await readFile(join(fx.outDir, 'about.html'), 'utf8')).toContain('About file route')
+  })
+
+  it('rejects static paths that escape build.outDir', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, '[slug].ts', null)
+    await expect(
+      runPrerender({
+        resolvedViteConfig: fx.resolvedViteConfig,
+        config: { output: 'static', dir: { pages: 'pages' } },
+        loadModule: async () => ({
+          default: { toHtml: () => '<main>unsafe path</main>' },
+          getStaticPaths: () => [{ slug: '../outside' }],
+        }),
+        warn: fx.warn,
+      }),
+    ).rejects.toThrow(/resolved to an HTML path outside build\.outDir/)
+  })
+
   it('folds globalHead (app.head) under per-route overrides', async () => {
     fx = await makeFixture()
     await writeRoute(fx.root, 'index.ts', { name: 'home', head: { title: 'Page Title' } })
@@ -522,20 +587,19 @@ describe('runPrerender — edge cases', () => {
     if (fx) await rm(fx.root, { recursive: true, force: true })
   })
 
-  it('warns and writes nothing when a route lacks a renderable default', async () => {
+  it('fails with route context when a route lacks a renderable default', async () => {
     fx = await makeFixture()
     await writeRoute(fx.root, 'index.ts', { name: 'home' })
     const loadModule: SsrModuleLoader = async () => ({ default: undefined })
 
-    const result = await runPrerender({
-      resolvedViteConfig: fx.resolvedViteConfig,
-      config: { output: 'static', dir: { pages: 'pages' } },
-      loadModule,
-      warn: fx.warn,
-    })
-
-    expect(result.written).toEqual([])
-    expect(result.warnings.join('\n')).toMatch(/no renderable default export/)
+    await expect(
+      runPrerender({
+        resolvedViteConfig: fx.resolvedViteConfig,
+        config: { output: 'static', dir: { pages: 'pages' } },
+        loadModule,
+        warn: fx.warn,
+      }),
+    ).rejects.toThrow(/route \/ .*pages\/index\.ts.*no renderable default export/)
   })
 
   it('relative canonical stays relative when no site.url is configured', async () => {

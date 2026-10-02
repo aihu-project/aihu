@@ -9,8 +9,9 @@ import * as v from './config-validate.ts'
  * - `'spa'` (default): a single empty-shell `index.html` that boots the client
  *   SPA. No per-route HTML, no prerendered content.
  * - `'static'` (SSG): prerenders every static route to a content-ful
- *   `<pattern>/index.html` with a per-page `<head>`, then hydrates into the SPA
- *   on load (progressive enhancement). Ideal for content sites on static hosts
+ *   `<pattern>/index.html` (or `<pattern>.html` with `static.format: 'file'`)
+ *   with a per-page `<head>`, then hydrates into the SPA on load (progressive
+ *   enhancement). Ideal for content sites on static hosts
  *   (e.g. Cloudflare Pages) — crawlers and non-JS agents see real content.
  * - `'ssr'`: everything `'spa'` builds, PLUS a second Vite environment whose
  *   entry is `virtual:aihu-server-entry` — a request-time server bundle that
@@ -23,6 +24,7 @@ import * as v from './config-validate.ts'
  * its only consumer is the client's hydration path. `'ssr'` belongs here.
  */
 export type OutputMode = 'spa' | 'static' | 'ssr'
+export type StaticHtmlFormat = 'directory' | 'file'
 
 /** Site-level configuration. */
 export interface SiteConfig {
@@ -44,14 +46,19 @@ export interface DirConfig {
   /** Public static assets directory. Default: 'public' */
   readonly public?: string
   /**
-   * Directory to scan for components. Default: 'src/components'
+   * Directories to scan for components. Default: 'src/components'. Provide
+   * multiple directories to include shared workspace components.
    *
-   * `@aihu/router`'s `componentsDir` has always existed but was unreachable
-   * from here: `viteAihuPlugin` forwarded only `pagesDir` and `layoutsDir`, so
-   * changing it meant calling `viteRouterIntegration()` yourself — i.e.
-   * abandoning `viteAihuPlugin` entirely.
+   * Each directory is forwarded to the router's client/server registries and
+   * scanned by static prerendering. The array form supports shared workspace
+   * component packages alongside the app's local directory.
    */
-  readonly components?: string
+  readonly components?: string | ReadonlyArray<string>
+}
+
+/** Static HTML path layout. Default: directory (`about/index.html`). */
+export interface StaticOutputConfig {
+  readonly format?: StaticHtmlFormat
 }
 
 /**
@@ -249,6 +256,8 @@ export interface AihuConfig {
    * warning.
    */
   readonly output?: OutputMode
+  /** Static HTML output options. `format: 'file'` writes `/about.html`. */
+  readonly static?: StaticOutputConfig
   /**
    * Site-level configuration. `site.url` is the absolute base URL used by the
    * `'static'` output mode to resolve relative canonical/OG/Twitter URLs.
@@ -368,9 +377,18 @@ const SCHEMA: Record<string, v.Validator> = {
     pages: v.string,
     layouts: v.string,
     public: v.string,
-    components: v.string,
+    components: (value, keypath) => {
+      if (value === undefined || typeof value === 'string') return
+      if (Array.isArray(value) && value.every((entry) => typeof entry === 'string')) return
+      throw new AihuConfigErrorImpl(
+        `${keypath} should be a directory path or an array of directory paths, if specified.`,
+        'INVALID_TYPE',
+        keypath,
+      )
+    },
   }),
   output: v.list(['spa', 'static', 'ssr'], 'INVALID_OUTPUT_MODE'),
+  static: v.object({ format: v.list(['directory', 'file'], 'INVALID_TYPE') }),
   site: v.object({ url: v.string }),
   plugins: v.array,
   runtimeConfig: v.object({ public: v.passthrough, private: v.passthrough }),

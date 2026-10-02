@@ -1,0 +1,20 @@
+@route {
+  path: "/product",
+  name: "static-product",
+  layout: "site",
+  head: { title: "Static product title", description: "Static product description" }
+}
+
+@state {
+  import { createRouter } from '@aihu/router'
+  const router = createRouter([{
+    pattern: '/product',
+    name: 'product',
+    segments: [{ kind: 'static', path: 'product' }],
+    "module": async () => ({ default: null }),
+  }])
+}
+
+@template {
+  <router router={router}><main><h1>Static product content</h1></main></router>
+}

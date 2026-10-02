@@ -25,7 +25,7 @@ interface VitePlugin {
 interface ResolvedRouterOptions {
   pagesDir: string
   layoutsDir: string
-  componentsDir: string
+  componentsDir: string | ReadonlyArray<string>
 }
 
 /** Attach router options using the same module API consumed by @aihu/app. */
@@ -54,7 +54,7 @@ export interface RouterPluginOptions {
   /** Directory to scan for layout files. Default: 'src/layouts' */
   layoutsDir?: string
   /** Directory to scan for component files. Default: 'src/components' */
-  componentsDir?: string
+  componentsDir?: string | ReadonlyArray<string>
   /**
    * Build-time route-metadata extractor — `@aihu/compiler`'s `compileRouteMeta`.
    * When provided, `genR` uses it to recover FULL `@route` metadata
@@ -422,6 +422,17 @@ export function scanComponents(
   return m
 }
 
+/** Combine component registries in deterministic path order across directories. */
+function scanComponentDirs(dirs: string | ReadonlyArray<string>): Record<string, string> {
+  const combined: Record<string, string> = {}
+  for (const dir of (Array.isArray(dirs) ? dirs : [dirs]).slice().sort()) {
+    for (const [tag, path] of Object.entries(scanComponents(dir))) {
+      if (combined[tag] === undefined || path < (combined[tag] as string)) combined[tag] = path
+    }
+  }
+  return combined
+}
+
 /**
  * F2: extract the normalized component tags a layout SFC's `@template`
  * references, so `genL` can carry them on each `virtual:aihu-layouts` entry and
@@ -648,8 +659,8 @@ export function genL(d: string): string {
  * a template may legitimately name a globally-registered element the router
  * does not own.
  */
-export function genC(d: string): string {
-  const mods = scanComponents(d)
+export function genC(d: string | ReadonlyArray<string>): string {
+  const mods = scanComponentDirs(d)
 
   // Validate at the codegen boundary. Everything below concatenates these two
   // values into JavaScript SOURCE, and both are read out of files on disk —
@@ -781,7 +792,7 @@ export function genC(d: string): string {
  */
 export function genSC(
   pageFiles: ReadonlyArray<string>,
-  componentsDir: string,
+  componentsDir: string | ReadonlyArray<string>,
   deriveChildTags?: (source: string, id: string) => string[],
   /**
    * Layout files, walked as ROOTS alongside the pages.
@@ -797,7 +808,7 @@ export function genSC(
    */
   layoutFiles: ReadonlyArray<string> = [],
 ): string {
-  const mods = scanComponents(componentsDir)
+  const mods = scanComponentDirs(componentsDir)
 
   // Same codegen-boundary validation as `genC`: everything below is
   // concatenated into JavaScript SOURCE from values read off disk. See
@@ -933,7 +944,11 @@ export function scanPages(root: string, pd: string): MiddlewareScan {
         // v0.7.2: capture _middleware.ts / _middleware.js / _middleware.tsx / _middleware.jsx
         if (/^_middleware\.(ts|js|tsx|jsx)$/.test(e.name)) {
           middlewareByDir[dir.replace(/\\/g, '/')] = fp.replace(/\\/g, '/')
-        } else if (/\.(ts|js|tsx|jsx|aihu)$/.test(e.name) && !e.name.startsWith('_')) {
+        } else if (
+          /\.(ts|js|tsx|jsx|aihu)$/.test(e.name) &&
+          !/\.aihu\.(ts|js|tsx|jsx)$/.test(e.name) &&
+          !e.name.startsWith('_')
+        ) {
           routes.push(fp)
         }
       }
@@ -985,11 +1000,12 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
         return cr
       }
       if (id === LR) return (cl ??= genL(resolve(root, ld)))
-      if (id === CR) return (cc ??= genC(resolve(root, cd)))
+      if (id === CR)
+        return (cc ??= genC((Array.isArray(cd) ? cd : [cd]).map((d) => resolve(root, d))))
       if (id === SCR) {
         return (csc ??= genSC(
           scanPages(root, pd).routes,
-          resolve(root, cd),
+          (Array.isArray(cd) ? cd : [cd]).map((d) => resolve(root, d)),
           opts?.deriveChildTags,
           // Layout FILES, not the tag map: `genSC` walks source for child-tag
           // edges, and the layouts are roots of that walk (see its docblock).
@@ -1003,10 +1019,10 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
       if (s.config?.root) root = s.config.root
       const pa = resolve(root, pd),
         la = resolve(root, ld),
-        ca = resolve(root, cd)
+        cas = (Array.isArray(cd) ? cd : [cd]).map((d) => resolve(root, d))
       server.watcher.add(pa)
       server.watcher.add(la)
-      server.watcher.add(ca)
+      for (const ca of cas) server.watcher.add(ca)
       const mk = (abs: string, rst: () => void, rid: string) => (p: string) => {
         if (!p.replace(/\\/g, '/').includes(abs.replace(/\\/g, '/'))) return
         rst()
@@ -1027,12 +1043,14 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
           },
           LR,
         ),
-        ic = mk(
-          ca,
-          () => {
-            cc = null
-          },
-          CR,
+        ics = cas.map((ca) =>
+          mk(
+            ca,
+            () => {
+              cc = null
+            },
+            CR,
+          ),
         ),
         // `virtual:aihu-server-components` is reachability-walked from the
         // PAGES and the LAYOUTS over the COMPONENTS, so it is the one virtual
@@ -1045,12 +1063,14 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
           },
           SCR,
         ),
-        iscc = mk(
-          ca,
-          () => {
-            csc = null
-          },
-          SCR,
+        isccs = cas.map((ca) =>
+          mk(
+            ca,
+            () => {
+              csc = null
+            },
+            SCR,
+          ),
         ),
         iscl = mk(
           la,
@@ -1062,9 +1082,9 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
       const invalidateAll = (p: string): void => {
         ir(p)
         il(p)
-        ic(p)
+        for (const ic of ics) ic(p)
         iscp(p)
-        iscc(p)
+        for (const iscc of isccs) iscc(p)
         iscl(p)
       }
       server.watcher.on('add', invalidateAll)
