@@ -164,6 +164,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     ...(options.actorResolver ? { actorResolver: options.actorResolver } : {}),
     ...(options.authorizeDataRead ? { authorizeDataRead: options.authorizeDataRead } : {}),
     securityHookTimeoutMs: options.securityHookTimeoutMs ?? DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+    ...(options.projectionLimits ? { projectionLimits: options.projectionLimits } : {}),
     ...(options.authDiscoveryUrl ? { authDiscoveryUrl: options.authDiscoveryUrl } : {}),
   })
 
@@ -178,10 +179,37 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   let verifiedIdentity: string | undefined
   let helloSeen = false
   let peerRevoked = false
-  const revokedBindings = new Map<string, Set<string>>()
+  const revokedBindings = new Map<
+    string,
+    { readonly identity: string; readonly grantVersion?: string; readonly expiresAt: number }
+  >()
+  const configuredRevocationTtlMs = options.bridgeRevocationTtlMs
+  const revocationTtlMs =
+    typeof configuredRevocationTtlMs === 'number' &&
+    Number.isFinite(configuredRevocationTtlMs) &&
+    configuredRevocationTtlMs > 0
+      ? configuredRevocationTtlMs
+      : 24 * 60 * 60 * 1000
+  const configuredRevocationMaxEntries = options.bridgeRevocationMaxEntries
+  const revocationMaxEntries =
+    typeof configuredRevocationMaxEntries === 'number' &&
+    Number.isSafeInteger(configuredRevocationMaxEntries) &&
+    configuredRevocationMaxEntries > 0
+      ? configuredRevocationMaxEntries
+      : 10_000
+  const revocationKey = (identity: string, grantVersion?: string): string =>
+    JSON.stringify([identity, grantVersion === undefined ? 'identity' : 'grant', grantVersion])
+  function pruneRevokedBindings(now = Date.now()): void {
+    for (const [key, binding] of revokedBindings) {
+      if (binding.expiresAt <= now) revokedBindings.delete(key)
+    }
+  }
   const isBindingRevoked = (identity: string, grantVersion?: string): boolean => {
-    const revoked = revokedBindings.get(identity)
-    return revoked?.has('*') === true || revoked?.has(grantVersion ?? '') === true
+    pruneRevokedBindings()
+    return (
+      revokedBindings.has(revocationKey(identity)) ||
+      (grantVersion !== undefined && revokedBindings.has(revocationKey(identity, grantVersion)))
+    )
   }
   let attachmentGeneration = 0
 
@@ -214,12 +242,38 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     for (const w of waiters) w()
   }
 
-  function diagnose(event: string, detail?: unknown): void {
-    try {
-      options.onBridgeDiagnostic?.({ event, ...(detail !== undefined ? { detail } : {}) })
-    } catch {
-      // Diagnostics are host-side only and cannot change authorization outcomes.
+  function diagnosticCopy(value: unknown, state = { nodes: 0 }, depth = 0): unknown {
+    state.nodes += 1
+    if (state.nodes > 48 || depth > 4) return '[truncated]'
+    if (typeof value === 'string') return value.slice(0, 160)
+    if (value === null || typeof value === 'number' || typeof value === 'boolean') return value
+    if (Array.isArray(value)) {
+      return Object.freeze(value.slice(0, 12).map((item) => diagnosticCopy(item, state, depth + 1)))
     }
+    if (typeof value === 'object') {
+      const out: Record<string, unknown> = Object.create(null)
+      for (const key of Object.keys(value).slice(0, 12)) {
+        const descriptor = Object.getOwnPropertyDescriptor(value, key)
+        out[key.slice(0, 80)] =
+          descriptor && 'value' in descriptor
+            ? diagnosticCopy(descriptor.value, state, depth + 1)
+            : '[accessor]'
+      }
+      return Object.freeze(out)
+    }
+    return `[${typeof value}]`
+  }
+
+  function diagnose(event: string, detail?: unknown): void {
+    const diagnostic = Object.freeze({
+      event,
+      ...(detail !== undefined ? { detail: diagnosticCopy(detail) } : {}),
+    })
+    queueMicrotask(() => {
+      Promise.resolve()
+        .then(() => options.onBridgeDiagnostic?.(diagnostic))
+        .catch(() => {})
+    })
   }
 
   /**
@@ -274,12 +328,18 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         }
         const hello = msg as Extract<BridgeClientMessage, { type: 'hello' }>
         if (!bridgeNonces.consume(hello.nonce, String(attachmentGeneration))) {
-          diagnose('hello.nonce.invalid', hello.nonce)
+          diagnose('hello.nonce.invalid', {
+            present: typeof hello.nonce === 'string',
+            ...(typeof hello.nonce === 'string' ? { length: hello.nonce.length } : {}),
+          })
           settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
           return
         }
         if (typeof hello.sessionToken !== 'string' || !options.verifyBridgeSession) {
-          diagnose('hello.session.invalid', { sessionToken: hello.sessionToken })
+          diagnose('hello.session.invalid', {
+            sessionIdentity: hello.sessionIdentity,
+            grantVersion: hello.grantVersion,
+          })
           settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
           return
         }
@@ -454,10 +514,21 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     return detachBridge
   }
 
-  function revokeBridgeSession(identity: string, grantVersion?: string): void {
-    const revoked = revokedBindings.get(identity) ?? new Set<string>()
-    revoked.add(grantVersion ?? '*')
-    revokedBindings.set(identity, revoked)
+  function revokeBridgeSession(identity: string, scope?: { readonly grantVersion: string }): void {
+    const grantVersion = scope?.grantVersion
+    const key = revocationKey(identity, grantVersion)
+    pruneRevokedBindings()
+    revokedBindings.delete(key)
+    revokedBindings.set(key, {
+      identity,
+      ...(grantVersion !== undefined ? { grantVersion } : {}),
+      expiresAt: Date.now() + revocationTtlMs,
+    })
+    while (revokedBindings.size > revocationMaxEntries) {
+      const oldest = revokedBindings.keys().next().value as string | undefined
+      if (oldest === undefined) break
+      revokedBindings.delete(oldest)
+    }
     if (
       verifiedIdentity === identity &&
       (grantVersion === undefined || verifiedGrantVersion === grantVersion)
@@ -491,9 +562,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     opaqueActionId: string,
     args: unknown[],
     binding: { identity: string; grantVersion?: string; readOnly: boolean },
+    markSent: () => void,
   ): Promise<unknown> {
     if (bridge !== channel || attachmentGeneration !== generation || !channel.connected) {
-      return Promise.resolve(undefined)
+      return Promise.reject(new Error('BRIDGE_DETACHED: bridge disconnected before invocation'))
     }
     const callId = crypto.randomUUID()
     const frame: BridgeInvokeMessage = { type: 'invoke', callId, opaqueActionId, args }
@@ -509,6 +581,9 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
       )
       pending.set(callId, { resolve, reject, timer, ...binding })
       try {
+        // A synchronous send error can still mean a partial transport write;
+        // after this point an action's execution status is unknown.
+        markSent()
         channel.send(JSON.stringify(frame))
       } catch (err) {
         pending.delete(callId)
@@ -667,13 +742,29 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
       const opaqueActionId = opaqueActionIdForTool(toolName)
       if (!opaqueActionId) return { error: `bad tool: ${toolName}`, code: 400 }
 
+      let invokeSent = false
       try {
-        const bridgeResult = await forwardToBridge(channel, generation, opaqueActionId, args, {
-          identity,
-          ...(grantVersion !== undefined ? { grantVersion } : {}),
-          readOnly,
-        })
+        const bridgeResult = await forwardToBridge(
+          channel,
+          generation,
+          opaqueActionId,
+          args,
+          {
+            identity,
+            ...(grantVersion !== undefined ? { grantVersion } : {}),
+            readOnly,
+          },
+          () => {
+            invokeSent = true
+          },
+        )
         if (bridge !== channel || attachmentGeneration !== generation) {
+          if (!readOnly) {
+            return {
+              error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+              code: 403,
+            }
+          }
           if (bridge === null) {
             return { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
           }
@@ -709,6 +800,17 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
                 code: 403,
               }
         }
+        if (bridge !== channel || attachmentGeneration !== generation) {
+          if (readOnly) {
+            return bridge === null
+              ? { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
+              : { error: 'BRIDGE_REPLACED: bridge attachment changed during invocation', code: 503 }
+          }
+          return {
+            error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+            code: 403,
+          }
+        }
         if (
           peerRevoked ||
           isBindingRevoked(identity, grantVersion) ||
@@ -725,11 +827,28 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
               }
         }
         try {
-          return { result: projectCapabilityResult(bridgeResult ?? null, projection) }
+          return {
+            result: projectCapabilityResult(
+              bridgeResult ?? null,
+              projection,
+              options.projectionLimits,
+            ),
+          }
         } catch {
-          return { error: 'CAPABILITY_UNAVAILABLE: result shape cannot be projected', code: 503 }
+          return readOnly
+            ? { error: 'CAPABILITY_UNAVAILABLE: result shape cannot be projected', code: 503 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
         }
       } catch (err) {
+        if (invokeSent && !readOnly) {
+          return {
+            error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+            code: 403,
+          }
+        }
         if (bridge !== channel || attachmentGeneration !== generation) {
           if (bridge === null) {
             return { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
@@ -749,6 +868,9 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         }
         if (err instanceof Error && err.message.startsWith('BRIDGE_TIMEOUT:')) {
           return { error: 'BRIDGE_TIMEOUT: bridge call timed out', code: 503 }
+        }
+        if (err instanceof Error && err.message.startsWith('BRIDGE_DETACHED:')) {
+          return { error: 'BRIDGE_DETACHED: bridge disconnected before invocation', code: 503 }
         }
         // WS-disconnect mid-drive must be surfaced, not silently dropped.
         return {

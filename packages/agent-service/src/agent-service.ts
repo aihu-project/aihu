@@ -509,7 +509,9 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
             )
           }
           try {
-            return { result: projectCapabilityResult(value, verdict.projection) }
+            return {
+              result: projectCapabilityResult(value, verdict.projection, options?.projectionLimits),
+            }
           } catch {
             return jsonrpcError(503, 'CAPABILITY_UNAVAILABLE: result shape cannot be projected')
           }

@@ -7,7 +7,7 @@
  * covers the same hook wired through `handleToolCall`'s data-read path.
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   authorizeCapability,
   type CapabilityGrantResolver,
@@ -235,6 +235,56 @@ describe('projectCapabilityResult', () => {
     expect(() => projectCapabilityResult({ created: new Date() }, ['created'])).toThrow(
       'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
     )
+  })
+
+  it('does not invoke selected accessors and fails closed', () => {
+    const getter = vi.fn(() => 'secret')
+    const value = Object.defineProperty({}, 'id', { enumerable: true, get: getter })
+    expect(() => projectCapabilityResult(value, ['id'])).toThrow(
+      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+    )
+    expect(getter).not.toHaveBeenCalled()
+  })
+
+  it('fails closed when the selected result exceeds the depth limit', () => {
+    let value: Record<string, unknown> = { leaf: 'ok' }
+    for (let i = 0; i < 33; i += 1) value = { child: value }
+    expect(() =>
+      projectCapabilityResult(value, [
+        'child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.child.leaf',
+      ]),
+    ).toThrow('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
+  })
+
+  it('accepts host configured projection limits', () => {
+    expect(() =>
+      projectCapabilityResult({ child: { id: 1 } }, ['child.id'], { maxDepth: 0 }),
+    ).toThrow('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
+  })
+
+  it('fails closed when the selected result exceeds the total node limit', () => {
+    expect(() =>
+      projectCapabilityResult(
+        Array.from({ length: 10_001 }, () => 1),
+        ['*'],
+      ),
+    ).toThrow('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
+  })
+
+  it('fails closed for a cycle in a selected result', () => {
+    let prototypeChecks = 0
+    const target: { child?: unknown } = {}
+    const value = new Proxy(target, {
+      getPrototypeOf(object) {
+        prototypeChecks += 1
+        return Reflect.getPrototypeOf(object)
+      },
+    })
+    target.child = value
+    expect(() => projectCapabilityResult(value, ['child.child'])).toThrow(
+      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+    )
+    expect(prototypeChecks).toBe(2)
   })
 })
 

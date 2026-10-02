@@ -670,9 +670,322 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       code?: number
       error?: string
     }
-    expect(denied.code).toBe(503)
-    expect(denied.error).toBe('BRIDGE_TIMEOUT: bridge call timed out')
+    expect(denied.code).toBe(403)
+    expect(denied.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
     expect(sent.some((frame) => frame.includes('"invoke"'))).toBe(true)
+  })
+
+  it('withholds action outcomes after a bridge error frame', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    const bridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        bridge.reply(JSON.stringify({ type: 'error', callId: message.callId, error: 'peer error' }))
+    })
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'identity-error',
+        sessionIdentity: 'identity-error',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const result = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(result.code).toBe(403)
+    expect(result.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
+  })
+
+  it('withholds action outcomes after bridge disconnect', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    let bridge!: ReturnType<typeof makeFakeBridge>
+    bridge = makeFakeBridge((frame) => {
+      if (frame.includes('"invoke"')) bridge.close()
+    })
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'identity-disconnect',
+        sessionIdentity: 'identity-disconnect',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const result = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(result.code).toBe(403)
+    expect(result.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
+  })
+
+  it('treats a literal wildcard grant version as an exact revocation', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeCallTimeoutMs: 25,
+      verifyBridgeSession: (token) => ({
+        identity: 'identity-shared',
+        grantVersion: token === 'token-star' ? '*' : 'v2',
+      }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        grantVersion: binding.grantVersion,
+      }),
+    })
+    const attach = async (token: string, grantVersion: string) => {
+      const frames: string[] = []
+      const bridge = makeFakeBridge((frame) => {
+        frames.push(frame)
+        const message = JSON.parse(frame) as { type?: string; callId?: string }
+        if (message.type === 'invoke' && message.callId)
+          bridge.reply(JSON.stringify({ type: 'result', callId: message.callId, result: 'ok' }))
+      })
+      server.attachBridge(bridge)
+      bridge.reply(
+        JSON.stringify({
+          type: 'hello',
+          protocol: BRIDGE_PROTOCOL_VERSION,
+          nonce: server.issueBridgeNonce().nonce,
+          sessionToken: token,
+          sessionIdentity: 'identity-shared',
+          grantVersion,
+        }),
+      )
+      await Promise.resolve()
+      await Promise.resolve()
+      return { bridge, frames }
+    }
+    await attach('token-star', '*')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    server.revokeBridgeSession('identity-shared', { grantVersion: '*' })
+    const starDenied = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(starDenied.code).toBe(403)
+    expect(starDenied.error).toBe('BRIDGE_REVOKED: bridge session was revoked')
+    const other = await attach('token-v2', 'v2')
+    const allowed = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      result?: string
+      error?: string
+    }
+    expect(other.frames.some((frame) => frame.includes('"invoke"'))).toBe(true)
+    expect(allowed.result).toBe('ok')
+    expect(allowed.error).toBeUndefined()
+  })
+
+  it('expires revocations after their configured TTL', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeRevocationTtlMs: 10,
+      bridgeRevocationMaxEntries: 1,
+      bridgeCallTimeoutMs: 10,
+      verifyBridgeSession: (token) => ({ identity: token, grantVersion: 'v1' }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        grantVersion: binding.grantVersion,
+      }),
+    })
+    server.revokeBridgeSession('expired', { grantVersion: 'v1' })
+    await new Promise((resolve) => setTimeout(resolve, 15))
+    const expiredBridge = makeFakeBridge(() => {})
+    server.attachBridge(expiredBridge)
+    expiredBridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'expired',
+        sessionIdentity: 'expired',
+        grantVersion: 'v1',
+      }),
+    )
+    const expiredResult = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(expiredResult.code).toBe(403)
+    expect(expiredResult.error).toBe(
+      'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+    )
+  })
+
+  it('evicts the oldest revocation when the configured cap is reached', async () => {
+    const counter = makeCounter()
+    const capped = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeRevocationTtlMs: 10_000,
+      bridgeRevocationMaxEntries: 1,
+      bridgeCallTimeoutMs: 10,
+      verifyBridgeSession: (token) => ({ identity: token, grantVersion: 'v1' }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        grantVersion: binding.grantVersion,
+      }),
+    })
+    capped.revokeBridgeSession('oldest', { grantVersion: 'v1' })
+    capped.revokeBridgeSession('newest', { grantVersion: 'v1' })
+    const oldestBridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        oldestBridge.reply(JSON.stringify({ type: 'result', callId: message.callId, result: 'ok' }))
+    })
+    capped.attachBridge(oldestBridge)
+    oldestBridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: capped.issueBridgeNonce().nonce,
+        sessionToken: 'oldest',
+        sessionIdentity: 'oldest',
+        grantVersion: 'v1',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const oldestResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      result?: string
+      error?: string
+    }
+    expect(oldestResult.result).toBe('ok')
+    expect(oldestResult.error).toBeUndefined()
+    const newestBridge = makeFakeBridge(() => {})
+    capped.attachBridge(newestBridge)
+    newestBridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: capped.issueBridgeNonce().nonce,
+        sessionToken: 'newest',
+        sessionIdentity: 'newest',
+        grantVersion: 'v1',
+      }),
+    )
+    const newestResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(newestResult.code).toBe(503)
+    expect(newestResult.error).toBe(
+      'BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed',
+    )
+  })
+
+  it('commits protocol denial before running a throwing diagnostic hook', async () => {
+    const counter = makeCounter()
+    let calls = 0
+    let captured: unknown
+    const unhandled: unknown[] = []
+    const onUnhandled = (reason: unknown): void => {
+      unhandled.push(reason)
+    }
+    process.on('unhandledRejection', onUnhandled)
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeHandshakeTimeoutMs: 5,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+      onBridgeDiagnostic: async (diagnostic) => {
+        calls += 1
+        captured = diagnostic
+        throw new Error('diagnostic failure')
+      },
+    })
+    const bridge = makeFakeBridge(() => {})
+    server.attachBridge(bridge)
+    bridge.reply(JSON.stringify({ type: 'hello', protocol: -1, nonce: 'marker-token' }))
+    const result = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    await Promise.resolve()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    process.off('unhandledRejection', onUnhandled)
+    expect(result.code).toBe(503)
+    expect(result.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed')
+    expect(calls).toBeGreaterThan(0)
+    expect(unhandled).toEqual([])
+    expect(Object.isFrozen(captured)).toBe(true)
+  })
+
+  it('keeps a diagnostic reattachment from rejecting the replacement handshake', async () => {
+    const counter = makeCounter()
+    let server!: AgentServer
+    let replacement!: ReturnType<typeof makeFakeBridge>
+    server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+      onBridgeDiagnostic: ({ event }) => {
+        if (event !== 'hello.protocol.mismatch') return
+        replacement = makeFakeBridge((frame) => {
+          const message = JSON.parse(frame) as { type?: string; callId?: string }
+          if (message.type === 'invoke' && message.callId)
+            replacement.reply(
+              JSON.stringify({ type: 'result', callId: message.callId, result: 'replacement-ok' }),
+            )
+        })
+        server.attachBridge(replacement)
+        replacement.reply(
+          JSON.stringify({
+            type: 'hello',
+            protocol: BRIDGE_PROTOCOL_VERSION,
+            nonce: server.issueBridgeNonce().nonce,
+            sessionToken: 'replacement',
+            sessionIdentity: 'replacement',
+          }),
+        )
+      },
+    })
+    const original = makeFakeBridge(() => {})
+    server.attachBridge(original)
+    const originalCall = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' }) as Promise<{
+      code?: number
+      error?: string
+    }>
+    original.reply(JSON.stringify({ type: 'hello', protocol: -1 }))
+    const originalResult = await originalCall
+    expect(originalResult.code).toBe(503)
+    expect(originalResult.error).toBe(
+      'BRIDGE_REPLACED: bridge attachment changed during authorization',
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const replacementResult = (await server.callTool(`${TAG}/increment`, [1], {
+      userId: 'u1',
+    })) as {
+      result?: string
+      error?: string
+    }
+    expect(replacementResult.result).toBe('replacement-ok')
+    expect(replacementResult.error).toBeUndefined()
   })
 
   it('after the verified channel disconnects, a new channel that skips hello is never delegated to', async () => {

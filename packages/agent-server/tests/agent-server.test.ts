@@ -626,16 +626,16 @@ describe('WS capability bridge', () => {
       bridge.fireClose()
     })
     server.attachBridge(bridge)
-    // A verified channel — so the 503 below is provably the DISCONNECT, not the
-    // handshake refusal (which also returns 503, with a different message).
+    // A verified channel — so the withheld result is provably a post-send
+    // disconnect, not a handshake refusal.
     bridge.handshake(server.issueBridgeNonce().nonce)
 
     const res = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       code: number
       error: string
     }
-    expect(res.code).toBe(503)
-    expect(res.error).toBe('BRIDGE_DETACHED: bridge disconnected during invocation')
+    expect(res.code).toBe(403)
+    expect(res.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
   })
 })
 

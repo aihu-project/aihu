@@ -143,9 +143,9 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     version: '0.4.0',
     tagline: 'Service-side agent runtime (server-hosted agent endpoints).',
     note: '',
-    exportCount: 50,
+    exportCount: 51,
     valueCount: 8,
-    typeCount: 42,
+    typeCount: 43,
     agent: true,
   },
   {

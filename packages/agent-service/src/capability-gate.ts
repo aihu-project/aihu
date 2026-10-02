@@ -39,6 +39,14 @@ export interface CapabilityAuthorizationRequest {
 /** Field names the result is restricted to. Absent/undefined means "no restriction". */
 export type CapabilityProjection = readonly string[]
 
+export interface CapabilityProjectionLimits {
+  readonly maxDepth?: number
+  readonly maxNodes?: number
+}
+
+const DEFAULT_PROJECTION_MAX_DEPTH = 32
+const DEFAULT_PROJECTION_MAX_NODES = 10_000
+
 /**
  * What the host's resolver decided — BEFORE the credential-failure ladder
  * below ever runs (that ladder only fires when `resolve` is unreachable or
@@ -222,10 +230,25 @@ export async function authorizeCapability(
 export function projectCapabilityResult(
   value: unknown,
   projection: CapabilityProjection | undefined,
+  limits: CapabilityProjectionLimits = {},
 ): unknown {
   if (projection === undefined) return value
+  const maxDepth = limits.maxDepth ?? DEFAULT_PROJECTION_MAX_DEPTH
+  const maxNodes = limits.maxNodes ?? DEFAULT_PROJECTION_MAX_NODES
+  if (
+    !Number.isSafeInteger(maxDepth) ||
+    maxDepth < 0 ||
+    !Number.isSafeInteger(maxNodes) ||
+    maxNodes < 1
+  )
+    throw new TypeError('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
   const paths = projection.map((path) => path.split('.').filter(Boolean))
-  const project = (current: unknown, relevant: string[][]): unknown => {
+  const ancestors = new Set<object>()
+  let nodeCount = 0
+  const project = (current: unknown, relevant: string[][], depth: number): unknown => {
+    nodeCount += 1
+    if (nodeCount > maxNodes || depth > maxDepth)
+      throw new TypeError('unsupported projection value')
     if (current === null || typeof current !== 'object') {
       if (
         typeof current === 'string' ||
@@ -236,6 +259,7 @@ export function projectCapabilityResult(
       if (current === null) return null
       throw new TypeError('unsupported projection value')
     }
+    if (ancestors.has(current)) throw new TypeError('unsupported projection value')
     for (
       let cursor: object | null = current;
       cursor !== null;
@@ -248,27 +272,44 @@ export function projectCapabilityResult(
       )
         throw new TypeError('unsupported projection value')
     }
-    if (Array.isArray(current)) return Array.from(current, (item) => project(item, relevant))
+    ancestors.add(current)
+    if (Array.isArray(current)) {
+      const out: unknown[] = []
+      for (let index = 0; index < current.length; index += 1) {
+        const descriptor = Object.getOwnPropertyDescriptor(current, String(index))
+        if (!descriptor || !('value' in descriptor))
+          throw new TypeError('unsupported projection value')
+        out.push(project(descriptor.value, relevant, depth + 1))
+      }
+      ancestors.delete(current)
+      return out
+    }
     const proto = Object.getPrototypeOf(current)
     if (proto !== Object.prototype && proto !== null)
       throw new TypeError('unsupported projection value')
     const out = Object.create(null) as Record<string, unknown>
+    const keys = Object.keys(current)
     const includeAll = relevant.some((path) => path.length === 0)
-    for (const [key, child] of Object.entries(current as Record<string, unknown>)) {
+    for (const key of keys) {
+      const matching = relevant.filter((path) => path[0] === key)
+      if (!includeAll && matching.length === 0) continue
+      const descriptor = Object.getOwnPropertyDescriptor(current, key)
+      if (!descriptor || !('value' in descriptor))
+        throw new TypeError('unsupported projection value')
+      const child = descriptor.value
       if (includeAll) {
-        out[key] = project(child, [[]])
+        out[key] = project(child, [[]], depth + 1)
         continue
       }
-      const matching = relevant.filter((path) => path[0] === key)
-      if (matching.length === 0) continue
       const tails = matching.map((path) => path.slice(1))
-      if (tails.some((path) => path.length === 0)) out[key] = project(child, [[]])
-      else out[key] = project(child, tails)
+      if (tails.some((path) => path.length === 0)) out[key] = project(child, [[]], depth + 1)
+      else out[key] = project(child, tails, depth + 1)
     }
+    ancestors.delete(current)
     return out
   }
   try {
-    return project(value, paths)
+    return project(value, paths, 0)
   } catch {
     throw new TypeError('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
   }

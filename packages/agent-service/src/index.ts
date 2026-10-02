@@ -23,6 +23,7 @@ export type {
   CapabilityGrant,
   CapabilityGrantResolver,
   CapabilityProjection,
+  CapabilityProjectionLimits,
 } from './capability-gate.ts'
 export {
   authorizeCapability,

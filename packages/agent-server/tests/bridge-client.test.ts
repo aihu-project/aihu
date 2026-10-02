@@ -262,8 +262,8 @@ describe('full loop: server gates, the BROWSER instance is driven (not the twin)
       code?: number
       error?: string
     }
-    expect(result.code).toBe(503)
-    expect(result.error).toBe('BRIDGE_ERROR: bridge call failed')
+    expect(result.code).toBe(403)
+    expect(result.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
     expect(result.error).not.toContain('secret-marker')
     expect(diagnostics).toEqual([
       { code: 'BRIDGE_ACTION_FAILED', message: '{"customerSsn":"secret-marker"}' },

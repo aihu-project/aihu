@@ -4,4 +4,10 @@ Agent data reads require a host authorization decision against a verified princi
 
 Tenant actors are derived only from a verified principal and a current host lookup. Missing lookup results deny tenant-scoped reads. Actor data is returned only from the explicit authorization surface and is excluded from agent metadata and browser bundles.
 
-Browser bridge handshakes require a server-issued one-use nonce and a host-verified session. A channel is bound to the verified session and grant version. The host reauthorizes every invocation; denial or lookup failure prevents forwarding. Origin allowlisting remains an independent control and is not identity proof.
+Browser bridge handshakes require a server-issued one-use nonce and a host-verified session. A channel is bound to the verified session and grant version. The host reauthorizes every invocation; denial or lookup failure prevents forwarding. Origin allowlisting remains an independent control and is not identity proof. Hosts can revoke an identity or one exact grant version; grant versions are data and have no wildcard sentinel. The in-memory revocation guard expires entries after a configurable TTL (24 hours by default) and caps retained entries (10,000 by default), evicting the oldest. Revoke synchronously cancels matching pending invocations. Hosts keep their session store authoritative for revocations that must outlive this bounded guard.
+
+After an action invoke frame may have been sent, a missing or denied result does not prove the action did not run. Disconnect, timeout, bridge error/protocol failure, revocation, or post-invoke authorization/projection failure returns `BRIDGE_RESULT_WITHHELD`; callers treat the outcome as unknown. Read failures retain their specific denial codes.
+
+Projections inspect selected own data properties through descriptors and never call getters. Selected accessors, cycles, unsupported values, depth over 32, or more than 10,000 visited nodes fail closed as `CAPABILITY_UNAVAILABLE` by default. Hosts can configure the depth and node limits.
+
+Bridge diagnostics run asynchronously after the denial state transition. Their peer details are immutable, bounded copies with credential contents omitted, and a callback throw/rejection cannot alter the denial or connection state.

@@ -15,6 +15,7 @@ import type {
   AgentServiceOptions,
   AuthPlugin,
   CapabilityGrantResolver,
+  CapabilityProjectionLimits,
   RateLimitPlugin,
   RequestContext,
 } from '@aihu/agent-service'
@@ -92,6 +93,12 @@ export interface AgentServerOptions {
   bridgeHandshakeTimeoutMs?: number
   /** Maximum duration for a bridge invocation reply. Defaults to 5000ms. */
   bridgeCallTimeoutMs?: number
+  /** Bounds projected bridge read results. Defaults to depth 32 and 10,000 total nodes. */
+  projectionLimits?: CapabilityProjectionLimits
+  /** Revocation memory lifetime. Defaults to 24 hours; host session storage remains authoritative. */
+  bridgeRevocationTtlMs?: number
+  /** Maximum retained revocation bindings. Oldest entries are evicted when full. Defaults to 10,000. */
+  bridgeRevocationMaxEntries?: number
   /** Re-check the bound session/grant before every invocation. */
   reauthorizeBridgeInvoke?: (binding: {
     readonly sessionToken?: string
@@ -101,7 +108,10 @@ export interface AgentServerOptions {
     readonly actor?: Actor
   }) => BridgeVerifiedSession | false | Promise<BridgeVerifiedSession | false>
   /** Optional host-side diagnostics for rejected bridge frames. Disabled when omitted. */
-  onBridgeDiagnostic?: (diagnostic: { readonly event: string; readonly detail?: unknown }) => void
+  onBridgeDiagnostic?: (diagnostic: {
+    readonly event: string
+    readonly detail?: unknown
+  }) => void | Promise<void>
 }
 
 export interface BridgeVerifiedSession {
@@ -264,7 +274,7 @@ export interface AgentServer {
   issueBridgeNonce(ttlMs?: number): BridgeNonce
 
   /** Revoke a verified bridge identity (or its exact grant) and cancel its pending calls. */
-  revokeBridgeSession(identity: string, grantVersion?: string): void
+  revokeBridgeSession(identity: string, scope?: { readonly grantVersion: string }): void
 
   /**
    * Build the MCP `Server` (stdio-ready) exposing each component action as an

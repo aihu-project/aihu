@@ -11,7 +11,7 @@ export type { ActionSchema, InputSchema } from '@aihu/agent'
 
 import type { AgentMetadata } from '@aihu/agent'
 import type { Actor, ActorResolver } from './actor.ts'
-import type { CapabilityGrantResolver } from './capability-gate.ts'
+import type { CapabilityGrantResolver, CapabilityProjectionLimits } from './capability-gate.ts'
 import type { EntitlementMemo, EntitlementsHandle } from './entitlements.ts'
 
 // ─── v0.3.0 — LiveBinding (RFC §2.2) ─────────────────────────────────────────
@@ -178,6 +178,8 @@ export interface AgentManifest {
  * Options for `createAgentService`.
  */
 export interface AgentServiceOptions {
+  /** Bounds projected read results. Defaults to depth 32 and 10,000 total nodes. */
+  projectionLimits?: CapabilityProjectionLimits
   /** Maximum duration for each injected async security hook. Defaults to 5000ms. */
   securityHookTimeoutMs?: number
   /**
