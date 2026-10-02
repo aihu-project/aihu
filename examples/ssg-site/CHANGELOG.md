@@ -1,5 +1,14 @@
 # @aihu/example-ssg-site
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/server@0.6.2
+  - @aihu/app@10.2.3
+  - @aihu/router@0.5.4
+
 ## 0.0.14
 
 ### Patch Changes

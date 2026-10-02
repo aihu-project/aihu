@@ -1,5 +1,13 @@
 # @aihu/app
 
+## 10.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/server@0.6.2
+  - @aihu/router@0.5.4
+
 ## 10.2.2
 
 ### Patch Changes

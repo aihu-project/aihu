@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/agent-acp',
   slug: 'agent-acp',
   tier: 'Agents & governance',
-  version: '0.2.1',
+  version: '0.2.2',
   tagline:
     "DEPRECATED — use @aihu/agent-a2a. BeeAI ACP merged into A2A under the Linux Foundation (Aug 2025); this adapter's invented ACP shape has no spec to conform to.",
   note: '',

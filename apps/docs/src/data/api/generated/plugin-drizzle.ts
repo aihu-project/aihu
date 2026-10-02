@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu-plugin/drizzle',
   slug: 'plugin-drizzle',
   tier: 'Plugins',
-  version: '0.1.7',
+  version: '0.1.8',
   tagline:
     'Drizzle ORM data adapter for aihu — typed createResource fetchers and defineLoader helpers (Postgres / SQLite / libSQL).',
   note: '',

@@ -1,5 +1,12 @@
 # @aihu/agent-readiness
 
+## 2.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/server@0.6.2
+
 ## 2.4.0
 
 ### Minor Changes

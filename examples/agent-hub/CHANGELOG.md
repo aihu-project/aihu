@@ -1,5 +1,14 @@
 # @aihu/example-agent-hub
 
+## 0.0.30
+
+### Patch Changes
+
+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
+  - @aihu/agent-service@0.5.0
+  - @aihu/agent-a2a@1.0.2
+  - @aihu/agent-acp@0.2.2
+
 ## 0.0.29
 
 ### Patch Changes

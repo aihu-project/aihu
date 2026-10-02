@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/agent-service',
   slug: 'agent-service',
   tier: 'Agents & governance',
-  version: '0.4.0',
+  version: '0.5.0',
   tagline: 'Service-side agent runtime (server-hosted agent endpoints).',
   note: '',
 }

@@ -1,7 +1,7 @@
 [
   {
     "name": "@aihu-plugin/agent-readiness",
-    "version": "2.4.0",
+    "version": "2.4.1",
     "dir": "packages/plugin-agent-readiness",
     "isPlatform": false
   },
@@ -13,7 +13,7 @@
   },
   {
     "name": "@aihu-plugin/drizzle",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "dir": "packages/plugin-drizzle",
     "isPlatform": false
   },
@@ -25,13 +25,13 @@
   },
   {
     "name": "@aihu/adapter-cloudflare",
-    "version": "15.0.2",
+    "version": "15.0.3",
     "dir": "packages/adapter-cloudflare",
     "isPlatform": false
   },
   {
     "name": "@aihu/adapter-vercel",
-    "version": "15.0.2",
+    "version": "15.0.3",
     "dir": "packages/adapter-vercel",
     "isPlatform": false
   },
@@ -43,31 +43,31 @@
   },
   {
     "name": "@aihu/agent-a2a",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "dir": "packages/agent-a2a",
     "isPlatform": false
   },
   {
     "name": "@aihu/agent-acp",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "dir": "packages/agent-acp",
     "isPlatform": false
   },
   {
     "name": "@aihu/agent-readiness",
-    "version": "2.0.5",
+    "version": "2.0.6",
     "dir": "packages/_moved/agent-readiness",
     "isPlatform": false
   },
   {
     "name": "@aihu/agent-server",
-    "version": "0.4.4",
+    "version": "0.5.0",
     "dir": "packages/agent-server",
     "isPlatform": false
   },
   {
     "name": "@aihu/agent-service",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "dir": "packages/agent-service",
     "isPlatform": false
   },
@@ -79,7 +79,7 @@
   },
   {
     "name": "@aihu/app",
-    "version": "10.2.2",
+    "version": "10.2.3",
     "dir": "packages/app",
     "isPlatform": false
   },
@@ -181,7 +181,7 @@
   },
   {
     "name": "@aihu/router",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "dir": "packages/router",
     "isPlatform": false
   },
@@ -193,13 +193,13 @@
   },
   {
     "name": "@aihu/seo",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "dir": "packages/seo",
     "isPlatform": false
   },
   {
     "name": "@aihu/server",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "dir": "packages/server",
     "isPlatform": false
   },
