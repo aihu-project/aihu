@@ -28,6 +28,7 @@ export default defineConfig({
     'node:child_process',
     'node:fs',
     'node:module',
+    'node:os',
     'node:path',
     'node:url',
     // Bug A fix: keep @aihu/compiler external so consumers always resolve
