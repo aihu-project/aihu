@@ -157,11 +157,11 @@ Landed on the branch:
 **Known gaps**
 - `router.viewTransitions` and `ui.style` are declared and read by nothing. They
   now warn when set rather than lying silently. Wire or remove.
-  **`router.viewTransitions` half is in flight:** PR
+  **`router.viewTransitions` half has landed:** PR
   [#866](https://github.com/aihu-project/aihu/pull/866) wires it end-to-end
   (`createApp()`'s `RouteContext` + the generated `virtual:aihu-entry`) and
-  removes its `notYetImplemented` schema wrapper; open, not yet merged as of
-  2026-09-26. `ui.style` is untouched by that PR and still in this state.
+  removes its `notYetImplemented` schema wrapper. `ui.style` is untouched by
+  that PR and still in this state.
 - `css.shadowMode` is project-wide, so `--shadow light` flips leaves too, contra
   DA4. The shape that fixes it is `{ pages, layouts, leaves }`, needing compiler
   vocabulary that does not exist. **Design the surface capable of it now**;
@@ -214,9 +214,7 @@ is agreed.
 
 **Open:** ~~#613 fixes the `agent` TS7006 regression (#595 fixed it, #601
 reintroduced it at `templates-agent.ts:570`) and switches matrix PR runs to
-`--mode local`.~~ **MERGED, re-verified 2026-09-26** — PR #613
-("fix(cli): agent template TS7006 regression + matrix tests the diff, not
-npm") is closed/merged.
+`--mode local`.~~ **CLOSED, MERGED 2026-07-26** — PR #613.
 
 ---
 
@@ -335,7 +333,7 @@ FEL-402 (dep-check subpath purity evaded by computed dynamic imports).
 - **FEL-420** `@aihu/plugin` is 0.1.1 on npm, 0.1.0 in the repo — a published
   version with no source.
 - `scaffold-matrix` merged red and **has never passed on any branch**, including
-  its own. #613 (merged, see T3) switched PR runs to `--mode local` and skips
+  its own. #613 (closed, merged 2026-07-26; see T3) switched PR runs to `--mode local` and skips
   cells that cannot run — unverified this pass whether that alone was enough
   to turn `scaffold-matrix` green; re-check before trusting this line.
 - Known blind spots: `ci-ok` gates one job; the binary-bump guard misses
