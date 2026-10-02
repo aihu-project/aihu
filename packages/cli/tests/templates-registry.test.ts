@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   AVAILABLE_TEMPLATE_PACKAGES,
@@ -7,6 +9,15 @@ import {
 } from '../src/templates-registry.ts'
 
 describe('KNOWN_TEMPLATES', () => {
+  it('includes cf-solo in the scaffold matrix dispatch and scheduled defaults', () => {
+    const workflow = readFileSync(
+      resolve(process.cwd(), '.github/workflows/scaffold-matrix.yml'),
+      'utf8',
+    )
+    expect(workflow).toContain('default: minimal,full,docs,agent,cf-team,cf-solo')
+    expect(workflow).toContain("'minimal,full,docs,agent,cf-team,cf-solo'")
+  })
+
   it('lists the 5 v0.2.0 templates per arch-6 §3.5', () => {
     expect(KNOWN_TEMPLATES).toEqual([
       '@aihu/templates-cf-team',
