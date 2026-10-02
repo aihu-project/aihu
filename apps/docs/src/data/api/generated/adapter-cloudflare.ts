@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/adapter-cloudflare',
   slug: 'adapter-cloudflare',
   tier: 'App & routing',
-  version: '15.0.0',
+  version: '15.0.1',
   tagline: 'Cloudflare Workers/Pages deployment adapter for @aihu/app.',
   note: '',
 }

@@ -1,6 +1,6 @@
 {
   "name": "@aihu/css-engine-win32-x64-msvc",
-  "version": "0.1.19",
+  "version": "0.1.21",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",
@@ -15,5 +15,6 @@
   ],
   "files": [
     "aihu-css-compile.exe"
-  ]
+  ],
+  "aihuNativeSource": "d692c83fd70bcf6ca492e7d725df07f90c31e388"
 }

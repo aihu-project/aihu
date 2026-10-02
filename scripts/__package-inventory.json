@@ -25,13 +25,13 @@
   },
   {
     "name": "@aihu/adapter-cloudflare",
-    "version": "15.0.0",
+    "version": "15.0.1",
     "dir": "packages/adapter-cloudflare",
     "isPlatform": false
   },
   {
     "name": "@aihu/adapter-vercel",
-    "version": "15.0.0",
+    "version": "15.0.1",
     "dir": "packages/adapter-vercel",
     "isPlatform": false
   },
@@ -79,7 +79,7 @@
   },
   {
     "name": "@aihu/app",
-    "version": "10.2.0",
+    "version": "10.2.1",
     "dir": "packages/app",
     "isPlatform": false
   },
@@ -103,7 +103,7 @@
   },
   {
     "name": "@aihu/css-engine",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "dir": "packages/css-engine",
     "isPlatform": false
   },
@@ -181,7 +181,7 @@
   },
   {
     "name": "@aihu/router",
-    "version": "0.5.2",
+    "version": "0.5.3",
     "dir": "packages/router",
     "isPlatform": false
   },
