@@ -15,13 +15,8 @@
  *     disconnected must independently prove its own session; a verified
  *     handshake is never inherited by a new channel.
  *
- * NOT covered here: revoking an already-verified, STILL-CONNECTED channel
- * mid-session (no reconnect involved) is not yet implemented anywhere in
- * this package — see `bridge-sig.ts`'s docblock (`invoke` frames are signed
- * with the session token proved at handshake, not re-verified against a
- * live session store per call) and aihu-agent#13, which is the issue for
- * that gap. Do not read part 3 as proof that a revoked-but-still-connected
- * session is cut off — it is not.
+ * Also pins protocol v2, verified session identity/grant binding, and peer
+ * replacement cancellation. Live revocation is checked before each invoke.
  */
 
 import { registerAgentMetadata } from '@aihu/agent'
@@ -43,10 +38,11 @@ describe('conformance — pinned package versions and API surface', () => {
     expect(agentServerPackageJson.dependencies).toEqual({
       '@aihu/agent': 'workspace:*',
       '@aihu/agent-service': 'workspace:*',
-      '@aihu/arbor': '^4.1.2',
       '@modelcontextprotocol/sdk': '^1.0.0',
       jsdom: '^25.0.0',
     })
+    expect(agentServerPackageJson.peerDependencies['@aihu/arbor']).toBe('^4.1.2')
+    expect(agentServerPackageJson.devDependencies['@aihu/arbor']).toBe('workspace:*')
   })
 
   it('the exported value surface matches the documented allowlist exactly', () => {
@@ -67,8 +63,8 @@ describe('conformance — pinned package versions and API surface', () => {
     )
   })
 
-  it('the WS capability-bridge protocol version is unchanged (a bump is a breaking wire change)', () => {
-    expect(BRIDGE_PROTOCOL_VERSION).toBe(1)
+  it('the WS capability-bridge protocol is v2 for bound nonce/session hellos', () => {
+    expect(BRIDGE_PROTOCOL_VERSION).toBe(2)
   })
 })
 
@@ -182,14 +178,301 @@ function makeFakeBridge(onSend: (data: string) => void): BridgeChannel & {
 }
 
 describe('conformance — a reconnected bridge channel must independently re-verify', () => {
+  it('cancels reauthorization on peer replacement and never routes A approval to B', async () => {
+    const counter = makeCounter()
+    let release!: (value: { identity: string }) => void
+    let entered!: () => void
+    const reauthEntered = new Promise<void>((resolve) => {
+      entered = resolve
+    })
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: () => {
+        entered()
+        return new Promise<{ identity: string }>((resolve) => {
+          release = resolve
+        })
+      },
+    })
+    const a = makeFakeBridge(() => {})
+    server.attachBridge(a)
+    a.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const result = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })
+    await reauthEntered
+    const bFrames: string[] = []
+    let b!: ReturnType<typeof makeFakeBridge>
+    b = makeFakeBridge((frame) => {
+      bFrames.push(frame)
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId) {
+        b.reply(
+          JSON.stringify({ type: 'result', callId: message.callId, result: 'delivered-to-B' }),
+        )
+      }
+    })
+    server.attachBridge(b)
+    b.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-b',
+        sessionIdentity: 'session-b',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    release({ identity: 'session-a' })
+    const denied = (await result) as { code?: number; error?: string }
+    expect(denied.code).toBe(503)
+    expect(denied.error).toBe('BRIDGE_REPLACED: bridge attachment changed during authorization')
+    expect(bFrames.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('does not let a call waiting on A handshake adopt B after replacement', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeHandshakeTimeoutMs: 500,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
+    })
+    const a = makeFakeBridge(() => {})
+    server.attachBridge(a)
+    const result = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const bFrames: string[] = []
+    let b!: ReturnType<typeof makeFakeBridge>
+    b = makeFakeBridge((frame) => {
+      bFrames.push(frame)
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId) {
+        b.reply(
+          JSON.stringify({ type: 'result', callId: message.callId, result: 'delivered-to-B' }),
+        )
+      }
+    })
+    server.attachBridge(b)
+    b.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-b',
+        sessionIdentity: 'session-b',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const denied = (await result) as { code?: number; error?: string }
+    expect(denied.code).toBe(503)
+    expect(denied.error).toBe('BRIDGE_REPLACED: bridge attachment changed during handshake')
+    expect(bFrames.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('bounds a never-settling session verifier and refuses the channel', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      securityHookTimeoutMs: 5,
+      bridgeHandshakeTimeoutMs: 25,
+      verifyBridgeSession: () => new Promise(() => {}),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
+    })
+    const sent: string[] = []
+    const bridge = makeFakeBridge((frame) => sent.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+      }),
+    )
+    const denied = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(denied.code).toBe(503)
+    expect(denied.error).toContain('BRIDGE_SESSION_INVALID')
+    expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('bounds a never-settling per-invoke reauthorization hook', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      securityHookTimeoutMs: 5,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: () => new Promise(() => {}),
+    })
+    const sent: string[] = []
+    const bridge = makeFakeBridge((frame) => sent.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const denied = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(denied.code).toBe(503)
+    expect(denied.error).toBe('BRIDGE_AUTH_UNAVAILABLE: per-invoke authorization failed')
+    expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('rejects a per-invoke binding that changes identity or grant version', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token, grantVersion: 'g7' }),
+      reauthorizeBridgeInvoke: () => ({ identity: 'session-b', grantVersion: 'g8' }),
+    })
+    const sent: string[] = []
+    const bridge = makeFakeBridge((frame) => sent.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+        grantVersion: 'g7',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const denied = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(denied.code).toBe(403)
+    expect(denied.error).toBe('BRIDGE_REVOKED: session or grant binding changed')
+    expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('rejects existing pending calls when a later invoke detects grant revocation', async () => {
+    const counter = makeCounter()
+    let authorizeCount = 0
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token, grantVersion: 'g7' }),
+      reauthorizeBridgeInvoke: (binding) => {
+        authorizeCount += 1
+        return authorizeCount === 1 ? { identity: binding.identity, grantVersion: 'g7' } : false
+      },
+    })
+    const frames: string[] = []
+    const bridge = makeFakeBridge((frame) => frames.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+        grantVersion: 'g7',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const pending = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(frames.filter((frame) => frame.includes('"invoke"'))).toHaveLength(1)
+    const revoked = (await server.callTool(`${TAG}/increment`, [2], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    const cancelled = (await pending) as { code?: number; error?: string }
+    expect(revoked.code).toBe(403)
+    expect(revoked.error).toBe('BRIDGE_REVOKED: session or grant is no longer current')
+    expect(cancelled.code).toBe(403)
+    expect(cancelled.error).toBe('BRIDGE_REVOKED: session or grant is no longer current')
+    expect(frames.filter((frame) => frame.includes('"invoke"'))).toHaveLength(1)
+  })
+
+  it('times out a pending bridge invocation with its stable error code', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeCallTimeoutMs: 5,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
+    })
+    const sent: string[] = []
+    const bridge = makeFakeBridge((frame) => sent.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const denied = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(denied.code).toBe(503)
+    expect(denied.error).toBe('BRIDGE_TIMEOUT: bridge call timed out')
+    expect(sent.some((frame) => frame.includes('"invoke"'))).toBe(true)
+  })
+
   it('after the verified channel disconnects, a new channel that skips hello is never delegated to', async () => {
     const counter = makeCounter()
     const server = spawn({
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
       bridgeHandshakeTimeoutMs: 50,
-      verifyBridgeSession: (token) => token === 'good-token',
-      reauthorizeBridgeInvoke: () => true,
+      verifyBridgeSession: (token) =>
+        token === 'good-token' ? { identity: token, grantVersion: 'g7' } : { identity: '' },
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
     })
 
     // First connection: proves its session and would be delegated to.
@@ -201,6 +484,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         sessionToken: 'good-token',
+        sessionIdentity: 'good-token',
+        grantVersion: 'g7',
         nonce,
       }),
     )
@@ -229,8 +514,12 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
       bridgeHandshakeTimeoutMs: 50,
-      verifyBridgeSession: (token) => token === 'good-token',
-      reauthorizeBridgeInvoke: () => true,
+      verifyBridgeSession: (token) =>
+        token === 'good-token' ? { identity: token, grantVersion: 'g7' } : { identity: '' },
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
     })
 
     const first = makeFakeBridge(() => {})
@@ -241,6 +530,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         sessionToken: 'good-token',
+        sessionIdentity: 'good-token',
+        grantVersion: 'g7',
         nonce,
       }),
     )
@@ -256,6 +547,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         sessionToken: 'stale-token',
+        sessionIdentity: 'stale-token',
+        grantVersion: 'g7',
         nonce: server.issueBridgeNonce().nonce,
       }),
     )
@@ -276,8 +569,12 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
       bridgeHandshakeTimeoutMs: 50,
-      verifyBridgeSession: (token) => token === 'good-token',
-      reauthorizeBridgeInvoke: () => true,
+      verifyBridgeSession: (token) =>
+        token === 'good-token' ? { identity: token, grantVersion: 'g7' } : { identity: '' },
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
     })
     const sent: string[] = []
     const bridge = makeFakeBridge((data) => sent.push(data))
@@ -287,6 +584,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       type: 'hello',
       protocol: BRIDGE_PROTOCOL_VERSION,
       sessionToken: 'good-token',
+      sessionIdentity: 'good-token',
+      grantVersion: 'g7',
       nonce,
     })
     bridge.reply(hello)
@@ -298,10 +597,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       code?: number
       error?: string
     }
-    expect(res.code).toBe(503)
-    expect(res.error).toBe(
-      'BRIDGE_UNVERIFIED: BRIDGE_REPLAY: duplicate hello on an established peer',
-    )
+    expect(res.code).toBe(403)
+    expect(res.error).toBe('BRIDGE_REVOKED: bridge session binding changed')
     expect(sent.filter((s) => s.includes('"invoke"'))).toHaveLength(0)
   })
 
@@ -312,9 +609,12 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
       bridgeHandshakeTimeoutMs: 50,
-      verifyBridgeSession: (token) => token === 'good-token',
-      reauthorizeBridgeInvoke: ({ sessionToken, grantVersion }) =>
-        current && sessionToken === 'good-token' && grantVersion === 'g7',
+      verifyBridgeSession: (token) =>
+        token === 'good-token' ? { identity: token, grantVersion: 'g7' } : { identity: '' },
+      reauthorizeBridgeInvoke: ({ identity, grantVersion }) =>
+        current && identity === 'good-token' && grantVersion === 'g7'
+          ? { identity, grantVersion }
+          : false,
     })
     const sent: string[] = []
     const bridge = makeFakeBridge((data) => sent.push(data))
@@ -324,6 +624,7 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         sessionToken: 'good-token',
+        sessionIdentity: 'good-token',
         grantVersion: 'g7',
         nonce: server.issueBridgeNonce().nonce,
       }),
@@ -347,7 +648,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
       bridgeHandshakeTimeoutMs: 50,
-      verifyBridgeSession: (token) => token === 'good-token',
+      verifyBridgeSession: (token) =>
+        token === 'good-token' ? { identity: token, grantVersion: 'g7' } : { identity: '' },
     })
     const sent: string[] = []
     const bridge = makeFakeBridge((data) => sent.push(data))
@@ -357,6 +659,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         sessionToken: 'good-token',
+        sessionIdentity: 'good-token',
+        grantVersion: 'g7',
         nonce: server.issueBridgeNonce().nonce,
       }),
     )
@@ -378,8 +682,12 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
       bridgeHandshakeTimeoutMs: 50,
-      verifyBridgeSession: (token) => token === 'good-token',
-      reauthorizeBridgeInvoke: () => true,
+      verifyBridgeSession: (token) =>
+        token === 'good-token' ? { identity: token, grantVersion: 'g7' } : { identity: '' },
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
     })
     const sent: string[] = []
     const bridge = makeFakeBridge((data) => sent.push(data))
@@ -389,6 +697,8 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         sessionToken: 'good-token',
+        sessionIdentity: 'good-token',
+        grantVersion: 'g7',
       }),
     )
 

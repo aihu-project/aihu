@@ -69,6 +69,8 @@ export interface AgentServerOptions {
   resolveAuth?: AgentServiceOptions['resolveAuth']
   actorResolver?: ActorResolver
   authorizeDataRead?: CapabilityGrantResolver
+  /** Maximum duration for each injected security hook and pending bridge call. Defaults to 5000ms. */
+  securityHookTimeoutMs?: number
   /**
    * Auth-discovery URL forwarded to `createAgentService` — included in every
    * 401 envelope so a refused agent knows where to obtain a credential (e.g.
@@ -76,8 +78,8 @@ export interface AgentServerOptions {
    * only; never a policy input.
    */
   authDiscoveryUrl?: AgentServiceOptions['authDiscoveryUrl']
-  /** Verify the session token bound to a bridge handshake. Missing verifier denies attachment. */
-  verifyBridgeSession?: (token: string) => boolean | Promise<boolean>
+  /** Verify a bridge token and return its stable identity/grant binding. Missing verifier denies attachment. */
+  verifyBridgeSession?: (token: string) => BridgeVerifiedSession | Promise<BridgeVerifiedSession>
   /**
    * How long (ms) `callTool` waits for an attached bridge channel to complete
    * its `hello` handshake before refusing to delegate to it (503
@@ -88,13 +90,21 @@ export interface AgentServerOptions {
    * protocol version is rejected immediately, without waiting out this timeout.
    */
   bridgeHandshakeTimeoutMs?: number
+  /** Maximum duration for a bridge invocation reply. Defaults to 5000ms. */
+  bridgeCallTimeoutMs?: number
   /** Re-check the bound session/grant before every invocation. */
   reauthorizeBridgeInvoke?: (binding: {
     readonly sessionToken?: string
+    readonly identity: string
     readonly grantVersion?: string
     /** Actor resolved by the service gate for this invocation, if verified. */
     readonly actor?: Actor
-  }) => boolean | Promise<boolean>
+  }) => BridgeVerifiedSession | false | Promise<BridgeVerifiedSession | false>
+}
+
+export interface BridgeVerifiedSession {
+  readonly identity: string
+  readonly grantVersion?: string
 }
 
 // ─── WS capability-bridge contract (T2 → T3) ─────────────────────────────────
@@ -110,7 +120,7 @@ export interface AgentServerOptions {
  * the server never relies on it to — per thesis §3, the client is never the
  * policy authority.
  */
-export const BRIDGE_PROTOCOL_VERSION = 1 as const
+export const BRIDGE_PROTOCOL_VERSION = 2 as const
 
 /**
  * Server → client. Sent ONLY after `handleToolCall` authorizes an invocation
@@ -153,6 +163,7 @@ export interface BridgeResultMessage {
 export interface BridgeErrorMessage {
   type: 'error'
   callId: string
+  code?: string
   message: string
 }
 
@@ -177,6 +188,7 @@ export interface BridgeHelloMessage {
   type: 'hello'
   protocol: number
   sessionToken?: string
+  sessionIdentity?: string
   nonce?: string
   grantVersion?: string
 }

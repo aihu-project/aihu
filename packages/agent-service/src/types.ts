@@ -178,6 +178,8 @@ export interface AgentManifest {
  * Options for `createAgentService`.
  */
 export interface AgentServiceOptions {
+  /** Maximum duration for each injected async security hook. Defaults to 5000ms. */
+  securityHookTimeoutMs?: number
   /**
    * Explicit list of agent metadata entries.
    * When omitted, reads the global registry via `getAgentMetadata`.

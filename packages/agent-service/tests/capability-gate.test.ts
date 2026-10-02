@@ -188,13 +188,37 @@ describe('projectCapabilityResult', () => {
     expect(projectCapabilityResult(value, undefined)).toBe(value)
   })
 
-  it('passes scalars and arrays through unchanged even with a projection', () => {
+  it('passes scalar leaves through and projects each array element', () => {
     expect(projectCapabilityResult('sunny', ['anything'])).toBe('sunny')
     expect(projectCapabilityResult([1, 2, 3], ['anything'])).toEqual([1, 2, 3])
+    expect(
+      projectCapabilityResult(
+        [
+          { id: 'o1', customerSsn: 'secret' },
+          { id: 'o2', customerSsn: 'secret-2' },
+        ],
+        ['id'],
+      ),
+    ).toEqual([{ id: 'o1' }, { id: 'o2' }])
     expect(projectCapabilityResult(null, ['anything'])).toBeNull()
   })
 
   it('produces an empty object when the projection names no present field', () => {
     expect(projectCapabilityResult({ a: 1, b: 2 }, ['c'])).toEqual({})
+  })
+
+  it('projects dotted paths recursively through records and arrays of records', () => {
+    expect(
+      projectCapabilityResult(
+        { order: { id: 'o1', customerSsn: 'secret' }, items: [{ sku: 's1', cost: 99 }] },
+        ['order.id', 'items.sku'],
+      ),
+    ).toEqual({ order: { id: 'o1' }, items: [{ sku: 's1' }] })
+  })
+
+  it('fails closed for object shapes that cannot be described by field paths', () => {
+    expect(() => projectCapabilityResult(new Map([['secret', 'value']]), ['id'])).toThrow(
+      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+    )
   })
 })

@@ -24,7 +24,11 @@ export type {
   CapabilityGrantResolver,
   CapabilityProjection,
 } from './capability-gate.ts'
-export { authorizeCapability, projectCapabilityResult } from './capability-gate.ts'
+export {
+  authorizeCapability,
+  projectCapabilityResult,
+  withSecurityTimeout,
+} from './capability-gate.ts'
 // GX Phase 4 (#466) — the live-entitlement contract the call axis consults.
 // The engine lives in `@aihu/server` (`createGovernedRegistry`); these types
 // are the structural seam that keeps this package server-agnostic.

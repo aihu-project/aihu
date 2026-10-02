@@ -29,12 +29,15 @@
   "dependencies": {
     "@aihu/agent": "workspace:*",
     "@aihu/agent-service": "workspace:*",
-    "@aihu/arbor": "^4.1.2",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "jsdom": "^25.0.0"
   },
   "devDependencies": {
+    "@aihu/arbor": "workspace:*",
     "@types/jsdom": "^21.1.7"
+  },
+  "peerDependencies": {
+    "@aihu/arbor": "^4.1.2"
   },
   "description": "Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge.",
   "repository": {

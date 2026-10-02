@@ -11,7 +11,11 @@
  */
 import type { AgentMetadata } from '@aihu/agent'
 import type { Actor } from './actor.ts'
-import { authorizeCapability, projectCapabilityResult } from './capability-gate.ts'
+import {
+  authorizeCapability,
+  projectCapabilityResult,
+  withSecurityTimeout,
+} from './capability-gate.ts'
 import type { Principal } from './principal-gate.ts'
 import {
   decideEmission,
@@ -136,6 +140,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
   const getRegistry = options?.getRegistry
   const authDiscoveryUrl = options?.authDiscoveryUrl
   const actorResolver = options?.actorResolver
+  const hookTimeoutMs = options?.securityHookTimeoutMs ?? 5_000
 
   /**
    * Run the security gate (RFC §5 steps 1-4: 404 → 401 → 403 → 429) WITHOUT
@@ -256,7 +261,18 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
     const scopeRequired = binding.scope()
     const rateLimitSpec = binding.rateLimit()
     const jwt = requestContext?.jwt ?? ''
-    const principal = await resolvePrincipal({ jwt: requestContext?.jwt ?? null }, { authPlugin })
+    let principal: Principal
+    try {
+      principal = await withSecurityTimeout(
+        resolvePrincipal({ jwt: requestContext?.jwt ?? null }, { authPlugin }),
+        hookTimeoutMs,
+      )
+    } catch {
+      return {
+        ok: false,
+        envelope: jsonrpcError(503, 'AUTH_UNAVAILABLE: verification timed out or failed'),
+      }
+    }
     const surfacePolicy = surfaceCallPolicy(meta)
     const decision = decideEmission(
       principal,
@@ -309,7 +325,10 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
         }
       }
       try {
-        actor = sanitizeActor(await actorResolver.resolveActor(principal), principal.scopes)
+        actor = sanitizeActor(
+          await withSecurityTimeout(actorResolver.resolveActor(principal), hookTimeoutMs),
+          principal.scopes,
+        )
       } catch {
         return {
           ok: false,
@@ -324,7 +343,10 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
       }
     } else if (actorResolver && principal.class !== 'anonymous') {
       try {
-        actor = sanitizeActor(await actorResolver.resolveActor(principal), principal.scopes)
+        actor = sanitizeActor(
+          await withSecurityTimeout(actorResolver.resolveActor(principal), hookTimeoutMs),
+          principal.scopes,
+        )
       } catch {
         return {
           ok: false,
@@ -477,7 +499,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
               resource: requestContext?.resource,
               ...(gated.actor ? { actor: gated.actor } : {}),
             },
-            { resolve: options?.authorizeDataRead },
+            { resolve: options?.authorizeDataRead, timeoutMs: hookTimeoutMs },
           )
           if (!verdict.allow) {
             return jsonrpcError(
@@ -486,7 +508,11 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
               verdict.code === 401 ? authDiscoveryUrl : undefined,
             )
           }
-          return { result: projectCapabilityResult(value, verdict.projection) }
+          try {
+            return { result: projectCapabilityResult(value, verdict.projection) }
+          } catch {
+            return jsonrpcError(503, 'CAPABILITY_UNAVAILABLE: result shape cannot be projected')
+          }
         }
         throw err
       }
@@ -520,7 +546,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
             resource: requestContext?.resource,
             ...(gated.actor ? { actor: gated.actor } : {}),
           },
-          { resolve: options?.authorizeDataRead },
+          { resolve: options?.authorizeDataRead, timeoutMs: hookTimeoutMs },
         )
         if (!verdict.allow) {
           return jsonrpcError(
@@ -557,7 +583,17 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
         // `options` is closed over by buildService; reference it (NOT `this`).
         // Fail-closed preserved: without resolveAuth, no ctx is passed, so a
         // scoped binding still yields 401 (AUTH_MISSING / AUTH_REQUIRED).
-        const ctx = options?.resolveAuth ? await options.resolveAuth(req) : undefined
+        let ctx: RequestContext | undefined
+        try {
+          ctx = options?.resolveAuth
+            ? await withSecurityTimeout(options.resolveAuth(req), hookTimeoutMs)
+            : undefined
+        } catch {
+          return new Response(
+            JSON.stringify({ error: 'AUTH_UNAVAILABLE: request authentication failed', code: 503 }),
+            { status: 503, headers: CT },
+          )
+        }
         const out = (await this.handleToolCall(body.tool, body.params ?? null, ctx)) as {
           code?: number
           retryAfter?: number

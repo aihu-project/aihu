@@ -60,6 +60,21 @@ export type CapabilityGrantResolver = (
   request: CapabilityAuthorizationRequest,
 ) => CapabilityGrant | Promise<CapabilityGrant>
 
+/** Resolve a host hook within a finite bound; the original promise cannot win after timeout. */
+export async function withSecurityTimeout<T>(value: T | Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      Promise.resolve(value),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('security hook timed out')), timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
+}
+
 /** Machine-readable reasons, mirroring the `call`/`read` axis's own ladder. */
 export type CapabilityDenyReason =
   | 'AUTH_MISSING'
@@ -127,7 +142,7 @@ const AUTH_MESSAGES: Record<
 export async function authorizeCapability(
   principal: Principal,
   request: CapabilityAuthorizationRequest,
-  deps: { readonly resolve?: CapabilityGrantResolver | undefined },
+  deps: { readonly resolve?: CapabilityGrantResolver | undefined; readonly timeoutMs?: number },
 ): Promise<CapabilityAuthorizationVerdict> {
   if (principal.class === 'anonymous') {
     const { reason, message } = AUTH_MESSAGES[principal.credentialFailure]
@@ -145,7 +160,7 @@ export async function authorizeCapability(
 
   let grant: CapabilityGrant
   try {
-    grant = await deps.resolve(principal, request)
+    grant = await withSecurityTimeout(deps.resolve(principal, request), deps.timeoutMs ?? 5_000)
   } catch {
     return {
       allow: false,
@@ -175,7 +190,13 @@ export async function authorizeCapability(
 
   if (
     grant.projection !== undefined &&
-    (!Array.isArray(grant.projection) || grant.projection.some((key) => typeof key !== 'string'))
+    (!Array.isArray(grant.projection) ||
+      grant.projection.some(
+        (path) =>
+          typeof path !== 'string' ||
+          path.length === 0 ||
+          path.split('.').some((part) => part.length === 0),
+      ))
   ) {
     return {
       allow: false,
@@ -192,29 +213,40 @@ export async function authorizeCapability(
 
 /**
  * Apply a {@link CapabilityProjection} to a read result: strip every own
- * enumerable key not named by the projection. Server-side, before the value
+ * enumerable key not covered by the projection. Server-side, before the value
  * leaves — the enforcement the issue asks for ("fields outside the
- * constraint are stripped, not just hidden client-side"). A non-plain-object
- * value (array, scalar, null) and an absent projection pass through
- * unchanged — there is nothing to project on a scalar/array, and "no
- * projection" means "no restriction".
+ * constraint are stripped, not just hidden client-side"). Dotted paths select
+ * nested fields and arrays are projected element-by-element. Unsupported
+ * object shapes fail closed.
  */
 export function projectCapabilityResult(
   value: unknown,
   projection: CapabilityProjection | undefined,
 ): unknown {
-  if (
-    projection === undefined ||
-    typeof value !== 'object' ||
-    value === null ||
-    Array.isArray(value)
-  ) {
-    return value
+  if (projection === undefined) return value
+  const paths = projection.map((path) => path.split('.').filter(Boolean))
+  const project = (current: unknown, relevant: string[][]): unknown => {
+    if (current === null || typeof current !== 'object') {
+      if (typeof current === 'function') throw new TypeError('unsupported projection value')
+      return current
+    }
+    if (Array.isArray(current)) return current.map((item) => project(item, relevant))
+    const proto = Object.getPrototypeOf(current)
+    if (proto !== Object.prototype && proto !== null)
+      throw new TypeError('unsupported projection value')
+    const out = Object.create(null) as Record<string, unknown>
+    for (const [key, child] of Object.entries(current as Record<string, unknown>)) {
+      const matching = relevant.filter((path) => path[0] === key)
+      if (matching.length === 0) continue
+      const tails = matching.map((path) => path.slice(1))
+      if (tails.some((path) => path.length === 0)) out[key] = child
+      else out[key] = project(child, tails)
+    }
+    return out
   }
-  const allowed = new Set(projection)
-  const out = Object.create(null) as Record<string, unknown>
-  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-    if (allowed.has(key)) out[key] = val
+  try {
+    return project(value, paths)
+  } catch {
+    throw new TypeError('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
   }
-  return out
 }

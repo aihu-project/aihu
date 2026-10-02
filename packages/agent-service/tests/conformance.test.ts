@@ -73,6 +73,7 @@ describe('conformance — pinned package versions and API surface', () => {
         'projectCapabilityResult',
         'resolvePrincipal',
         'surfaceCallPolicy',
+        'withSecurityTimeout',
       ].sort(),
     )
   })
@@ -332,13 +333,36 @@ describe('conformance — a read-only (state-only) member has no path to a write
     expect(binding.setSignalCalls).toHaveLength(0)
   })
 
-  it('runtime record fields never enter the agent manifest metadata', () => {
+  it('a live secret record stays out of metadata and is denied through the actual state read path', async () => {
     const privateRecord = { id: 'order-1', customerSsn: 'secret-ssn-marker' }
+    const binding: LiveBinding = {
+      rootId: 1,
+      tag: 'order-manifest',
+      getSignal(name: string) {
+        return name === 'order' ? privateRecord : undefined
+      },
+      setSignal() {},
+      async callAction(name: string) {
+        throw new Error(`no action: ${name}`)
+      },
+      scope: () => null,
+      rateLimit: () => null,
+      dispose$: () => true,
+    }
     const svc = createAgentService({
       manifests: [{ tag: 'order-manifest', state: { order: 'The current order.' } }],
+      getRegistry: () => new Map([['order-manifest', [binding]]]),
     })
     const manifest = JSON.stringify(svc.getManifest())
     expect(manifest).not.toContain(privateRecord.customerSsn)
     expect(manifest).not.toContain(privateRecord.id)
+    const read = (await svc.handleToolCall('order-manifest/order', null, { userId: null })) as {
+      code?: number
+      error?: string
+      result?: unknown
+    }
+    expect(read.code).toBe(401)
+    expect(read.error).toBe('AUTH_MISSING: @aihu/auth middleware is not registered')
+    expect(read.result).toBeUndefined()
   })
 })

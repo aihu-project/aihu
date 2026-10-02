@@ -102,8 +102,11 @@ function spawn(...args: Parameters<typeof createAgentServer>): AgentServer {
   const [input] = args
   const s = createAgentServer({
     ...input,
-    verifyBridgeSession: input.verifyBridgeSession ?? ((token) => token === 'test-session'),
-    reauthorizeBridgeInvoke: input.reauthorizeBridgeInvoke ?? (() => true),
+    verifyBridgeSession:
+      input.verifyBridgeSession ??
+      ((token) => (token === 'test-session' ? { identity: token } : { identity: '' })),
+    reauthorizeBridgeInvoke:
+      input.reauthorizeBridgeInvoke ?? (() => ({ identity: 'test-session' })),
   })
   servers.push(s)
   return s
@@ -471,6 +474,7 @@ function makeFakeBridge(onSend: (data: string) => void): BridgeChannel & {
           protocol: BRIDGE_PROTOCOL_VERSION,
           nonce,
           sessionToken: 'test-session',
+          sessionIdentity: 'test-session',
         }),
       )
     },
@@ -631,7 +635,7 @@ describe('WS capability bridge', () => {
       error: string
     }
     expect(res.code).toBe(503)
-    expect(res.error).toContain('BRIDGE_ERROR')
+    expect(res.error).toBe('BRIDGE_DETACHED: bridge disconnected during invocation')
   })
 })
 

@@ -33,4 +33,5 @@ export type {
   BridgeResultMessage,
   BridgeServerMessage,
   BridgeSnapshotMessage,
+  BridgeVerifiedSession,
 } from './types.ts'

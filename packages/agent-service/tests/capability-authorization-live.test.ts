@@ -26,7 +26,7 @@ function makeVerifyingAuthPlugin(tokens: Record<string, VerifiedClaims>): AuthPl
 }
 
 /** A read-only (state-only, no actions) component binding, served via getSignal. */
-function makeReadOnlyBinding(tag: string, orderRecord: Record<string, unknown>): LiveBinding {
+function makeReadOnlyBinding(tag: string, orderRecord: unknown): LiveBinding {
   return {
     rootId: 1,
     tag,
@@ -45,10 +45,10 @@ function makeReadOnlyBinding(tag: string, orderRecord: Record<string, unknown>):
 
 const ORDER = { id: 'order-1', total: 42, customerSsn: '000-00-0000' }
 
-function makeService(resolve: CapabilityGrantResolver) {
+function makeService(resolve: CapabilityGrantResolver, orderRecord: unknown = ORDER) {
   const tag = 'order-card'
   const meta: AgentMetadata = { tag, state: { order: 'the order record' } }
-  const registry = new Map([[tag, [makeReadOnlyBinding(tag, ORDER)]]])
+  const registry = new Map([[tag, [makeReadOnlyBinding(tag, orderRecord)]]])
   const authPlugin = makeVerifyingAuthPlugin({ 'valid-jwt': { sub: 'user-1' } })
   const svc = createAgentService({
     manifests: [meta],
@@ -128,6 +128,69 @@ describe('authorizeDataRead — (c) valid grant + projection stripped server-sid
       jwt: 'valid-jwt',
     })) as { result: Record<string, unknown> }
     expect(res.result).toEqual(ORDER)
+  })
+
+  it('recursively projects nested records and arrays through the direct read path', async () => {
+    const value = {
+      id: 'o1',
+      order: { id: 'o1', customerSsn: 'secret' },
+      items: [{ sku: 's1', cost: 55 }],
+    }
+    const svc = makeService(() => ({ granted: true, projection: ['order.id', 'items.sku'] }), value)
+    const res = (await svc.handleToolCall('order-card/order', null, {
+      userId: 'user-1',
+      jwt: 'valid-jwt',
+    })) as { result: unknown }
+    expect(res.result).toEqual({ order: { id: 'o1' }, items: [{ sku: 's1' }] })
+  })
+})
+
+describe('security hook timeout', () => {
+  it('returns the specific actor unavailable code when actor resolution never settles', async () => {
+    const svc = createAgentService({
+      manifests: [{ tag: 'order-card', state: { order: 'the order record' } }],
+      getRegistry: () => new Map([['order-card', [makeReadOnlyBinding('order-card', ORDER)]]]),
+      authPlugin: makeVerifyingAuthPlugin({ 'valid-jwt': { sub: 'user-1' } }),
+      securityHookTimeoutMs: 5,
+      actorResolver: { resolveActor: () => new Promise(() => {}) },
+      authorizeDataRead: () => ({ granted: true }),
+    })
+    const result = (await svc.handleToolCall('order-card/order', null, {
+      userId: 'user-1',
+      jwt: 'valid-jwt',
+    })) as { code?: number; error?: string }
+    expect(result.code).toBe(503)
+    expect(result.error).toBe('ACTOR_UNAVAILABLE: actor resolution failed')
+  })
+
+  it('returns the specific unavailable code when capability authorization never settles', async () => {
+    const svc = createAgentService({
+      manifests: [{ tag: 'order-card', state: { order: 'the order record' } }],
+      getRegistry: () => new Map([['order-card', [makeReadOnlyBinding('order-card', ORDER)]]]),
+      authPlugin: makeVerifyingAuthPlugin({ 'valid-jwt': { sub: 'user-1' } }),
+      securityHookTimeoutMs: 5,
+      actorResolver: {
+        resolveActor: (principal) => ({
+          kind: 'human',
+          subject: principal.sub,
+          organizationId: 'org-1',
+          scopes: principal.scopes,
+          issuer: null,
+          audience: null,
+          grantId: null,
+          grantVersion: null,
+        }),
+      },
+      authorizeDataRead: () => new Promise(() => {}),
+    })
+    const result = (await svc.handleToolCall('order-card/order', null, {
+      userId: 'user-1',
+      jwt: 'valid-jwt',
+    })) as { code?: number; error?: string }
+    expect(result.code).toBe(503)
+    expect(result.error).toBe(
+      "CAPABILITY_UNAVAILABLE: authorization for 'order-card.order' could not be verified (resolver failure); refusing to serve",
+    )
   })
 })
 

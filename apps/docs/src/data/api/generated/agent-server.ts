@@ -27,6 +27,13 @@ export const EXPORTS: readonly ApiExport[] = [
     agent: true,
   },
   {
+    name: 'createBridgeNonceStore',
+    kind: 'function',
+    signature: 'function createBridgeNonceStore(): BridgeNonceStore',
+    summary: '',
+    agent: true,
+  },
+  {
     name: 'createComponentMcpServer',
     kind: 'function',
     signature:
@@ -93,7 +100,7 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'AgentServer',
     kind: 'interface',
     signature:
-      'interface AgentServer {\n  /** The underlying agent-service (exposes `handleToolCall`, `asMiddleware`). */\n  readonly service: AgentService\n  /** The `MountScope` of the server-mounted component. */\n  readonly mount: MountScope\n\n  /**\n   * Run a tool call through the full agent-service gate. On authorization, the\n   * dispatch is applied to the server-mounted binding AND, if a browser bridge\n   * is attached, forwarded to it as a {@link BridgeInvokeMessage}.\n   *\n   * Returns the agent-service envelope: `{ result }` on success, or\n   * `{ error, code, jsonrpc }` on a gate rejection (404/401/403/429). The HTTP\n   * code is never mutated here — the gate is the sole policy authority.\n   */\n  callTool(toolName: string, params: unknown, ctx?: RequestContext): Promise<unknown>\n\n  /** Current serialized state of the server-mounted component. */\n  serialize(): Snapshot\n\n  /**\n   * Attach a browser bridge channel. Approved invocations are forwarded to it;\n   * `result`/`error`/`snapshot` frames from it resolve pending `callTool`\n   * promises. Returns a detach function.\n   *\n   * The channel MUST complete the `hello` handshake (see\n   * {@link BRIDGE_PROTOCOL_VERSION}) before anything is delegated to it. Until\n   * it does, `hello` is the only frame it may send, and `callTool` refuses to\n   * forward — an unverified channel never becomes the execution authority.\n   * Attaching a new channel always resets this state; verified status is never\n   * inherited from a previous peer.\n   */\n  attachBridge(channel: BridgeChannel): () => void\n\n  /**\n   * Build the MCP `Server` (stdio-ready) exposing each component action as an\n   * MCP tool backed by `callTool`. Lazily constructed; the SDK is imported only\n   * when this is called. See {@link createComponentMcpServer}.\n   */\n  // (the MCP server factory is a separate export to keep the SDK import lazy)\n\n  /** Tear down: dispose the mount + detach any bridge. */\n  dispose(): void\n}',
+      'interface AgentServer {\n  /** The underlying agent-service (exposes `handleToolCall`, `asMiddleware`). */\n  readonly service: AgentService\n  /** The `MountScope` of the server-mounted component. */\n  readonly mount: MountScope\n\n  /**\n   * Run a tool call through the full agent-service gate. On authorization, the\n   * dispatch is applied to the server-mounted binding AND, if a browser bridge\n   * is attached, forwarded to it as a {@link BridgeInvokeMessage}.\n   *\n   * Returns the agent-service envelope: `{ result }` on success, or\n   * `{ error, code, jsonrpc }` on a gate rejection (404/401/403/429). The HTTP\n   * code is never mutated here — the gate is the sole policy authority.\n   */\n  callTool(toolName: string, params: unknown, ctx?: RequestContext): Promise<unknown>\n\n  /** Current serialized state of the server-mounted component. */\n  serialize(): Snapshot\n\n  /**\n   * Attach a browser bridge channel. Approved invocations are forwarded to it;\n   * `result`/`error`/`snapshot` frames from it resolve pending `callTool`\n   * promises. Returns a detach function.\n   *\n   * The channel MUST complete the `hello` handshake (see\n   * {@link BRIDGE_PROTOCOL_VERSION}) before anything is delegated to it. Until\n   * it does, `hello` is the only frame it may send, and `callTool` refuses to\n   * forward — an unverified channel never becomes the execution authority.\n   * Attaching a new channel always resets this state; verified status is never\n   * inherited from a previous peer.\n   */\n  attachBridge(channel: BridgeChannel): () => void\n\n  /** Issue a single-use nonce for a forthcoming bridge handshake. */\n  issueBridgeNonce(ttlMs?: number): BridgeNonce\n\n  /**\n   * Build the MCP `Server` (stdio-ready) exposing each component action as an\n   * MCP tool backed by `callTool`. Lazily constructed; the SDK is imported only\n   * when this is called. See {@link createComponentMcpServer}.\n   */\n  // (the MCP server factory is a separate export to keep the SDK import lazy)\n\n  /** Tear down: dispose the mount + detach any bridge. */\n  dispose(): void\n}',
     summary: '',
     agent: true,
   },
@@ -101,7 +108,7 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'AgentServerOptions',
     kind: 'interface',
     signature:
-      "interface AgentServerOptions {\n  /** The component to mount + drive. */\n  target: AgentServerTarget\n  /**\n   * Optional host factory for the server-side mount. When omitted,\n   * `createAgentServer` stands up an internal jsdom-backed global DOM (if the\n   * runtime has none) and mounts into a fresh detached `<div>` — so a plain\n   * Bun/Node consumer needs no DOM glue at all. Provide this only to mount into\n   * a specific host element (an explicit factory always wins).\n   */\n  createHost?: () => Element\n  /** Auth plugin — forwarded to `createAgentService` for `$scope` checks. */\n  authPlugin?: AuthPlugin\n  /** Rate-limit plugin — forwarded to `createAgentService`. */\n  rateLimitPlugin?: RateLimitPlugin\n  /**\n   * Per-request auth resolver — forwarded to `createAgentService.asMiddleware`.\n   * Lets scoped/rate-limited tools be reachable over the bundled HTTP path.\n   */\n  resolveAuth?: AgentServiceOptions['resolveAuth']\n  /**\n   * Auth-discovery URL forwarded to `createAgentService` — included in every\n   * 401 envelope so a refused agent knows where to obtain a credential (e.g.\n   * the deployment's `/.well-known/oauth-protected-resource`). Informational\n   * only; never a policy input.\n   */\n  authDiscoveryUrl?: AgentServiceOptions['authDiscoveryUrl']\n  /**\n   * How long (ms) `callTool` waits for an attached bridge channel to complete\n   * its `hello` handshake before refusing to delegate to it (503\n   * `BRIDGE_UNVERIFIED`). Defaults to 1000ms.\n   *\n   * The wait exists only to absorb the attach/connect race over a real socket;\n   * it is not a grace period. A channel that sends a MISMATCHED or non-numeric\n   * protocol version is rejected immediately, without waiting out this timeout.\n   */\n  bridgeHandshakeTimeoutMs?: number\n}",
+      "interface AgentServerOptions {\n  /** The component to mount + drive. */\n  target: AgentServerTarget\n  /**\n   * Optional host factory for the server-side mount. When omitted,\n   * `createAgentServer` stands up an internal jsdom-backed global DOM (if the\n   * runtime has none) and mounts into a fresh detached `<div>` — so a plain\n   * Bun/Node consumer needs no DOM glue at all. Provide this only to mount into\n   * a specific host element (an explicit factory always wins).\n   */\n  createHost?: () => Element\n  /** Auth plugin — forwarded to `createAgentService` for `$scope` checks. */\n  authPlugin?: AuthPlugin\n  /** Rate-limit plugin — forwarded to `createAgentService`. */\n  rateLimitPlugin?: RateLimitPlugin\n  /**\n   * Per-request auth resolver — forwarded to `createAgentService.asMiddleware`.\n   * Lets scoped/rate-limited tools be reachable over the bundled HTTP path.\n   */\n  resolveAuth?: AgentServiceOptions['resolveAuth']\n  actorResolver?: ActorResolver\n  authorizeDataRead?: CapabilityGrantResolver\n  /** Maximum duration for each injected security hook and pending bridge call. Defaults to 5000ms. */\n  securityHookTimeoutMs?: number\n  /**\n   * Auth-discovery URL forwarded to `createAgentService` — included in every\n   * 401 envelope so a refused agent knows where to obtain a credential (e.g.\n   * the deployment's `/.well-known/oauth-protected-resource`). Informational\n   * only; never a policy input.\n   */\n  authDiscoveryUrl?: AgentServiceOptions['authDiscoveryUrl']\n  /** Verify a bridge token and return its stable identity/grant binding. Missing verifier denies attachment. */\n  verifyBridgeSession?: (token: string) => BridgeVerifiedSession | Promise<BridgeVerifiedSession>\n  /**\n   * How long (ms) `callTool` waits for an attached bridge channel to complete\n   * its `hello` handshake before refusing to delegate to it (503\n   * `BRIDGE_UNVERIFIED`). Defaults to 1000ms.\n   *\n   * The wait exists only to absorb the attach/connect race over a real socket;\n   * it is not a grace period. A channel that sends a MISMATCHED or non-numeric\n   * protocol version is rejected immediately, without waiting out this timeout.\n   */\n  bridgeHandshakeTimeoutMs?: number\n  /** Maximum duration for a bridge invocation reply. Defaults to 5000ms. */\n  bridgeCallTimeoutMs?: number\n  /** Re-check the bound session/grant before every invocation. */\n  reauthorizeBridgeInvoke?: (binding: {\n    readonly sessionToken?: string\n    readonly identity: string\n    readonly grantVersion?: string\n    /** Actor resolved by the service gate for this invocation, if verified. */\n    readonly actor?: Actor\n  }) => BridgeVerifiedSession | false | Promise<BridgeVerifiedSession | false>\n}",
     summary: '',
     agent: true,
   },
@@ -133,7 +140,7 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'BridgeClientOptions',
     kind: 'interface',
     signature:
-      "interface BridgeClientOptions {\n  /** The compiler-emitted `__agentDispatcher` for the mounted component. */\n  dispatcher: AgentDispatcher\n  /** Duplex channel to the server (a `ws` WebSocket in production). */\n  channel: BridgeChannel\n  /**\n   * Optional snapshot source (e.g. the mount's `serialize`). When provided, a\n   * `snapshot` frame is pushed after each successful invocation so the server\n   * and any read-only viewer reflect the visible instance's new state.\n   */\n  serialize?: () => unknown\n}",
+      "interface BridgeClientOptions {\n  /** The compiler-emitted `__agentDispatcher` for the mounted component. */\n  dispatcher: AgentDispatcher\n  /** Duplex channel to the server (a `ws` WebSocket in production). */\n  channel: BridgeChannel\n  /** Server-issued single-use handshake nonce. */\n  nonce?: string\n  /** Verified session credential, bound to this bridge peer. */\n  sessionToken?: string\n  /** Identity returned by the server's session verifier. */\n  sessionIdentity?: string\n  /** Current actor/grant version, rechecked by the server on every invoke. */\n  grantVersion?: string\n  /**\n   * Optional snapshot source (e.g. the mount's `serialize`). When provided, a\n   * `snapshot` frame is pushed after each successful invocation so the server\n   * and any read-only viewer reflect the visible instance's new state.\n   */\n  serialize?: () => unknown\n  /** Optional host-only diagnostic callback. Its raw error text is never sent over the bridge. */\n  onDiagnostic?: (diagnostic: { code: string; message: string }) => void\n}",
     summary: '',
     agent: true,
   },
@@ -141,14 +148,15 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'BridgeErrorMessage',
     kind: 'interface',
     signature:
-      "interface BridgeErrorMessage {\n  type: 'error'\n  callId: string\n  message: string\n}",
+      "interface BridgeErrorMessage {\n  type: 'error'\n  callId: string\n  code?: string\n  message: string\n}",
     summary: 'Client → server.',
     agent: true,
   },
   {
     name: 'BridgeHelloMessage',
     kind: 'interface',
-    signature: "interface BridgeHelloMessage {\n  type: 'hello'\n  protocol: number\n}",
+    signature:
+      "interface BridgeHelloMessage {\n  type: 'hello'\n  protocol: number\n  sessionToken?: string\n  sessionIdentity?: string\n  nonce?: string\n  grantVersion?: string\n}",
     summary: 'Handshake, client → server, sent once on connect.',
     agent: true,
   },
@@ -158,6 +166,21 @@ export const EXPORTS: readonly ApiExport[] = [
     signature:
       "interface BridgeInvokeMessage {\n  type: 'invoke'\n  /** Correlates the eventual `result`/`error`/`snapshot` reply. */\n  callId: string\n  /** Opaque action identifier the client maps to a concrete action. */\n  opaqueActionId: string\n  /** Positional arguments for the action. */\n  args: unknown[]\n}",
     summary: 'Server → client.',
+    agent: true,
+  },
+  {
+    name: 'BridgeNonce',
+    kind: 'interface',
+    signature: 'interface BridgeNonce {\n  readonly nonce: string\n  readonly expiresAt: number\n}',
+    summary: 'Single-use, short-lived bridge handshake nonces.',
+    agent: true,
+  },
+  {
+    name: 'BridgeNonceStore',
+    kind: 'interface',
+    signature:
+      'interface BridgeNonceStore {\n  issue(ttlMs: number | undefined, connectionId: string): BridgeNonce\n  consume(value: unknown, connectionId: string): boolean\n}',
+    summary: '',
     agent: true,
   },
   {
@@ -174,6 +197,14 @@ export const EXPORTS: readonly ApiExport[] = [
     signature:
       "interface BridgeSnapshotMessage {\n  type: 'snapshot'\n  callId?: string\n  snapshot: Snapshot\n}",
     summary: 'Client → server (or server → a read-only viewer).',
+    agent: true,
+  },
+  {
+    name: 'BridgeVerifiedSession',
+    kind: 'interface',
+    signature:
+      'interface BridgeVerifiedSession {\n  readonly identity: string\n  readonly grantVersion?: string\n}',
+    summary: '',
     agent: true,
   },
   {
