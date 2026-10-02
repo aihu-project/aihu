@@ -316,6 +316,62 @@ describe('projectCapabilityResult', () => {
     )
     expect(prototypeChecks).toBeLessThanOrEqual(8)
   })
+
+  it('reads only requested own keys from a large Proxy', () => {
+    let descriptorChecks = 0
+    let ownKeysCalls = 0
+    const describedKeys: PropertyKey[] = []
+    const names = Array.from({ length: 25_000 }, (_, index) => `field${index}`)
+    const value = new Proxy(
+      { requested: 'safe' },
+      {
+        ownKeys() {
+          ownKeysCalls += 1
+          return [...names, 'requested']
+        },
+        getOwnPropertyDescriptor(target, key) {
+          descriptorChecks += 1
+          describedKeys.push(key)
+          if (descriptorChecks > 32) throw new Error('descriptor work exceeded the budget')
+          if (key === 'requested') return Reflect.getOwnPropertyDescriptor(target, key)
+          return { configurable: true, enumerable: true, writable: true, value: 'unused' }
+        },
+      },
+    )
+
+    expect(projectCapabilityResult(value, ['requested'], { maxNodes: 16 })).toEqual({
+      requested: 'safe',
+    })
+    expect(descriptorChecks).toBeLessThanOrEqual(16)
+    expect(describedKeys).toEqual(['requested'])
+    expect(ownKeysCalls).toBe(0)
+  })
+
+  it('denies an include-all leaf before describing a large Proxy key set', () => {
+    let descriptorChecks = 0
+    let ownKeysCalls = 0
+    const names = Array.from({ length: 25_000 }, (_, index) => `field${index}`)
+    const value = new Proxy(
+      {},
+      {
+        ownKeys() {
+          ownKeysCalls += 1
+          return names
+        },
+        getOwnPropertyDescriptor(_target, _key) {
+          descriptorChecks += 1
+          if (descriptorChecks > 32) throw new Error('descriptor work exceeded the budget')
+          return { configurable: true, enumerable: true, writable: true, value: 'unused' }
+        },
+      },
+    )
+
+    expect(() => projectCapabilityResult(value, [''], { maxNodes: 16 })).toThrow(
+      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+    )
+    expect(descriptorChecks).toBeLessThanOrEqual(16)
+    expect(ownKeysCalls).toBe(1)
+  })
 })
 
 describe('withSecurityTimeout', () => {

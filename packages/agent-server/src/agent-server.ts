@@ -318,7 +318,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
    */
   function checkHelloProtocol(raw: unknown): { ok: true } | { ok: false; reason: string } {
     if (typeof raw !== 'number' || !Number.isFinite(raw)) {
-      diagnose('hello.protocol.invalid', raw)
+      diagnose('hello.protocol.invalid', { type: raw === null ? 'null' : typeof raw })
       return { ok: false, reason: 'BRIDGE_HELLO_INVALID: hello verification failed' }
     }
     if (raw !== BRIDGE_PROTOCOL_VERSION) {
@@ -374,8 +374,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         }
         if (typeof hello.sessionToken !== 'string' || !options.verifyBridgeSession) {
           diagnose('hello.session.invalid', {
-            sessionIdentity: hello.sessionIdentity,
-            grantVersion: hello.grantVersion,
+            sessionIdentityType: typeof hello.sessionIdentity,
+            grantVersionType: typeof hello.grantVersion,
           })
           settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
           return
@@ -405,8 +405,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
                 (verified.grantVersion ?? undefined) !== (hello.grantVersion ?? undefined)
               ) {
                 diagnose('hello.session.mismatch', {
-                  sessionIdentity: hello.sessionIdentity,
-                  grantVersion: hello.grantVersion,
+                  sessionIdentityType: typeof hello.sessionIdentity,
+                  grantVersionType: typeof hello.grantVersion,
                 })
                 settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
                 return

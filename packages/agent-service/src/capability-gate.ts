@@ -245,6 +245,11 @@ export function projectCapabilityResult(
   const paths = projection.map((path) => path.split('.').filter(Boolean))
   const ancestors = new Set<object>()
   let nodeCount = 0
+  const ownDescriptor = (owner: object, key: PropertyKey): PropertyDescriptor | undefined => {
+    nodeCount += 1
+    if (nodeCount > maxNodes) throw new TypeError('unsupported projection value')
+    return Object.getOwnPropertyDescriptor(owner, key)
+  }
   const project = (current: unknown, relevant: string[][], depth: number): unknown => {
     nodeCount += 1
     if (nodeCount > maxNodes || depth > maxDepth)
@@ -264,19 +269,23 @@ export function projectCapabilityResult(
     const proto = Object.getPrototypeOf(current)
     if (isArray ? proto !== Array.prototype : proto !== Object.prototype && proto !== null)
       throw new TypeError('unsupported projection value')
+    const includeAll = relevant.some((path) => path.length === 0)
     const hasCallableToJson = (owner: object): boolean => {
-      const descriptor = Object.getOwnPropertyDescriptor(owner, 'toJSON')
+      const descriptor = ownDescriptor(owner, 'toJSON')
       return Boolean(
         descriptor && (typeof descriptor.value === 'function' || descriptor.get || descriptor.set),
       )
     }
-    if (hasCallableToJson(current) || (proto !== null && hasCallableToJson(proto)))
+    if (
+      (isArray || includeAll) &&
+      (hasCallableToJson(current) || (proto !== null && hasCallableToJson(proto)))
+    )
       throw new TypeError('unsupported projection value')
     ancestors.add(current)
     if (isArray) {
       const out: unknown[] = []
       for (let index = 0; index < current.length; index += 1) {
-        const descriptor = Object.getOwnPropertyDescriptor(current, String(index))
+        const descriptor = ownDescriptor(current, String(index))
         if (!descriptor || !('value' in descriptor))
           throw new TypeError('unsupported projection value')
         out.push(project(descriptor.value, relevant, depth + 1))
@@ -285,14 +294,19 @@ export function projectCapabilityResult(
       return out
     }
     const out = Object.create(null) as Record<string, unknown>
-    const keys = Object.keys(current)
-    const includeAll = relevant.some((path) => path.length === 0)
+    // Restricted paths never enumerate unrelated Proxy keys. Whole-record
+    // leaves must bound ownKeys before asking the Proxy for any key descriptor.
+    const keys = includeAll
+      ? Reflect.ownKeys(current)
+      : [...new Set(relevant.map((path) => path[0]).filter((key) => key !== undefined))]
+    if (includeAll && keys.length > maxNodes) throw new TypeError('unsupported projection value')
     for (const key of keys) {
-      const matching = relevant.filter((path) => path[0] === key)
+      if (typeof key !== 'string') continue
+      const matching = includeAll ? [] : relevant.filter((path) => path[0] === key)
       if (!includeAll && matching.length === 0) continue
-      const descriptor = Object.getOwnPropertyDescriptor(current, key)
-      if (!descriptor || !('value' in descriptor))
-        throw new TypeError('unsupported projection value')
+      const descriptor = ownDescriptor(current, key)
+      if (!descriptor?.enumerable) continue
+      if (!('value' in descriptor)) throw new TypeError('unsupported projection value')
       const child = descriptor.value
       if (includeAll) {
         out[key] = project(child, [[]], depth + 1)

@@ -1250,6 +1250,61 @@ describe('conformance — a reconnected bridge channel must independently re-ver
     expect(diagnostics.length).toBeLessThanOrEqual(1)
   })
 
+  it('limits actual diagnostic callbacks to eight events and one suppression summary per attachment', async () => {
+    vi.useFakeTimers()
+    const counter = makeCounter()
+    const diagnostics: Array<{ event: string; detail?: unknown }> = []
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeRevocationTtlMs: 1,
+      bridgeRevocationMaxEntries: 1,
+      onBridgeDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+    })
+    server.attachBridge(makeFakeBridge(() => {}))
+
+    for (let index = 0; index < 6; index += 1) {
+      vi.setSystemTime(new Date(Date.now() + 2))
+      server.revokeBridgeSession(`diagnostic-${index}`)
+    }
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(diagnostics.slice(0, 8).map(({ event }) => event)).toEqual([
+      'revocation.store.full',
+      'revocation.store.available',
+      'revocation.store.full',
+      'revocation.store.available',
+      'revocation.store.full',
+      'revocation.store.available',
+      'revocation.store.full',
+      'revocation.store.available',
+    ])
+    expect(diagnostics).toHaveLength(9)
+    expect(diagnostics[8]).toEqual({ event: 'diagnostics.suppressed', detail: { count: 3 } })
+  })
+
+  it('does not copy a large malformed protocol object into diagnostics', async () => {
+    const counter = makeCounter()
+    const diagnostics: Array<{ event: string; detail?: unknown }> = []
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      onBridgeDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+    })
+    const bridge = makeFakeBridge(() => {})
+    server.attachBridge(bridge)
+    const protocol = Object.fromEntries(
+      Array.from({ length: 25_000 }, (_, index) => [`field${index}`, index]),
+    )
+    bridge.reply(JSON.stringify({ type: 'hello', protocol }))
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(diagnostics).toEqual([{ event: 'hello.protocol.invalid', detail: { type: 'object' } }])
+  })
+
   it('a revoked grant is denied on the next invoke and never forwarded', async () => {
     const counter = makeCounter()
     let current = true
