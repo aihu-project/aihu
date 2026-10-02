@@ -34,6 +34,26 @@ fn project_theme_replaces_default_fallback_values() {
 }
 
 #[test]
+fn project_theme_with_comments_preserves_theme_values() {
+    let css = compile_sfc_scoped(&sfc(
+        None,
+        r#","theme":"@theme { /* palette } comment */ --color-primary: #0a7; }""#,
+    ))
+    .unwrap();
+    assert!(css.contains("background-color: var(--color-primary, #0a7)"), "{css}");
+}
+
+#[test]
+fn project_theme_rejects_a_root_wrapper() {
+    let err = compile_sfc_scoped(&sfc(
+        None,
+        r#","theme":":root { --color-primary: #0a7; }""#,
+    ))
+    .unwrap_err();
+    assert!(err.to_string().contains("@theme"), "{err}");
+}
+
+#[test]
 fn project_theme_accepts_a_bare_declaration_list() {
     let css = compile_sfc_scoped(&sfc(None, r#","theme":"--color-primary: #0a7;""#)).unwrap();
     assert!(css.contains("background-color: var(--color-primary, #0a7)"), "{css}");
