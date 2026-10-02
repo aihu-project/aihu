@@ -8,6 +8,8 @@
  * `.size-limit.json` row.
  */
 
+export type { CreateFocusTrapOptions, FocusTarget, FocusTrap } from './createFocusTrap/index.ts'
+export { createFocusTrap } from './createFocusTrap/index.ts'
 export type { MaybeElementGetter, MaybeGetter } from './shared/index.ts'
 export {
   defaultDocument,

@@ -199,6 +199,18 @@ describe('checkUseSubpathPurity', () => {
     ).toBe(true)
   })
 
+  it('FAIL: a computed dynamic import cannot bypass subpath purity', async () => {
+    dir = await baseFixture()
+    await write(
+      dir,
+      'src/useMouse/index.ts',
+      "import { isClient } from '../shared/index.ts'\nconst target = 'unlisted-package'\nvoid import(target)\nexport function useMouse() { return isClient }\n",
+    )
+    const result = checkUseSubpathPurity(dir)
+    expect(result.pass).toBe(false)
+    expect(result.errors.some((error) => error.includes('computed dynamic import'))).toBe(true)
+  })
+
   it('FAIL: an optional peer declared in package.json but not claimed by families.json', async () => {
     dir = await baseFixture()
     await write(
@@ -254,6 +266,12 @@ describe('extractSpecifiers (comment-blindness)', () => {
     // undeclared import in live code is still surfaced to the purity check.
     const src = "import axios from 'axios'\nconst from = 'shadowed'\n"
     expect(extractSpecifiers(src)).toContain('axios')
+  })
+
+  it('marks computed dynamic imports as unverifiable', () => {
+    expect(extractSpecifiers("const specifier = 'pkg'; void import(specifier)")).toContain(
+      '<computed dynamic import>',
+    )
   })
 
   it('an import on a later line survives a regex-with-slashes above it', () => {

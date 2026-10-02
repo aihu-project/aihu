@@ -233,6 +233,13 @@
     "ignore": ["@aihu/signals", "@aihu/context"]
   },
   {
+    "name": "@aihu/use/createFocusTrap",
+    "path": "packages/use/dist/createFocusTrap.js",
+    "limit": "900 B",
+    "gzip": true,
+    "ignore": ["@aihu/signals", "@aihu/primitives/focus-trap"]
+  },
+  {
     "name": "@aihu/use/shared",
     "path": "packages/use/dist/shared.js",
     "limit": "320 B",

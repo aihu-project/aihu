@@ -25,6 +25,7 @@ export default defineConfig({
   input: {
     index: 'src/index.ts',
     shared: 'src/shared/index.ts',
+    createFocusTrap: 'src/createFocusTrap/index.ts',
     useActiveElement: 'src/useActiveElement/index.ts',
     useAsync: 'src/useAsync/index.ts',
     useAsyncAbortable: 'src/useAsyncAbortable/index.ts',
@@ -125,7 +126,7 @@ export default defineConfig({
   // the package-name boundary — exact name or `<name>/...` — never a bare
   // prefix (which would also admit an unrelated package sharing a prefix).
   external: (id: string) =>
-    ['@aihu/signals', ...Object.keys(pkg.peerDependencies ?? {})].some(
+    ['@aihu/signals', '@aihu/primitives', ...Object.keys(pkg.peerDependencies ?? {})].some(
       (name) => id === name || id.startsWith(`${name}/`),
     ),
 })

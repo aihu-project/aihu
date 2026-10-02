@@ -54,6 +54,7 @@ be discriminated from a legitimate array value. Pass the read half
 
 | Entry | What it does |
 | --- | --- |
+| `createFocusTrap(container, options?) → { activate, deactivate }` | Manage dialog focus: move focus in, contain Tab through open shadow roots, handle Escape, inert background targets, and restore focus on close or disconnect. |
 | `useEventListener(target, event, handler, options?) → stop()` | Attach a listener with scope-owned auto-cleanup **and** a manual `stop()`. Getter targets (`$ref`, signal reads) rebind reactively — the old listener is removed, the new one added, whenever the target changes. Handler event types are inferred from the DOM event maps for `Window`/`Document`/`HTMLElement` targets. |
 | `useMouse(options?) → { x, y }` | Reactive mouse position (`client`/`page`/`screen` coordinates, configurable target and initial value). |
 
@@ -120,6 +121,7 @@ bun add @aihu/use
 | `.` | `./dist/index.js` | `—` |
 | `./shared` | `./dist/shared.js` | `—` |
 | `./composable-registry.json` | `./composable-registry.json` | — |
+| `./createFocusTrap` | `./dist/createFocusTrap.js` | `—` |
 | `./useActiveElement` | `./dist/useActiveElement.js` | `—` |
 | `./useAsync` | `./dist/useAsync.js` | `—` |
 | `./useAsyncAbortable` | `./dist/useAsyncAbortable.js` | `—` |
@@ -208,6 +210,7 @@ bun add @aihu/use
 
 **Dependencies:**
 
+- `@aihu/primitives` — `^0.2.4`
 - `@aihu/signals` — `^0.5.1`
 
 **Peer dependencies:**

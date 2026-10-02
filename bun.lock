@@ -619,7 +619,7 @@
     },
     "packages/context": {
       "name": "@aihu/context",
-      "version": "0.2.0",
+      "version": "0.2.1",
     },
     "packages/create-aihu": {
       "name": "create-aihu",
@@ -886,6 +886,7 @@
       "name": "@aihu/use",
       "version": "2.0.0",
       "dependencies": {
+        "@aihu/primitives": "^0.2.4",
         "@aihu/signals": "^0.5.1",
       },
       "devDependencies": {

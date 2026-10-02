@@ -264,6 +264,14 @@ export function extractSpecifiers(src: string): string[] {
     let m: RegExpExecArray | null
     while ((m = re.exec(code)) !== null) specs.push(m[1])
   }
+  // A computed dynamic import cannot be proven to stay within the entry's
+  // declared dependency envelope. Treat it as a purity violation instead of
+  // silently omitting it from this static import graph.
+  const dynamicImportRe = /\bimport\s*\(\s*([^)]*)\)/g
+  let dynamicMatch: RegExpExecArray | null
+  while ((dynamicMatch = dynamicImportRe.exec(code)) !== null) {
+    if (!/^\s*['"]/.test(dynamicMatch[1])) specs.push('<computed dynamic import>')
+  }
   return specs
 }
 
@@ -346,7 +354,19 @@ export function checkUseSubpathPurity(usePkgDir: string = join(packagesDir, 'use
     visited.add(memoKey)
     if (!existsSync(real)) return
     const src = readFileSync(real, 'utf8')
+    const fileAllowed = new Set(allowed)
+    if (real === resolve(join(usePkgDir, 'src/createFocusTrap/index.ts'))) {
+      fileAllowed.add('@aihu/primitives')
+    }
     for (const spec of extractSpecifiers(src)) {
+      if (spec === '<computed dynamic import>') {
+        errors.push(
+          `FAIL [@aihu/use] '${entryKey}' uses a computed dynamic import that cannot be verified ` +
+            `against its allowed externals (${[...fileAllowed].join(', ') || '(none)'}). Use a static ` +
+            `literal import so subpath purity can be checked.`,
+        )
+        continue
+      }
       if (spec.startsWith('.')) {
         const resolved = resolveRelativeSpecifier(real, spec)
         const fam = dirFamilyOf(useSrcDir, resolved, families)
@@ -366,11 +386,12 @@ export function checkUseSubpathPurity(usePkgDir: string = join(packagesDir, 'use
           )
         }
         walk(entryKey, cls, resolved, allowed)
-      } else if (!isAllowedExternal(spec, allowed)) {
+      } else if (!isAllowedExternal(spec, fileAllowed)) {
         errors.push(
           `FAIL [@aihu/use] '${entryKey}' imports '${spec}', which is not in its allowed externals ` +
-            `(${[...allowed].join(', ') || '(none)'}). CORE may import @aihu/signals only; a family ` +
-            `entry may import @aihu/signals plus its families.json-declared peers.`,
+            `(${[...fileAllowed].join(', ') || '(none)'}). CORE may import @aihu/signals only; a family ` +
+            `entry may import @aihu/signals plus its families.json-declared peers. Only the ` +
+            `createFocusTrap source may also reach @aihu/primitives.`,
         )
       }
     }
@@ -379,6 +400,7 @@ export function checkUseSubpathPurity(usePkgDir: string = join(packagesDir, 'use
   for (const [entryKey, srcPath] of entries) {
     const cls = classifyEntry(entryKey, families)
     const allowed = allowedExternals(cls, families)
+    if (entryKey === 'createFocusTrap') allowed.add('@aihu/primitives')
     walk(entryKey, cls, join(usePkgDir, srcPath), allowed)
   }
 

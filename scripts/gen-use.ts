@@ -496,6 +496,32 @@ export function patchUseRegistryRs(
 
 // ---------- CLI entrypoint ----------
 
+export function parseGenUseArgs(args: string[]): {
+  names: string[]
+  bare: boolean
+  family?: string
+} {
+  const names: string[] = []
+  let bare = false
+  let family: string | undefined
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i]
+    if (arg === '--bare') {
+      bare = true
+    } else if (arg === '--family') {
+      const value = args[i + 1]
+      if (!value || value.startsWith('--')) throw new Error('--family requires a family name')
+      family = value
+      i += 1
+    } else if (arg.startsWith('--')) {
+      throw new Error(`Unknown option: ${arg}`)
+    } else {
+      names.push(arg)
+    }
+  }
+  return { names, bare, family }
+}
+
 function findRepoRoot(start: string): string {
   let dir = start
   for (let i = 0; i < 10; i++) {
@@ -711,14 +737,18 @@ function scaffoldOne(
   }
 }
 
+export function scaffoldBatch(
+  repoRoot: string,
+  names: string[],
+  bare: boolean,
+  family: string | undefined,
+  families: Record<string, FamilyDef>,
+): void {
+  for (const name of names) scaffoldOne(repoRoot, name, bare, family, families)
+}
+
 function main(): void {
-  const args = process.argv.slice(2)
-  const bare = args.includes('--bare')
-  const familyIdx = args.indexOf('--family')
-  const family = familyIdx !== -1 ? args[familyIdx + 1] : undefined
-  const names = args.filter(
-    (a, i) => !a.startsWith('--') && !(familyIdx !== -1 && i === familyIdx + 1),
-  )
+  const { names, bare, family } = parseGenUseArgs(process.argv.slice(2))
 
   if (names.length === 0) {
     console.error('Usage: bun scripts/gen-use.ts <name> [<name>...] [--bare] [--family <family>]')
@@ -747,9 +777,7 @@ function main(): void {
     )
   }
 
-  for (const name of names) {
-    scaffoldOne(repoRoot, name, bare, family, families)
-  }
+  scaffoldBatch(repoRoot, names, bare, family, families)
 
   // 8. self-verify — immediate feedback instead of waiting for CI.
   const parityScriptPath = join(repoRoot, 'scripts/check-use-registry-parity.ts')
