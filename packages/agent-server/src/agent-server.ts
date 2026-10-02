@@ -199,10 +199,22 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
       : 10_000
   const revocationKey = (identity: string, grantVersion?: string): string =>
     JSON.stringify([identity, grantVersion === undefined ? 'identity' : 'grant', grantVersion])
+  let revocationStoreFull = false
+  let revocationStoreSaturatedUntil = 0
   function pruneRevokedBindings(now = Date.now()): void {
     for (const [key, binding] of revokedBindings) {
       if (binding.expiresAt <= now) revokedBindings.delete(key)
     }
+    if (revocationStoreSaturatedUntil <= now) revocationStoreSaturatedUntil = 0
+    const full = revokedBindings.size >= revocationMaxEntries || revocationStoreSaturatedUntil > now
+    if (full !== revocationStoreFull) {
+      revocationStoreFull = full
+      diagnose(full ? 'revocation.store.full' : 'revocation.store.available')
+    }
+  }
+  const isRevocationStoreFull = (): boolean => {
+    pruneRevokedBindings()
+    return revocationStoreFull
   }
   const isBindingRevoked = (identity: string, grantVersion?: string): boolean => {
     pruneRevokedBindings()
@@ -230,6 +242,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   type HandshakeState = 'pending' | 'verified' | 'rejected'
   let handshake: HandshakeState = 'pending'
   let handshakeReason = ''
+  let diagnosticCount = 0
+  let diagnosticsSuppressed = 0
+  let suppressionSummaryQueued = false
+  let suppressionSummarySent = false
   /** Woken when `handshake` leaves `'pending'`. */
   let handshakeWaiters: Array<() => void> = []
 
@@ -265,14 +281,29 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   }
 
   function diagnose(event: string, detail?: unknown): void {
-    const diagnostic = Object.freeze({
-      event,
-      ...(detail !== undefined ? { detail: diagnosticCopy(detail) } : {}),
-    })
+    const emit = (name: string, copiedDetail?: unknown): void => {
+      const diagnostic = Object.freeze({
+        event: name,
+        ...(copiedDetail !== undefined ? { detail: copiedDetail } : {}),
+      })
+      queueMicrotask(() => {
+        Promise.resolve()
+          .then(() => options.onBridgeDiagnostic?.(diagnostic))
+          .catch(() => {})
+      })
+    }
+    if (diagnosticCount < 8) {
+      diagnosticCount += 1
+      emit(event, detail !== undefined ? diagnosticCopy(detail) : undefined)
+      return
+    }
+    diagnosticsSuppressed += 1
+    if (suppressionSummaryQueued || suppressionSummarySent) return
+    suppressionSummaryQueued = true
     queueMicrotask(() => {
-      Promise.resolve()
-        .then(() => options.onBridgeDiagnostic?.(diagnostic))
-        .catch(() => {})
+      suppressionSummaryQueued = false
+      suppressionSummarySent = true
+      emit('diagnostics.suppressed', { count: diagnosticsSuppressed })
     })
   }
 
@@ -313,11 +344,17 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     switch (msg.type) {
       case 'hello': {
         if (helloSeen) {
+          diagnosticsSuppressed += 1
           peerRevoked = true
           handshake = 'rejected'
-          handshakeReason = 'BRIDGE_HELLO_INVALID: hello verification failed'
-          diagnose('hello.duplicate')
+          handshakeReason = 'BRIDGE_REVOKED: bridge session binding changed'
           rejectAllPending(handshakeReason)
+          try {
+            peer.close?.()
+          } catch {
+            // A broken close hook cannot restore this peer's authority.
+          }
+          detachBridge?.()
           return
         }
         helloSeen = true
@@ -375,7 +412,11 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
                 return
               }
               if (isBindingRevoked(verified.identity, verified.grantVersion)) {
-                settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
+                settleHandshake('rejected', 'BRIDGE_REVOKED: bridge session was revoked')
+                return
+              }
+              if (isRevocationStoreFull()) {
+                settleHandshake('rejected', 'BRIDGE_REVOCATION_STORE_FULL')
                 return
               }
               verifiedSessionToken = hello.sessionToken
@@ -491,6 +532,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     verifiedGrantVersion = undefined
     helloSeen = false
     peerRevoked = false
+    diagnosticCount = 0
+    diagnosticsSuppressed = 0
+    suppressionSummaryQueued = false
+    suppressionSummarySent = false
     const offMsg = channel.onMessage((data) => handleBridgeFrame(data, channel))
     const offClose = channel.onClose(() => {
       if (bridge === channel) {
@@ -518,17 +563,18 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     const grantVersion = scope?.grantVersion
     const key = revocationKey(identity, grantVersion)
     pruneRevokedBindings()
-    revokedBindings.delete(key)
-    revokedBindings.set(key, {
-      identity,
-      ...(grantVersion !== undefined ? { grantVersion } : {}),
-      expiresAt: Date.now() + revocationTtlMs,
-    })
-    while (revokedBindings.size > revocationMaxEntries) {
-      const oldest = revokedBindings.keys().next().value as string | undefined
-      if (oldest === undefined) break
-      revokedBindings.delete(oldest)
+    const now = Date.now()
+    if (revokedBindings.has(key) || revokedBindings.size < revocationMaxEntries) {
+      revokedBindings.delete(key)
+      revokedBindings.set(key, {
+        identity,
+        ...(grantVersion !== undefined ? { grantVersion } : {}),
+        expiresAt: now + revocationTtlMs,
+      })
+    } else {
+      revocationStoreSaturatedUntil = Math.max(revocationStoreSaturatedUntil, now + revocationTtlMs)
     }
+    pruneRevokedBindings(now)
     if (
       verifiedIdentity === identity &&
       (grantVersion === undefined || verifiedGrantVersion === grantVersion)
@@ -605,6 +651,9 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         ? [params]
         : []
 
+    if (peerRevoked && !bridge?.connected) {
+      return { error: 'BRIDGE_REVOKED: bridge peer was revoked', code: 403 }
+    }
     if (bridge?.connected) {
       const channel = bridge
       const generation = attachmentGeneration

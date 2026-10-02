@@ -284,7 +284,37 @@ describe('projectCapabilityResult', () => {
     expect(() => projectCapabilityResult(value, ['child.child'])).toThrow(
       'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
     )
-    expect(prototypeChecks).toBe(2)
+    expect(prototypeChecks).toBe(1)
+  })
+
+  it('bounds prototype inspection for a Proxy that returns a fresh prototype forever', () => {
+    let prototypeChecks = 0
+    const freshPrototype = (): object =>
+      new Proxy(
+        {},
+        {
+          getPrototypeOf() {
+            prototypeChecks += 1
+            if (prototypeChecks > 100) throw new Error('prototype inspection was unbounded')
+            return freshPrototype()
+          },
+        },
+      )
+    const value = new Proxy(
+      {},
+      {
+        getPrototypeOf() {
+          prototypeChecks += 1
+          if (prototypeChecks > 100) throw new Error('prototype inspection was unbounded')
+          return freshPrototype()
+        },
+      },
+    )
+
+    expect(() => projectCapabilityResult(value, ['secret'])).toThrow(
+      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+    )
+    expect(prototypeChecks).toBeLessThanOrEqual(8)
   })
 })
 

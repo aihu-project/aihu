@@ -23,7 +23,7 @@ import { registerAgentMetadata } from '@aihu/agent'
 import { type AgentBindingSpec, branch, leaf } from '@aihu/arbor'
 import { type Signal, signal } from '@aihu/signals'
 import { JSDOM } from 'jsdom'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import agentServerPackageJson from '../package.json' with { type: 'json' }
 import { createAgentServer } from '../src/agent-server.ts'
 import { verifyBridgeUpgrade } from '../src/bridge-auth.ts'
@@ -132,6 +132,7 @@ let servers: AgentServer[] = []
 afterEach(() => {
   for (const s of servers) s.dispose()
   servers = []
+  vi.useRealTimers()
 })
 
 function spawn(...args: Parameters<typeof createAgentServer>): AgentServer {
@@ -797,14 +798,15 @@ describe('conformance — a reconnected bridge channel must independently re-ver
     expect(allowed.error).toBeUndefined()
   })
 
-  it('expires revocations after their configured TTL', async () => {
+  it('denies a revocation before TTL and accepts the same binding after TTL when the host allows it', async () => {
+    vi.useFakeTimers()
     const counter = makeCounter()
     const server = spawn({
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
-      bridgeRevocationTtlMs: 10,
+      bridgeRevocationTtlMs: 100,
       bridgeRevocationMaxEntries: 1,
-      bridgeCallTimeoutMs: 10,
+      bridgeCallTimeoutMs: 100,
       verifyBridgeSession: (token) => ({ identity: token, grantVersion: 'v1' }),
       reauthorizeBridgeInvoke: (binding) => ({
         identity: binding.identity,
@@ -812,10 +814,9 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       }),
     })
     server.revokeBridgeSession('expired', { grantVersion: 'v1' })
-    await new Promise((resolve) => setTimeout(resolve, 15))
-    const expiredBridge = makeFakeBridge(() => {})
-    server.attachBridge(expiredBridge)
-    expiredBridge.reply(
+    const beforeTtlBridge = makeFakeBridge(() => {})
+    server.attachBridge(beforeTtlBridge)
+    beforeTtlBridge.reply(
       JSON.stringify({
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
@@ -825,76 +826,192 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         grantVersion: 'v1',
       }),
     )
-    const expiredResult = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+    const beforeTtlResult = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       code?: number
       error?: string
     }
-    expect(expiredResult.code).toBe(403)
-    expect(expiredResult.error).toBe(
-      'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+    expect(beforeTtlResult.code).toBe(503)
+    expect(beforeTtlResult.error).toBe(
+      'BRIDGE_UNVERIFIED: BRIDGE_REVOKED: bridge session was revoked',
     )
+
+    await vi.advanceTimersByTimeAsync(101)
+    const afterTtlBridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        afterTtlBridge.reply(
+          JSON.stringify({ type: 'result', callId: message.callId, result: 'ok' }),
+        )
+    })
+    server.attachBridge(afterTtlBridge)
+    afterTtlBridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'expired',
+        sessionIdentity: 'expired',
+        grantVersion: 'v1',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const afterTtlResult = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+      result?: string
+    }
+    expect(afterTtlResult.result).toBe('ok')
+    expect(afterTtlResult.code).toBeUndefined()
+    expect(afterTtlResult.error).toBeUndefined()
   })
 
-  it('evicts the oldest revocation when the configured cap is reached', async () => {
+  it('keeps revoked bindings denied and refuses new hellos while the revocation store is full', async () => {
+    vi.useFakeTimers()
     const counter = makeCounter()
     const capped = spawn({
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
-      bridgeRevocationTtlMs: 10_000,
+      bridgeRevocationTtlMs: 100,
       bridgeRevocationMaxEntries: 1,
-      bridgeCallTimeoutMs: 10,
+      bridgeCallTimeoutMs: 100,
+      bridgeHandshakeTimeoutMs: 10,
+      onBridgeDiagnostic: () => {},
       verifyBridgeSession: (token) => ({ identity: token, grantVersion: 'v1' }),
       reauthorizeBridgeInvoke: (binding) => ({
         identity: binding.identity,
         grantVersion: binding.grantVersion,
       }),
     })
-    capped.revokeBridgeSession('oldest', { grantVersion: 'v1' })
-    capped.revokeBridgeSession('newest', { grantVersion: 'v1' })
-    const oldestBridge = makeFakeBridge((frame) => {
+    let establishedBridge!: ReturnType<typeof makeFakeBridge>
+    establishedBridge = makeFakeBridge((frame) => {
       const message = JSON.parse(frame) as { type?: string; callId?: string }
       if (message.type === 'invoke' && message.callId)
-        oldestBridge.reply(JSON.stringify({ type: 'result', callId: message.callId, result: 'ok' }))
+        establishedBridge.reply(
+          JSON.stringify({ type: 'result', callId: message.callId, result: 'existing-session-ok' }),
+        )
     })
-    capped.attachBridge(oldestBridge)
-    oldestBridge.reply(
+    capped.attachBridge(establishedBridge)
+    establishedBridge.reply(
       JSON.stringify({
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         nonce: capped.issueBridgeNonce().nonce,
-        sessionToken: 'oldest',
-        sessionIdentity: 'oldest',
+        sessionToken: 'established',
+        sessionIdentity: 'established',
         grantVersion: 'v1',
       }),
     )
     await Promise.resolve()
     await Promise.resolve()
-    const oldestResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
-      result?: string
+    const initialSessionResult = (await capped.callTool(`${TAG}/increment`, [1], {
+      userId: 'u1',
+    })) as {
+      code?: number
       error?: string
+      result?: string
     }
-    expect(oldestResult.result).toBe('ok')
-    expect(oldestResult.error).toBeUndefined()
-    const newestBridge = makeFakeBridge(() => {})
-    capped.attachBridge(newestBridge)
-    newestBridge.reply(
+    expect(initialSessionResult.result).toBe('existing-session-ok')
+    expect(initialSessionResult.code).toBeUndefined()
+    expect(initialSessionResult.error).toBeUndefined()
+    capped.revokeBridgeSession('revoked', { grantVersion: 'v1' })
+    capped.revokeBridgeSession('another-revocation', { grantVersion: 'v1' })
+    const existingResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+      result?: string
+    }
+    expect(existingResult.result).toBe('existing-session-ok')
+    expect(existingResult.code).toBeUndefined()
+    expect(existingResult.error).toBeUndefined()
+
+    let revokedBridge!: ReturnType<typeof makeFakeBridge>
+    revokedBridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        revokedBridge.reply(
+          JSON.stringify({
+            type: 'result',
+            callId: message.callId,
+            result: 'unexpectedly-allowed',
+          }),
+        )
+    })
+    capped.attachBridge(revokedBridge)
+    revokedBridge.reply(
       JSON.stringify({
         type: 'hello',
         protocol: BRIDGE_PROTOCOL_VERSION,
         nonce: capped.issueBridgeNonce().nonce,
-        sessionToken: 'newest',
-        sessionIdentity: 'newest',
+        sessionToken: 'revoked',
+        sessionIdentity: 'revoked',
         grantVersion: 'v1',
       }),
     )
-    const newestResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+    const revokedResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       code?: number
       error?: string
     }
-    expect(newestResult.code).toBe(503)
-    expect(newestResult.error).toBe(
-      'BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed',
+    expect(revokedResult.code).toBe(503)
+    expect(revokedResult.error).toBe(
+      'BRIDGE_UNVERIFIED: BRIDGE_REVOKED: bridge session was revoked',
     )
+
+    let fullBridge!: ReturnType<typeof makeFakeBridge>
+    fullBridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        fullBridge.reply(JSON.stringify({ type: 'result', callId: message.callId, result: 'ok' }))
+    })
+    capped.attachBridge(fullBridge)
+    fullBridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: capped.issueBridgeNonce().nonce,
+        sessionToken: 'new-identity',
+        sessionIdentity: 'new-identity',
+        grantVersion: 'v1',
+      }),
+    )
+    const fullResult = (await capped.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(fullResult.code).toBe(503)
+    expect(fullResult.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_REVOCATION_STORE_FULL')
+
+    await vi.advanceTimersByTimeAsync(101)
+    const afterTtlBridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        afterTtlBridge.reply(
+          JSON.stringify({ type: 'result', callId: message.callId, result: 'ok' }),
+        )
+    })
+    capped.attachBridge(afterTtlBridge)
+    afterTtlBridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: capped.issueBridgeNonce().nonce,
+        sessionToken: 'new-identity',
+        sessionIdentity: 'new-identity',
+        grantVersion: 'v1',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const afterExpiryResult = (await capped.callTool(`${TAG}/increment`, [1], {
+      userId: 'u1',
+    })) as {
+      result?: string
+      error?: string
+      code?: number
+    }
+    expect(afterExpiryResult.result).toBe('ok')
+    expect(afterExpiryResult.code).toBeUndefined()
+    expect(afterExpiryResult.error).toBeUndefined()
   })
 
   it('commits protocol denial before running a throwing diagnostic hook', async () => {
@@ -1092,6 +1209,7 @@ describe('conformance — a reconnected bridge channel must independently re-ver
 
   it('a hello nonce can be consumed only once; a duplicate hello revokes that peer', async () => {
     const counter = makeCounter()
+    const diagnostics: string[] = []
     const server = spawn({
       target: { node: counter.node, agentBinding: counter.agentBinding },
       createHost: host,
@@ -1102,6 +1220,7 @@ describe('conformance — a reconnected bridge channel must independently re-ver
         identity: binding.identity,
         ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
       }),
+      onBridgeDiagnostic: ({ event }) => diagnostics.push(event),
     })
     const sent: string[] = []
     const bridge = makeFakeBridge((data) => sent.push(data))
@@ -1115,18 +1234,20 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       grantVersion: 'g7',
       nonce,
     })
-    bridge.reply(hello)
+    for (let index = 0; index < 10_000; index += 1) bridge.reply(hello)
     await Promise.resolve()
     await Promise.resolve()
-    bridge.reply(hello)
 
     const res = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       code?: number
       error?: string
     }
     expect(res.code).toBe(403)
-    expect(res.error).toBe('BRIDGE_REVOKED: bridge session binding changed')
+    expect(res.error).toBe('BRIDGE_REVOKED: bridge peer was revoked')
+    expect(bridge.connected).toBe(false)
     expect(sent.filter((s) => s.includes('"invoke"'))).toHaveLength(0)
+    await Promise.resolve()
+    expect(diagnostics.length).toBeLessThanOrEqual(1)
   })
 
   it('a revoked grant is denied on the next invoke and never forwarded', async () => {

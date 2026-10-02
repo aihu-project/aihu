@@ -97,7 +97,7 @@ export interface AgentServerOptions {
   projectionLimits?: CapabilityProjectionLimits
   /** Revocation memory lifetime. Defaults to 24 hours; host session storage remains authoritative. */
   bridgeRevocationTtlMs?: number
-  /** Maximum retained revocation bindings. Oldest entries are evicted when full. Defaults to 10,000. */
+  /** Maximum retained revocation bindings. New handshakes fail with BRIDGE_REVOCATION_STORE_FULL while full. Defaults to 10,000. */
   bridgeRevocationMaxEntries?: number
   /** Re-check the bound session/grant before every invocation. */
   reauthorizeBridgeInvoke?: (binding: {
@@ -227,6 +227,8 @@ export interface BridgeChannel {
   onMessage(handler: (data: string) => void): () => void
   /** Register a close handler. Returns an unsubscribe function. */
   onClose(handler: () => void): () => void
+  /** Close the underlying peer after a protocol violation, when supported by the transport. */
+  close?(): void
   /** True while the channel can still deliver frames. */
   readonly connected: boolean
 }

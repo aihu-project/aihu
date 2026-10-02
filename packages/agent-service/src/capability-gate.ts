@@ -260,20 +260,20 @@ export function projectCapabilityResult(
       throw new TypeError('unsupported projection value')
     }
     if (ancestors.has(current)) throw new TypeError('unsupported projection value')
-    for (
-      let cursor: object | null = current;
-      cursor !== null;
-      cursor = Object.getPrototypeOf(cursor)
-    ) {
-      const descriptor = Object.getOwnPropertyDescriptor(cursor, 'toJSON')
-      if (
-        descriptor &&
-        (typeof descriptor.value === 'function' || descriptor.get || descriptor.set)
+    const isArray = Array.isArray(current)
+    const proto = Object.getPrototypeOf(current)
+    if (isArray ? proto !== Array.prototype : proto !== Object.prototype && proto !== null)
+      throw new TypeError('unsupported projection value')
+    const hasCallableToJson = (owner: object): boolean => {
+      const descriptor = Object.getOwnPropertyDescriptor(owner, 'toJSON')
+      return Boolean(
+        descriptor && (typeof descriptor.value === 'function' || descriptor.get || descriptor.set),
       )
-        throw new TypeError('unsupported projection value')
     }
+    if (hasCallableToJson(current) || (proto !== null && hasCallableToJson(proto)))
+      throw new TypeError('unsupported projection value')
     ancestors.add(current)
-    if (Array.isArray(current)) {
+    if (isArray) {
       const out: unknown[] = []
       for (let index = 0; index < current.length; index += 1) {
         const descriptor = Object.getOwnPropertyDescriptor(current, String(index))
@@ -284,9 +284,6 @@ export function projectCapabilityResult(
       ancestors.delete(current)
       return out
     }
-    const proto = Object.getPrototypeOf(current)
-    if (proto !== Object.prototype && proto !== null)
-      throw new TypeError('unsupported projection value')
     const out = Object.create(null) as Record<string, unknown>
     const keys = Object.keys(current)
     const includeAll = relevant.some((path) => path.length === 0)
