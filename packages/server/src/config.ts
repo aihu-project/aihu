@@ -109,6 +109,11 @@ export interface UiConfig {
   readonly registries?: Readonly<Record<string, string>>
 }
 
+/**
+ * @deprecated Use `@aihu/app`'s `AihuConfig` for new application configuration.
+ * This exported shape remains available for compatibility with existing
+ * `@aihu/server` consumers and will only be removed in a future major release.
+ */
 export interface AihuConfig {
   readonly server?: ServerConfig
   readonly agent?: import('./agent-readiness-config.ts').AgentReadinessConfig
@@ -150,6 +155,9 @@ export interface AihuConfig {
 const RENDERING_DEFAULTS: Required<RenderingConfig> = { mode: 'ssr', hydratable: true }
 
 /**
+ * @deprecated Use `defineConfig` from `@aihu/app` for new application
+ * configuration. This function remains available for existing consumers.
+ *
  * Define the aihu application configuration.
  *
  * Applies opinionated defaults before returning so callers always receive

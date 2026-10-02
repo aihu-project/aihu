@@ -35,7 +35,7 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
   '@aihu/language-server': '^0.4.2',
   '@aihu/magna': '^0.2.8',
   '@aihu/mcp': '^0.2.1',
-  '@aihu/plugin': '^0.1.0',
+  '@aihu/plugin': '^0.1.1',
   '@aihu/primitives': '^0.2.4',
   '@aihu/router': '^0.5.1',
   '@aihu/runtime': '^6.1.1',
