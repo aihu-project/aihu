@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /**
- * stamp-platform-versions.ts — make every native platform package carry its
- * host's version, and every host pin point at exactly that.
+ * stamp-platform-versions.ts — keep native platform package versions and host
+ * pins synchronized. Server follows its host version; css-engine has an
+ * independent patch version advanced only for native source changes.
  *
  * Was `stamp-platform-snapshot.ts`, which did this for canary snapshots only.
  * The mechanism is identical for a stable release; only the guard differed. See
@@ -13,8 +14,9 @@
  * The platform packages under `packages/<host>/{npm,npm-native}/<platform>/`
  * are NOT workspace members — the root `workspaces` glob is `packages/*`, which
  * does not match nested dirs — so changesets never versions them. This script
- * keeps the remaining server and CSS-engine platform manifests synchronized
- * with their host versions and optional dependency pins during releases.
+ * keeps the remaining server platform manifests synchronized with the host
+ * version and css-engine platform manifests synchronized with their own
+ * release version and host pins.
  *
  * ── MODES ────────────────────────────────────────────────────────────────────
  *
@@ -135,6 +137,12 @@ for (const { host, npmDirs } of selected) {
   }
 
   const optDeps: Record<string, string> = hostPkg.optionalDependencies ?? {}
+  if (host === 'css-engine' && !BUMP_CSS_ENGINE) {
+    // css-engine's native binaries have an independent patch stream. Ordinary
+    // host package bumps must not publish duplicate binaries; preserve the
+    // platform version and verify/stamp the exact pins against it.
+    version = readPkg(platformPkgPaths[0]).version
+  }
   if (BUMP_CSS_ENGINE && host === 'css-engine') {
     const firstPlatform = readPkg(platformPkgPaths[0])
     const versions = [firstPlatform.version, ...(publishedVersion ? [publishedVersion] : [])]

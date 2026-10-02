@@ -214,6 +214,11 @@ describe('stamp-platform-versions · css-engine publish-before-pins', () => {
           .optionalDependencies[`@aihu/css-engine-${p}`],
       ).toBe('0.1.20')
     }
+    const check = spawnSync('bun', [SCRIPT, '--host', 'css-engine', '--check'], {
+      encoding: 'utf8',
+      env: { ...process.env, PLATFORM_SYNC_ROOT: root },
+    })
+    expect(check.status, `${check.stdout}${check.stderr}`).toBe(0)
   })
 
   it('does not reuse a platform version orphaned by an abandoned Version PR', () => {
