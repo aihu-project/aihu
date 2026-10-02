@@ -91,7 +91,10 @@ export function loadFamilies(familiesJsonSrc: string): Record<string, FamilyDef>
  * derived from its family's `autoImport` flag (see `registryRequirement`),
  * never hand-listed here.
  */
-export const REGISTRY_EXEMPT = new Set<string>()
+export const REGISTRY_EXEMPT = new Set<string>([
+  // Imperative activate/deactivate handle; it is not an auto-import hook.
+  'createFocusTrap',
+])
 
 // ---------- Per-source discovery / parsing ----------
 

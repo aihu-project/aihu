@@ -149,6 +149,20 @@ describe('@aihu/use — Tier 1: auto-discovered import-time SSR safety', () => {
  * whenever the parity gate requires one (source references `isClient`). */
 const entries: Array<{ entry: string; run: () => Promise<void> }> = [
   {
+    entry: 'createFocusTrap',
+    run: () =>
+      withSSR(
+        () => import('../src/createFocusTrap/index.ts'),
+        ({ createFocusTrap }) => {
+          const trap = createFocusTrap(null)
+          expect(() => {
+            trap.activate()
+            trap.deactivate()
+          }).not.toThrow()
+        },
+      ),
+  },
+  {
     entry: 'useEventListener',
     run: () =>
       withSSR(

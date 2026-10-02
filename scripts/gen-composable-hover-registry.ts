@@ -82,7 +82,7 @@ function parseRegistry(): { name: string; specifier: string }[] {
           continue
         }
         const family = tail ? tail.split('/')[0] : undefined
-        if (!family || families[family]?.autoImport === true) {
+        if ((!family || families[family]?.autoImport === true) && /^use[A-Z]/.test(entry.name)) {
           entries.push({ name: entry.name, specifier: `@aihu/use/${nextTail}` })
         }
         continue

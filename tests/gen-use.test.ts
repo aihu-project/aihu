@@ -6,18 +6,82 @@
  * tree, so a fixture stays valid regardless of what lands in packages/use
  * next.
  */
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   exportKeyRank,
   type FamilyDef,
+  parseGenUseArgs,
   patchFamilyBarrel,
   patchPackageExports,
   patchRolldownEntry,
   patchSizeLimit,
   patchUseRegistryRs,
   peersFor,
+  scaffoldBatch,
   validateFamily,
 } from '../scripts/gen-use.ts'
+
+describe('parseGenUseArgs', () => {
+  it('preserves every composable name in a multi-name invocation', () => {
+    expect(parseGenUseArgs(['useFirst', 'useSecond'])).toEqual({
+      names: ['useFirst', 'useSecond'],
+      bare: false,
+      family: undefined,
+    })
+  })
+
+  it('preserves the first name when family and bare flags follow the batch', () => {
+    expect(parseGenUseArgs(['useFirst', 'useSecond', '--bare', '--family', 'math'])).toEqual({
+      names: ['useFirst', 'useSecond'],
+      bare: true,
+      family: 'math',
+    })
+  })
+})
+
+describe('scaffoldBatch', () => {
+  it('creates every named composable and all corresponding package registrations', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gen-use-batch-'))
+    try {
+      const useDir = join(root, 'packages/use')
+      const srcDir = join(useDir, 'src')
+      const config = join(useDir, 'rolldown.config.ts')
+      const packageJson = join(useDir, 'package.json')
+      const sizeLimit = join(root, '.size-limit.json')
+      const write = (path: string, content: string) => {
+        mkdirSync(join(path, '..'), { recursive: true })
+        writeFileSync(path, content)
+      }
+      write(join(srcDir, 'index.ts'), 'export {}\n')
+      write(
+        config,
+        "input: {\n    index: 'src/index.ts',\n    shared: 'src/shared/index.ts',\n  },\n",
+      )
+      write(packageJson, JSON.stringify({ exports: { '.': {}, './shared': {} } }))
+      write(
+        sizeLimit,
+        '[\n  {\n    "name": "@aihu/use/shared",\n    "path": "packages/use/dist/shared.js",\n    "limit": "320 B",\n    "gzip": true\n  },\n]\n',
+      )
+
+      scaffoldBatch(root, ['useFirst', 'useSecond'], false, undefined, {})
+
+      expect(readFileSync(join(srcDir, 'useFirst/index.ts'), 'utf8')).toContain('useFirst')
+      expect(readFileSync(join(srcDir, 'useSecond/index.ts'), 'utf8')).toContain('useSecond')
+      const pkg = JSON.parse(readFileSync(packageJson, 'utf8'))
+      expect(pkg.exports).toHaveProperty('./useFirst')
+      expect(pkg.exports).toHaveProperty('./useSecond')
+      expect(readFileSync(config, 'utf8')).toContain("useFirst: 'src/useFirst/index.ts'")
+      expect(readFileSync(config, 'utf8')).toContain("useSecond: 'src/useSecond/index.ts'")
+      expect(readFileSync(sizeLimit, 'utf8')).toContain('"name": "@aihu/use/useFirst"')
+      expect(readFileSync(sizeLimit, 'utf8')).toContain('"name": "@aihu/use/useSecond"')
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
 
 const FAMILIES: Record<string, FamilyDef> = {
   math: {
