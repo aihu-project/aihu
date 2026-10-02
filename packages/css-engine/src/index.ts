@@ -1,6 +1,15 @@
 import { execFileSync } from 'node:child_process'
-import { accessSync, constants, existsSync, statSync } from 'node:fs'
+import {
+  accessSync,
+  constants,
+  existsSync,
+  mkdtempSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { compileToAst } from '@aihu/compiler'
@@ -241,14 +250,11 @@ function buildMissingBinaryError(
 //            `lsof -U`: the peer of the child's fd 0 was the parent and nothing
 //            else, so this is not an fd-inheritance leak).
 //
-// So the stall is on the parent side: spawnSync's loop never delivers the
-// writable event that would finish `input` and close the write end, and the
-// child blocks in read() forever. With no timer armed, `uv__io_poll` calls
-// kevent with NO deadline — which is precisely why it hangs for days rather
-// than minutes. Passing `timeout` arms a uv timer in that same loop, which
-// gives kevent a deadline, so the loop always wakes and kills the child.
-// Verified: the same harness that hung indefinitely without `timeout` was
-// rescued at iteration 94 with ETIMEDOUT after 5002 ms once `timeout` was set.
+// Passing `input` to execFileSync normally closes the child's stdin, but its
+// synchronous write path can stall under load before delivering that EOF.
+// runBinary avoids that pipe by writing a unique temporary file and passing
+// its path to the CLI, which already supports positional file input. The
+// timeout remains as a bound for genuinely slow or wedged compiler runs.
 //
 // This is intermittent and load-dependent — it is not a pipe-buffer capacity
 // problem (20 MB of stdin against 200 KB each of stdout+stderr round-trips
@@ -307,21 +313,27 @@ function compileTimeoutMs(inputBytes: number): number {
  * (the binary's R-RESULT error path) throw an `Error` carrying the binary's
  * stderr message rather than letting `execFileSync`'s opaque status error
  * surface. stderr is PIPED (not inherited) so the message lands in the thrown
- * error instead of the parent's console.
+ * error instead of the parent's console. Payload input is read from a
+ * temporary file so the child does not depend on stdin EOF delivery.
  *
  * The spawn is BOUNDED: `timeout` (see `DEFAULT_COMPILE_TIMEOUT_MS`) and an
  * explicit `maxBuffer`. `killSignal: 'SIGKILL'` because the whole point is that
  * nothing survives — a SIGTERM-ignoring or already-wedged child is exactly the
  * process that was found still alive 2.5 days later.
  */
-function runBinary(bin: string, args: string[], input: string): string {
+function runBinary(bin: string, args: string[], input: string, componentPath?: string): string {
   const timeoutMs = compileTimeoutMs(input.length)
   const startedAt = Date.now()
+  const inputDir = mkdtempSync(join(tmpdir(), 'aihu-css-compile-'))
+  const inputFile = join(inputDir, 'input')
+  const fileArgs = [...args, inputFile]
+  const safeComponentPath = componentPath?.replace(/[\r\n\t]/g, ' ')
+  const component = safeComponentPath ? `\n  component: ${safeComponentPath}` : ''
   try {
-    return execFileSync(bin, args, {
-      input,
+    writeFileSync(inputFile, input)
+    return execFileSync(bin, fileArgs, {
       encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
       timeout: timeoutMs,
       maxBuffer: COMPILE_MAX_BUFFER,
       killSignal: 'SIGKILL',
@@ -331,21 +343,18 @@ function runBinary(bin: string, args: string[], input: string): string {
     const elapsedMs = Date.now() - startedAt
     const where =
       `  binary:   ${bin}\n` +
-      `  args:     ${args.length > 0 ? args.join(' ') : '(none)'}\n` +
-      `  stdin:    ${input.length} bytes\n` +
+      `  args:     ${fileArgs.join(' ')}\n` +
+      `  input:    ${input.length} bytes from temporary file\n` +
       `  elapsed:  ${elapsedMs} ms`
 
     if (e.code === 'ETIMEDOUT') {
       throw new Error(
         `[@aihu/css-engine] CSS compile TIMED OUT after ${timeoutMs} ms and the child was killed.\n\n` +
-          `${where}\n\n` +
-          `  This is the known spawn stall, not a slow compile: the compiler normally\n` +
-          `  finishes in single-digit milliseconds. The child parks in read() waiting for\n` +
-          `  an EOF on stdin that the parent's spawnSync loop never delivers, so without\n` +
-          `  this timeout the build would hang at 0% CPU indefinitely.\n\n` +
+          `${where}${component}\n\n` +
+          `  Input is read from a closed temporary file, so this indicates a slow or wedged\n` +
+          `  compiler process. The timeout keeps builds bounded.\n\n` +
           `  What to do next:\n` +
-          `    - Re-run the build. The stall is intermittent and load-dependent; a retry\n` +
-          `      normally succeeds.\n` +
+          `    - Retry once if the machine was under unusual load when the compile ran.\n` +
           `    - If it reproduces every time, the binary itself is likely wedged. Check it\n` +
           `      directly:  ${bin} --help\n` +
           `      and rebuild it:  cargo build --release -p aihu-css-core\n` +
@@ -358,7 +367,7 @@ function runBinary(bin: string, args: string[], input: string): string {
       throw new Error(
         `[@aihu/css-engine] CSS compile produced more than the ${COMPILE_MAX_BUFFER} byte\n` +
           `  stdout/stderr limit and the child was killed.\n\n` +
-          `${where}\n\n` +
+          `${where}${component}\n\n` +
           `  A stylesheet this large almost certainly means the input is wrong (an\n` +
           `  unbounded generated class list, or a non-AST payload sent to --ast-json)\n` +
           `  rather than a real page. Check what is being passed in before raising the cap.`,
@@ -372,7 +381,9 @@ function runBinary(bin: string, args: string[], input: string): string {
           ? e.stderr.toString('utf-8')
           : ''
     const detail = stderr.trim() || e.message || 'unknown error'
-    throw new Error(`[@aihu/css-engine] CSS compile failed: ${detail}\n\n${where}`)
+    throw new Error(`[@aihu/css-engine] CSS compile failed: ${detail}\n\n${where}${component}`)
+  } finally {
+    rmSync(inputDir, { recursive: true, force: true })
   }
 }
 
@@ -417,7 +428,7 @@ export function compileSfc(
     ...(options?.hostTokens !== undefined ? { hostTokens: options.hostTokens } : {}),
   }
   const bin = resolveBinary()
-  return runBinary(bin, ['--ast-json'], JSON.stringify(payload))
+  return runBinary(bin, ['--ast-json'], JSON.stringify(payload), id)
 }
 
 /** Project-level inputs to {@link compileSfc}, shared by every SFC in a build. */

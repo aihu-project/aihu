@@ -13,9 +13,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 // timer armed and calls kevent with no deadline — so it waits forever (two
 // `aihu-compile --stdin` children were found still alive after 2.5 days).
 //
-// The fix bounds the spawn: `timeout` (which arms the uv timer that gives
-// kevent a deadline) + an explicit `maxBuffer` instead of node's inherited
-// 1 MiB default. These tests pin both bounds.
+// Input now comes from a positional temp-file argument, avoiding the stalled
+// stdin write path. `timeout` and `maxBuffer` still bound compiler execution
+// and output. These tests pin the bounds and file handoff.
 //
 // The fake binary stands in for the wedged child: it is switched by env vars
 // that execFileSync passes through, because `resolveBinary()` memoizes the
@@ -30,8 +30,10 @@ writeFileSync(
   fakeBin,
   [
     '#!/bin/sh',
-    '# Never reads stdin — mirrors a child that cannot be driven to EOF.',
+    '# Compiler input is supplied as a file argument, never stdin.',
     'if [ -n "$FAKE_HANG" ]; then sleep 600; exit 0; fi',
+    'if [ -n "$FAKE_FAIL" ]; then echo "fake compile failure" >&2; exit 7; fi',
+    'if [ -n "$FAKE_ECHO_INPUT" ]; then cat "$1"; exit 0; fi',
     'if [ -n "$FAKE_BYTES" ]; then',
     "  head -c \"$FAKE_BYTES\" /dev/zero | tr '\\000' 'a'",
     '  exit 0',
@@ -81,9 +83,9 @@ describe('@aihu/css-engine — runBinary is bounded', () => {
       }
       expect(message).toContain(fakeBin)
       expect(message).toContain('args:')
-      // 'bg-primary\np-4' — the exact stdin byte count, so a reader can tell a
+      // 'bg-primary\np-4' — the exact payload byte count, so a reader can tell a
       // pathological payload from a wedged child.
-      expect(message).toContain('stdin:    14 bytes')
+      expect(message).toContain('input:    14 bytes from temporary file')
       expect(message).toMatch(/elapsed:\s+\d+ ms/)
       // And what to do next.
       expect(message).toContain('AIHU_CSS_COMPILE_TIMEOUT_MS')
@@ -102,6 +104,26 @@ describe('@aihu/css-engine — runBinary is bounded', () => {
       process.env.FAKE_BYTES = String(2 * 1024 * 1024)
       const out = compile(['bg-primary'])
       expect(out.length).toBeGreaterThan(1024 * 1024)
+    })
+  })
+
+  describe('file input and diagnostics', () => {
+    afterAll(() => {
+      delete process.env.FAKE_ECHO_INPUT
+      delete process.env.FAKE_FAIL
+    })
+
+    it('passes the complete payload through the CLI file argument', () => {
+      process.env.FAKE_ECHO_INPUT = '1'
+      expect(compile(['bg-primary', 'p-4'])).toBe('bg-primary\np-4')
+    })
+
+    it('includes the component path when CSS compilation fails', async () => {
+      process.env.FAKE_FAIL = '1'
+      const { compileSfc } = await import('../src/index.ts')
+      expect(() => compileSfc('@template { <div /> }', 'src/components/Fail.aihu')).toThrow(
+        /fake compile failure[\s\S]*component: src\/components\/Fail\.aihu/,
+      )
     })
   })
 })
