@@ -111,6 +111,24 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
     expect(css).not.toContain('@theme') // directive consumed, not emitted raw
   })
 
+  it('keeps a project theme when comments contain CSS delimiters', () => {
+    const source = `@template { <div class="bg-primary">x</div> }`
+    const css = compileSfc(source, 'CommentTheme.aihu', undefined, {
+      theme: '@theme { /* palette } note */ --color-primary: #ff00aa; }',
+    })
+    expect(css).toContain('background-color: var(--color-primary, #ff00aa)')
+  })
+
+  it('rejects a bare :root block used instead of @theme', () => {
+    const source = `@style { :root { --color-primary: #ff00aa; } }\n@template { <div class="bg-primary">x</div> }`
+    expect(() => compileSfc(source, 'RootTheme.aihu')).toThrow(/@theme/)
+  })
+
+  it('keeps compound :root.dark selectors as authored CSS', () => {
+    const source = `@style { :root.dark { --color-primary: #111111; } }\n@template { <div class="bg-primary">x</div> }`
+    expect(compileSfc(source, 'DarkRoot.aihu')).toContain(':root.dark')
+  })
+
   // R-RESULT: a binary emit error (non-zero exit) surfaces as a thrown Error
   // carrying the stderr message, not an opaque status failure.
   it('throws with the engine error message when emit hard-errors', () => {
@@ -119,6 +137,8 @@ describe('@aihu/css-engine — compileSfc end-to-end (AST → scoped CSS)', () =
   @theme --color-primary: red;
 }
 @template { <div class="bg-primary">x</div> }`
-    expect(() => compileSfc(source, 'Broken.aihu')).toThrow(/malformed @theme/)
+    expect(() => compileSfc(source, 'src/components/Broken.aihu')).toThrow(
+      /malformed @theme[\s\S]*component: src\/components\/Broken\.aihu/,
+    )
   })
 })
