@@ -1,3 +1,7 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { build, type Plugin } from 'vite'
 import { describe, expect, it } from 'vitest'
 import type { RouteDefinition } from '../src/index.ts'
 import { createRouter } from '../src/index.ts'
@@ -214,5 +218,92 @@ describe('@aihu/router — viteRouterPlugin', () => {
     // Plugin should be constructable without errors
     expect(plugin.resolveId).toBeDefined()
     expect(plugin.load).toBeDefined()
+  })
+
+  it('scans default and configured relative directories under Vite root', () => {
+    const root = mkdtempSync(join(tmpdir(), 'aihu-router-vite-root-'))
+    const dirs = [
+      'pages',
+      'src/layouts',
+      'src/components',
+      'custom-pages',
+      'custom-layouts',
+      'custom-components',
+    ]
+    try {
+      for (const dir of dirs) mkdirSync(join(root, dir), { recursive: true })
+      writeFileSync(join(root, 'pages', 'about.aihu'), '@template { <p>default page</p> }')
+      writeFileSync(join(root, 'src/layouts', 'default-layout.aihu'), '@template { <outlet /> }')
+      writeFileSync(
+        join(root, 'src/components', 'default-card.aihu'),
+        '@template { <p>default</p> }',
+      )
+      writeFileSync(join(root, 'custom-pages', 'custom.aihu'), '@template { <p>custom page</p> }')
+      writeFileSync(join(root, 'custom-layouts', 'custom-layout.aihu'), '@template { <outlet /> }')
+      writeFileSync(
+        join(root, 'custom-components', 'custom-card.aihu'),
+        '@template { <p>custom</p> }',
+      )
+
+      const defaultPlugin = viteRouterPlugin()
+      defaultPlugin.configResolved?.({ root })
+      expect(defaultPlugin.load?.('\0virtual:aihu-routes')).toContain('/about')
+      expect(defaultPlugin.load?.('\0virtual:aihu-layouts')).toContain('default-layout')
+      expect(defaultPlugin.load?.('\0virtual:aihu-components')).toContain('default-card')
+
+      const configuredPlugin = viteRouterPlugin({
+        pagesDir: 'custom-pages',
+        layoutsDir: 'custom-layouts',
+        componentsDir: 'custom-components',
+      })
+      configuredPlugin.configResolved?.({ root })
+      expect(configuredPlugin.load?.('\0virtual:aihu-routes')).toContain('/custom')
+      expect(configuredPlugin.load?.('\0virtual:aihu-layouts')).toContain('custom-layout')
+      expect(configuredPlugin.load?.('\0virtual:aihu-components')).toContain('custom-card')
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('uses Vite root during a build invoked from a different cwd', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'aihu-router-vite-build-'))
+    mkdirSync(join(root, 'pages'))
+    writeFileSync(join(root, 'pages', 'about.aihu'), '@template { <p>about</p> }')
+    const generated: string[] = []
+    try {
+      await build({
+        configFile: false,
+        root,
+        logLevel: 'silent',
+        plugins: [
+          viteRouterPlugin() as Plugin,
+          {
+            name: 'router-test-sfc-loader',
+            load(id) {
+              if (id.endsWith('.aihu')) return 'export default {}'
+              return null
+            },
+            transform(code, id) {
+              if (id.includes('virtual:aihu-routes')) generated.push(code)
+              return null
+            },
+          },
+        ],
+        build: { write: false, rollupOptions: { input: 'virtual:aihu-routes' } },
+      })
+      expect(generated.join('\n')).toContain('/about')
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('exposes resolved directories through the aihu module config contract', () => {
+    const plugin = viteRouterPlugin({ pagesDir: 'custom-pages' })
+    expect(plugin.api?.aihuModule).toBe('@aihu/router')
+    expect(plugin.api?.getOptions()).toEqual({
+      pagesDir: 'custom-pages',
+      layoutsDir: 'src/layouts',
+      componentsDir: 'src/components',
+    })
   })
 })

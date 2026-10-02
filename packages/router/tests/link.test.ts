@@ -18,10 +18,12 @@ import {
   createPrefetcher,
   createRouter,
   createRouteSignal,
+  isActiveRouteLink,
   navigate,
   RouteContext,
   type RouteContextValue,
   type RouteDefinition,
+  shouldInterceptLinkClick,
 } from '../src/index.ts'
 
 const userRoute = (pattern: string): RouteDefinition => ({
@@ -70,6 +72,71 @@ describe('<a> — click intercepts and SPA-navigates', () => {
     dispose()
   })
 
+  it('keeps current-route matching for relative, query, and fragment hrefs', () => {
+    expect(isActiveRouteLink('/x?tab=one', '/x')).toBe(true)
+    expect(isActiveRouteLink('/x#details', '/x')).toBe(true)
+    expect(isActiveRouteLink('/other', '/x')).toBe(false)
+  })
+
+  it('leaves modified, targeted, downloaded, external, and same-page fragment clicks native', () => {
+    window.history.replaceState(null, '', '/current?tab=one')
+    const makeClick = (
+      href: string,
+      init: MouseEventInit = {},
+      attrs?: { target?: string; download?: string },
+    ) => {
+      const anchor = document.createElement('a')
+      anchor.href = href
+      if (attrs?.target) anchor.target = attrs.target
+      if (attrs?.download !== undefined) anchor.setAttribute('download', attrs.download)
+      const event = new MouseEvent('click', { button: 0, cancelable: true, ...init })
+      return { anchor, event }
+    }
+    for (const init of [
+      { ctrlKey: true },
+      { metaKey: true },
+      { shiftKey: true },
+      { altKey: true },
+      { button: 1 },
+    ]) {
+      const { anchor, event } = makeClick('/next', init)
+      expect(shouldInterceptLinkClick(event, anchor)).toBe(false)
+    }
+    for (const [href, attrs] of [
+      ['/next', { target: '_blank' }],
+      ['/file', { download: '' }],
+      ['https://example.com/next', undefined],
+      ['#details', undefined],
+    ] as const) {
+      const { anchor, event } = makeClick(href, {}, attrs)
+      expect(shouldInterceptLinkClick(event, anchor)).toBe(false)
+    }
+    const { anchor, event } = makeClick('/next')
+    expect(shouldInterceptLinkClick(event, anchor)).toBe(true)
+  })
+
+  it('SPA navigation to a fragment scrolls to and focuses the destination', async () => {
+    const { map, dispose } = makeContext([userRoute('/'), userRoute('/other')])
+    window.history.replaceState(null, '', '/other')
+    const target = document.createElement('section')
+    target.id = 'details'
+    target.scrollIntoView = () => {}
+    document.body.appendChild(target)
+    const scroll = vi.spyOn(target, 'scrollIntoView')
+    try {
+      await runWithContext(map, async () => {
+        await navigate('/other#details')
+      })
+      expect(window.location.hash).toBe('#details')
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'auto' })
+      expect(document.activeElement).toBe(target)
+    } finally {
+      scroll.mockRestore()
+      target.remove()
+      dispose()
+    }
+  })
+
   it('navigate() honours replace=true via replaceState', async () => {
     const { map, dispose } = makeContext([userRoute('/'), userRoute('/x')])
     const spy = vi.spyOn(window.history, 'replaceState')
@@ -105,14 +172,13 @@ describe('<a> — click intercepts and SPA-navigates', () => {
     window.history.replaceState(null, '', '/x')
     window.dispatchEvent(new PopStateEvent('popstate'))
     runWithContext(map, () => {
-      // ariaCompute logic mirrored from emitted Link boundary:
       const current = (href: string): string | null => {
         const ctx = map.get(RouteContext._id) as RouteContextValue
         const r = ctx.current()
-        return r && r.pathname === href ? 'page' : null
+        return r && isActiveRouteLink(href, r.pathname) ? 'page' : null
       }
-      expect(current('/x')).toBe('page')
-      expect(current('/')).toBeNull()
+      expect(current('/x?tab=one')).toBe('page')
+      expect(current('/#home')).toBeNull()
     })
     dispose()
   })

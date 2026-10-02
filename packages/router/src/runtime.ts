@@ -202,6 +202,7 @@ async function navigateWithContext(
     if (opts.replace) SAFE_WINDOW.history.replaceState(null, '', href)
     else SAFE_WINDOW.history.pushState(null, '', href)
     setRouteSignal(ctx, target)
+    navigateToFragment(url.hash)
   }
 
   const useVT =
@@ -223,6 +224,74 @@ async function navigateWithContext(
 
   ctx.router.runAfterGuards(target, from)
   return 'navigated'
+}
+
+/** @internal — Whether a link click belongs to client-side route navigation. */
+export function shouldInterceptLinkClick(event: MouseEvent, anchor: HTMLAnchorElement): boolean {
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey ||
+    anchor.hasAttribute('download') ||
+    (anchor.target !== '' && anchor.target.toLowerCase() !== '_self')
+  ) {
+    return false
+  }
+
+  const target = new URL(anchor.href, SAFE_WINDOW?.location.href ?? 'http://localhost/')
+  const current = new URL(SAFE_WINDOW?.location.href ?? 'http://localhost/')
+  if (target.protocol !== 'http:' && target.protocol !== 'https:') return false
+  if (target.origin !== current.origin) return false
+  if (target.pathname === current.pathname && target.search === current.search && target.hash) {
+    return false
+  }
+  return true
+}
+
+/** @internal — Compare a link destination with the current route pathname. */
+export function isActiveRouteLink(href: string, pathname: string): boolean {
+  const base = SAFE_WINDOW?.location.href ?? 'http://localhost/'
+  return new URL(href, base).pathname === pathname
+}
+
+function navigateToFragment(hash: string): void {
+  if (!SAFE_WINDOW || !hash || hash === '#') return
+  let id: string
+  try {
+    id = decodeURIComponent(hash.slice(1))
+  } catch {
+    return
+  }
+  if (!id) return
+
+  const focusTarget = (element: Element): void => {
+    element.scrollIntoView({ behavior: 'auto' })
+    if (!(element instanceof HTMLElement)) return
+    const hadTabIndex = element.hasAttribute('tabindex')
+    if (!hadTabIndex) element.setAttribute('tabindex', '-1')
+    element.focus({ preventScroll: true })
+    if (!hadTabIndex) {
+      const clearTabIndex = (): void => {
+        element.removeAttribute('tabindex')
+        element.removeEventListener('blur', clearTabIndex)
+      }
+      element.addEventListener('blur', clearTabIndex)
+    }
+  }
+  const resolveTarget = (): Element | null =>
+    document.getElementById(id) ?? document.getElementsByName(id)[0] ?? null
+  const target = resolveTarget()
+  if (target) {
+    focusTarget(target)
+  } else {
+    SAFE_WINDOW.requestAnimationFrame(() => {
+      const retried = resolveTarget()
+      if (retried) focusTarget(retried)
+    })
+  }
 }
 
 // ---------------------------------------------------------------------------
