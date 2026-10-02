@@ -1,6 +1,6 @@
 {
   "name": "@aihu/use",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -354,7 +354,7 @@
   },
   "devDependencies": {
     "@aihu/context": "^0.2.0",
-    "@aihu/router": "^0.5.0",
+    "@aihu/router": "^0.5.2",
     "jwt-decode": "^4.0.0"
   },
   "scripts": {
@@ -363,7 +363,7 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
-  "description": "aihu utility/sensor/state composables \u2014 SSR-safe, scope-aware, per-composable subpath entries.",
+  "description": "aihu utility/sensor/state composables — SSR-safe, scope-aware, per-composable subpath entries.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

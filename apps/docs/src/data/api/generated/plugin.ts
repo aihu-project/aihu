@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/plugin',
   slug: 'plugin',
   tier: 'Plugins',
-  version: '0.1.1',
+  version: '0.1.2',
   tagline: 'Plugin substrate shared by @aihu/server and the meta-framework — runtime hook surface.',
   note: '',
 }

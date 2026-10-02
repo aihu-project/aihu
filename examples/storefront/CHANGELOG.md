@@ -1,5 +1,13 @@
 # @aihu/example-storefront
 
+## 0.0.30
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/auth@6.0.1
+  - @aihu-plugin/data@2.0.5
+
 ## 0.0.29
 
 ### Patch Changes

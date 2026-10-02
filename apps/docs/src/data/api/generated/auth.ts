@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/auth',
   slug: 'auth',
   tier: 'Agents & governance',
-  version: '6.0.0',
+  version: '6.0.1',
   tagline: 'JWT scope checks, ScopeSignal, and server middleware for aihu auth.',
   note: '',
 }

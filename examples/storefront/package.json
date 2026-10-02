@@ -1,7 +1,7 @@
 {
   "name": "@aihu/example-storefront",
   "private": true,
-  "version": "0.0.29",
+  "version": "0.0.30",
   "type": "module",
   "scripts": {
     "server": "bun --watch server.ts",

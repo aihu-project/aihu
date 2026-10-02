@@ -35,7 +35,7 @@ npm install @aihu/seo
 bun add @aihu/seo
 ```
 
-<sub><i>Auto-generated against `@aihu/seo@1.0.5`.</i></sub>
+<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -46,12 +46,12 @@ bun add @aihu/seo
 
 | | |
 |---|---|
-| **Version** | `1.0.5` |
+| **Version** | `1.0.6` |
 | **Tier** | C — Agent surface — DEPRECATED shim over @aihu-plugin/agent-readiness |
 | **Published files** | 4 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/seo@1.0.5`.</i></sub>
+<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -64,7 +64,7 @@ bun add @aihu/seo
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu/seo@1.0.5`.</i></sub>
+<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -79,7 +79,7 @@ bun add @aihu/seo
 - `@aihu/server` — `workspace:*`
 - `@aihu-plugin/agent-readiness` — `workspace:*`
 
-<sub><i>Auto-generated against `@aihu/seo@1.0.5`.</i></sub>
+<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -91,7 +91,7 @@ bun add @aihu/seo
 - [@aihu-plugin/agent-readiness](../plugin-agent-readiness)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `@aihu/seo@1.0.5`.</i></sub>
+<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -102,6 +102,6 @@ bun add @aihu/seo
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/seo@1.0.5`.</i></sub>
+<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

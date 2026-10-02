@@ -1,5 +1,17 @@
 # @aihu/cli
 
+## 1.4.0
+
+### Minor Changes
+
+- [#886](https://github.com/aihu-project/aihu/pull/886) [`355b6fb`](https://github.com/aihu-project/aihu/commit/355b6fb52d53c4445ea34dce249b53ed0e4d80fd) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add the confirmed `aihu plugin install` manifest workflow with strict input validation.
+
+- [#892](https://github.com/aihu-project/aihu/pull/892) [`f62dfce`](https://github.com/aihu-project/aihu/commit/f62dfce2f323115848a14050ac2b950dc1a6356e) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Include the cf-solo starter in the scaffold compatibility matrix.
+
+### Patch Changes
+
+- [#894](https://github.com/aihu-project/aihu/pull/894) [`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Reconcile `@aihu/plugin`'s source version with npm (0.1.1 was published from a source that recorded 0.1.0). Deprecate `@aihu/server`'s duplicate `AihuConfig` type and `defineAihuConfig` helper in favor of `@aihu/app`'s `AihuConfig` and `defineConfig`; both remain exported for compatibility.
+
 ## 1.3.1
 
 ### Patch Changes

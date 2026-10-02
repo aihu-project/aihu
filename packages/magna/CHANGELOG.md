@@ -1,5 +1,13 @@
 # @aihu/magna
 
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3)]:
+  - @aihu/plugin@0.1.2
+  - @aihu-plugin/data@2.0.5
+
 ## 0.2.8
 
 ### Patch Changes

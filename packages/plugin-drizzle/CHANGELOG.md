@@ -1,5 +1,12 @@
 # @aihu-plugin/drizzle
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3), [`04da84c`](https://github.com/aihu-project/aihu/commit/04da84ca60390fb7198588afe3a5872ab134defe)]:
+  - @aihu/server@0.6.1
+
 ## 0.1.6
 
 ### Patch Changes

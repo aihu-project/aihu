@@ -1,5 +1,11 @@
 # @aihu/use
 
+## 2.1.0
+
+### Minor Changes
+
+- [#899](https://github.com/aihu-project/aihu/pull/899) [`0222a00`](https://github.com/aihu-project/aihu/commit/0222a00a76f57aa44548187a97afac89844cc398) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add `createFocusTrap` for accessible dialog focus management, using the shared primitives focus trap.
+
 ## 2.0.0
 
 ### Patch Changes

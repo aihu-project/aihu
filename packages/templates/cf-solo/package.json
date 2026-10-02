@@ -1,6 +1,6 @@
 {
   "name": "@aihu/templates-cf-solo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "description": "Cloudflare Workers single-package solo template for Aihu",

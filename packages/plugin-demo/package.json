@@ -1,6 +1,6 @@
 {
   "name": "@aihu/plugin-demo",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@aihu/server": "workspace:*"
   },
-  "description": "Canonical proof-of-life for the @aihu/plugin API \u2014 exercises macros, middleware, and transforms.",
+  "description": "Canonical proof-of-life for the @aihu/plugin API — exercises macros, middleware, and transforms.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aihu-project/aihu.git",

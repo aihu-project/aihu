@@ -1,5 +1,17 @@
 # @aihu/app
 
+## 10.2.0
+
+### Minor Changes
+
+- [#901](https://github.com/aihu-project/aihu/pull/901) [`b912065`](https://github.com/aihu-project/aihu/commit/b91206574284b3893327e9c909fc436a6b1edc9b) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Complete static prerenders across Vite virtual modules, support shared component directories and file-style route HTML, and fail builds with route-specific errors.
+
+### Patch Changes
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3), [`04da84c`](https://github.com/aihu-project/aihu/commit/04da84ca60390fb7198588afe3a5872ab134defe), [`444604a`](https://github.com/aihu-project/aihu/commit/444604a0653a3378dd7cace386ee413833c4da57), [`b912065`](https://github.com/aihu-project/aihu/commit/b91206574284b3893327e9c909fc436a6b1edc9b)]:
+  - @aihu/server@0.6.1
+  - @aihu/router@0.5.2
+
 ## 10.1.2
 
 ### Patch Changes

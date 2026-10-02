@@ -1,5 +1,16 @@
 # @aihu/router
 
+## 0.5.2
+
+### Patch Changes
+
+- [#895](https://github.com/aihu-project/aihu/pull/895) [`444604a`](https://github.com/aihu-project/aihu/commit/444604a0653a3378dd7cace386ee413833c4da57) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Resolve route, layout, and component directories from Vite's project root, and preserve native link behavior for modified, targeted, downloaded, external, and same-page fragment clicks. SPA fragment navigation now scrolls to and focuses its destination, while active links expose `aria-current="page"` and the `active` class. Router plugin options are also exposed through the aihu module config contract.
+
+- [#901](https://github.com/aihu-project/aihu/pull/901) [`b912065`](https://github.com/aihu-project/aihu/commit/b91206574284b3893327e9c909fc436a6b1edc9b) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Complete static prerenders across Vite virtual modules, support shared component directories and file-style route HTML, and fail builds with route-specific errors.
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3), [`04da84c`](https://github.com/aihu-project/aihu/commit/04da84ca60390fb7198588afe3a5872ab134defe)]:
+  - @aihu/server@0.6.1
+
 ## 0.5.1
 
 ### Patch Changes

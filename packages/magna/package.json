@@ -1,6 +1,6 @@
 {
   "name": "@aihu/magna",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "aihu bridge for Magna GraphQL — dep-free fetch, resource composition, JWT relay",
   "license": "MIT",
   "type": "module",

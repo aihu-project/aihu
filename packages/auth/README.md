@@ -23,7 +23,7 @@ npm install @aihu/auth
 bun add @aihu/auth
 ```
 
-<sub><i>Auto-generated against `@aihu/auth@6.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -34,13 +34,13 @@ bun add @aihu/auth
 
 | | |
 |---|---|
-| **Version** | `6.0.0` |
+| **Version** | `6.0.1` |
 | **Tier** | B — Meta-framework — JWT scope checks, ScopeSignal, and server auth middleware |
 | **Bundle size** | 1.16 kB (gz) — limit 1.5 KB |
 | **Published files** | 3 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/auth@6.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -54,7 +54,7 @@ bun add @aihu/auth
 | `.` | `./dist/index.js` | `—` |
 | `./server` | `./dist/server.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu/auth@6.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -72,7 +72,7 @@ bun add @aihu/auth
 - `@aihu/agent-service` — `workspace:*`
 - `@aihu/signals` — `^0.5.1`
 
-<sub><i>Auto-generated against `@aihu/auth@6.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -85,7 +85,7 @@ bun add @aihu/auth
 - [@aihu/agent-service](../agent-service)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `@aihu/auth@6.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -96,6 +96,6 @@ bun add @aihu/auth
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/auth@6.0.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

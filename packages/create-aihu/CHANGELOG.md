@@ -1,5 +1,12 @@
 # create-aihu
 
+## 0.1.13
+
+### Patch Changes
+
+- Updated dependencies [[`a40aba7`](https://github.com/aihu-project/aihu/commit/a40aba75cd95539427e42a4cc0686c4f4e63c6e3), [`355b6fb`](https://github.com/aihu-project/aihu/commit/355b6fb52d53c4445ea34dce249b53ed0e4d80fd), [`f62dfce`](https://github.com/aihu-project/aihu/commit/f62dfce2f323115848a14050ac2b950dc1a6356e)]:
+  - @aihu/cli@1.4.0
+
 ## 0.1.12
 
 ### Patch Changes

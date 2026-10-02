@@ -21,7 +21,7 @@ npm install @aihu/router
 bun add @aihu/router
 ```
 
-<sub><i>Auto-generated against `@aihu/router@0.5.1`.</i></sub>
+<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -32,13 +32,13 @@ bun add @aihu/router
 
 | | |
 |---|---|
-| **Version** | `0.5.1` |
+| **Version** | `0.5.2` |
 | **Tier** | B — Meta-framework — file-based router |
 | **Bundle size** | 1.71 kB (gz) — limit 2400 B |
 | **Published files** | 3 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu/router@0.5.1`.</i></sub>
+<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -53,7 +53,7 @@ bun add @aihu/router
 | `./server` | `./dist/server.js` | `—` |
 | `./plugin` | `./dist/plugin.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu/router@0.5.1`.</i></sub>
+<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -68,7 +68,7 @@ bun add @aihu/router
 - `@aihu/server` — `workspace:*`
 - `@aihu/signals` — `^0.5.1`
 
-<sub><i>Auto-generated against `@aihu/router@0.5.1`.</i></sub>
+<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -82,7 +82,7 @@ bun add @aihu/router
 - [@aihu/server](../server)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `@aihu/router@0.5.1`.</i></sub>
+<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -93,6 +93,6 @@ bun add @aihu/router
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu/router@0.5.1`.</i></sub>
+<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

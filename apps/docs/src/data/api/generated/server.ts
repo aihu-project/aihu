@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/server',
   slug: 'server',
   tier: 'App & routing',
-  version: '0.6.0',
+  version: '0.6.1',
   tagline: 'Server runtime + native renderer (napi-rs) for aihu SSR.',
   note: '',
 }
