@@ -43,6 +43,9 @@ import { BRIDGE_PROTOCOL_VERSION } from './types.ts'
 interface PendingBridgeCall {
   resolve(value: unknown): void
   reject(err: Error): void
+  identity: string
+  grantVersion?: string
+  readOnly: boolean
   timer?: ReturnType<typeof setTimeout>
 }
 
@@ -175,6 +178,11 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   let verifiedIdentity: string | undefined
   let helloSeen = false
   let peerRevoked = false
+  const revokedBindings = new Map<string, Set<string>>()
+  const isBindingRevoked = (identity: string, grantVersion?: string): boolean => {
+    const revoked = revokedBindings.get(identity)
+    return revoked?.has('*') === true || revoked?.has(grantVersion ?? '') === true
+  }
   let attachmentGeneration = 0
 
   // ── Bridge handshake state (thesis §3: the client is never the authority) ──
@@ -206,6 +214,14 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     for (const w of waiters) w()
   }
 
+  function diagnose(event: string, detail?: unknown): void {
+    try {
+      options.onBridgeDiagnostic?.({ event, ...(detail !== undefined ? { detail } : {}) })
+    } catch {
+      // Diagnostics are host-side only and cannot change authorization outcomes.
+    }
+  }
+
   /**
    * Validate a `hello` frame's protocol field.
    *
@@ -217,18 +233,12 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
    */
   function checkHelloProtocol(raw: unknown): { ok: true } | { ok: false; reason: string } {
     if (typeof raw !== 'number' || !Number.isFinite(raw)) {
-      return {
-        ok: false,
-        reason:
-          `bridge client sent a non-numeric protocol value (${JSON.stringify(raw)}); ` +
-          `expected ${BRIDGE_PROTOCOL_VERSION}`,
-      }
+      diagnose('hello.protocol.invalid', raw)
+      return { ok: false, reason: 'BRIDGE_HELLO_INVALID: hello verification failed' }
     }
     if (raw !== BRIDGE_PROTOCOL_VERSION) {
-      return {
-        ok: false,
-        reason: `bridge protocol mismatch: client speaks ${raw}, server speaks ${BRIDGE_PROTOCOL_VERSION}`,
-      }
+      diagnose('hello.protocol.mismatch', raw)
+      return { ok: false, reason: 'BRIDGE_HELLO_INVALID: hello verification failed' }
     }
     return { ok: true }
   }
@@ -251,7 +261,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         if (helloSeen) {
           peerRevoked = true
           handshake = 'rejected'
-          handshakeReason = 'BRIDGE_REPLAY: duplicate hello on an established peer'
+          handshakeReason = 'BRIDGE_HELLO_INVALID: hello verification failed'
+          diagnose('hello.duplicate')
           rejectAllPending(handshakeReason)
           return
         }
@@ -263,19 +274,16 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         }
         const hello = msg as Extract<BridgeClientMessage, { type: 'hello' }>
         if (!bridgeNonces.consume(hello.nonce, String(attachmentGeneration))) {
-          settleHandshake(
-            'rejected',
-            'BRIDGE_NONCE_INVALID: missing, unknown, expired, or replayed nonce',
-          )
+          diagnose('hello.nonce.invalid', hello.nonce)
+          settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
           return
         }
         if (typeof hello.sessionToken !== 'string' || !options.verifyBridgeSession) {
-          settleHandshake(
-            'rejected',
-            'BRIDGE_SESSION_UNVERIFIED: session verifier and token are required',
-          )
+          diagnose('hello.session.invalid', { sessionToken: hello.sessionToken })
+          settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
           return
         }
+        const verificationGeneration = attachmentGeneration
         Promise.resolve()
           .then(() =>
             withSecurityTimeout(
@@ -285,7 +293,12 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
           )
           .then(
             (verified) => {
-              if (bridge !== peer || handshake !== 'pending') return
+              if (
+                bridge !== peer ||
+                attachmentGeneration !== verificationGeneration ||
+                handshake !== 'pending'
+              )
+                return
               if (
                 !verified ||
                 typeof verified !== 'object' ||
@@ -294,7 +307,15 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
                 hello.sessionIdentity !== verified.identity ||
                 (verified.grantVersion ?? undefined) !== (hello.grantVersion ?? undefined)
               ) {
-                settleHandshake('rejected', 'BRIDGE_SESSION_INVALID: session verification failed')
+                diagnose('hello.session.mismatch', {
+                  sessionIdentity: hello.sessionIdentity,
+                  grantVersion: hello.grantVersion,
+                })
+                settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
+                return
+              }
+              if (isBindingRevoked(verified.identity, verified.grantVersion)) {
+                settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
                 return
               }
               verifiedSessionToken = hello.sessionToken
@@ -303,8 +324,13 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
               settleHandshake('verified', '')
             },
             () => {
-              if (bridge === peer && handshake === 'pending') {
-                settleHandshake('rejected', 'BRIDGE_SESSION_INVALID: session verification failed')
+              if (
+                bridge === peer &&
+                attachmentGeneration === verificationGeneration &&
+                handshake === 'pending'
+              ) {
+                diagnose('hello.session.verification_failed')
+                settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
               }
             },
           )
@@ -428,6 +454,32 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     return detachBridge
   }
 
+  function revokeBridgeSession(identity: string, grantVersion?: string): void {
+    const revoked = revokedBindings.get(identity) ?? new Set<string>()
+    revoked.add(grantVersion ?? '*')
+    revokedBindings.set(identity, revoked)
+    if (
+      verifiedIdentity === identity &&
+      (grantVersion === undefined || verifiedGrantVersion === grantVersion)
+    ) {
+      peerRevoked = true
+      handshake = 'rejected'
+      handshakeReason = 'BRIDGE_REVOKED: bridge session was revoked'
+      for (const wake of handshakeWaiters) wake()
+      handshakeWaiters = []
+    }
+    for (const [callId, call] of pending) {
+      if (
+        call.identity !== identity ||
+        (grantVersion !== undefined && call.grantVersion !== grantVersion)
+      )
+        continue
+      pending.delete(callId)
+      if (call.timer !== undefined) clearTimeout(call.timer)
+      call.reject(new Error('BRIDGE_REVOKED: bridge session was revoked'))
+    }
+  }
+
   /**
    * Forward an approved invocation to the bridge and await the browser's reply
    * (the visible instance's result). If the bridge is disconnected mid-flight
@@ -438,6 +490,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     generation: number,
     opaqueActionId: string,
     args: unknown[],
+    binding: { identity: string; grantVersion?: string; readOnly: boolean },
   ): Promise<unknown> {
     if (bridge !== channel || attachmentGeneration !== generation || !channel.connected) {
       return Promise.resolve(undefined)
@@ -454,7 +507,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
           options.securityHookTimeoutMs ??
           DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
       )
-      pending.set(callId, { resolve, reject, timer })
+      pending.set(callId, { resolve, reject, timer, ...binding })
       try {
         channel.send(JSON.stringify(frame))
       } catch (err) {
@@ -504,8 +557,12 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
             identityAtStart !== verifiedIdentity ||
             grantVersionAtStart !== verifiedGrantVersion))
       ) {
-        rejectAllPending('BRIDGE_REVOKED: bridge session binding changed')
-        return { error: 'BRIDGE_REVOKED: bridge session binding changed', code: 403 }
+        const reason =
+          identityAtStart && isBindingRevoked(identityAtStart, grantVersionAtStart)
+            ? 'BRIDGE_REVOKED: bridge session was revoked'
+            : 'BRIDGE_REVOKED: bridge session binding changed'
+        rejectAllPending(reason)
+        return { error: reason, code: 403 }
       }
       if (isGateRejection(verdict)) return verdict
       const projection =
@@ -514,6 +571,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         Array.isArray((verdict as { projection?: unknown }).projection)
           ? (verdict as { projection: readonly string[] }).projection
           : undefined
+      const readOnly =
+        typeof verdict === 'object' &&
+        verdict !== null &&
+        (verdict as { readOnly?: unknown }).readOnly === true
       const actor =
         typeof verdict === 'object' &&
         verdict !== null &&
@@ -537,8 +598,12 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
             identityAtStart !== verifiedIdentity ||
             grantVersionAtStart !== verifiedGrantVersion))
       ) {
-        rejectAllPending('BRIDGE_REVOKED: bridge session binding changed')
-        return { error: 'BRIDGE_REVOKED: bridge session binding changed', code: 403 }
+        const reason =
+          identityAtStart && isBindingRevoked(identityAtStart, grantVersionAtStart)
+            ? 'BRIDGE_REVOKED: bridge session was revoked'
+            : 'BRIDGE_REVOKED: bridge session binding changed'
+        rejectAllPending(reason)
+        return { error: reason, code: 403 }
       }
       if (handshakeState !== 'verified' || peerRevoked) {
         return { error: `BRIDGE_UNVERIFIED: ${handshakeReason}`, code: 503 }
@@ -603,7 +668,11 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
       if (!opaqueActionId) return { error: `bad tool: ${toolName}`, code: 400 }
 
       try {
-        const bridgeResult = await forwardToBridge(channel, generation, opaqueActionId, args)
+        const bridgeResult = await forwardToBridge(channel, generation, opaqueActionId, args, {
+          identity,
+          ...(grantVersion !== undefined ? { grantVersion } : {}),
+          readOnly,
+        })
         if (bridge !== channel || attachmentGeneration !== generation) {
           if (bridge === null) {
             return { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
@@ -612,6 +681,48 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
             error: 'BRIDGE_REPLACED: bridge attachment changed during invocation',
             code: 503,
           }
+        }
+        if (peerRevoked || isBindingRevoked(identity, grantVersion)) {
+          return readOnly
+            ? { error: 'BRIDGE_REVOKED: bridge session was revoked', code: 403 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
+        let finalAuthorization: import('./types.ts').BridgeVerifiedSession | false
+        try {
+          finalAuthorization = await withSecurityTimeout(
+            options.reauthorizeBridgeInvoke({
+              sessionToken,
+              identity,
+              ...(grantVersion !== undefined ? { grantVersion } : {}),
+              ...(actor !== undefined ? { actor } : {}),
+            }),
+            options.securityHookTimeoutMs ?? DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+          )
+        } catch {
+          return readOnly
+            ? { error: 'BRIDGE_AUTH_UNAVAILABLE: post-invoke authorization failed', code: 503 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
+        if (
+          peerRevoked ||
+          isBindingRevoked(identity, grantVersion) ||
+          !finalAuthorization ||
+          typeof finalAuthorization !== 'object' ||
+          finalAuthorization.identity !== identity ||
+          (finalAuthorization.grantVersion ?? undefined) !== (grantVersion ?? undefined)
+        ) {
+          return readOnly
+            ? { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
         }
         try {
           return { result: projectCapabilityResult(bridgeResult ?? null, projection) }
@@ -629,7 +740,12 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
           }
         }
         if (err instanceof Error && err.message.startsWith('BRIDGE_REVOKED:')) {
-          return { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
+          return readOnly
+            ? { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
         }
         if (err instanceof Error && err.message.startsWith('BRIDGE_TIMEOUT:')) {
           return { error: 'BRIDGE_TIMEOUT: bridge call timed out', code: 503 }
@@ -662,6 +778,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     callTool,
     serialize,
     attachBridge,
+    revokeBridgeSession,
     issueBridgeNonce: (ttlMs?: number) => bridgeNonces.issue(ttlMs, String(attachmentGeneration)),
     dispose,
   }

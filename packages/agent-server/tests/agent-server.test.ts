@@ -706,7 +706,7 @@ describe('GO2 under-enforcement — an unverified channel must never be delegate
     })
     expect(res.code).toBe(503)
     expect(res.error).toContain('BRIDGE_UNVERIFIED')
-    expect(res.error).toContain('mismatch')
+    expect(res.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed')
     expect(invokes).toHaveLength(0)
   })
 

@@ -316,7 +316,7 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       error?: string
     }
     expect(denied.code).toBe(503)
-    expect(denied.error).toContain('BRIDGE_SESSION_INVALID')
+    expect(denied.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed')
     expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
   })
 
@@ -350,6 +350,218 @@ describe('conformance — a reconnected bridge channel must independently re-ver
     expect(denied.code).toBe(503)
     expect(denied.error).toBe('BRIDGE_AUTH_UNAVAILABLE: per-invoke authorization failed')
     expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('ignores verification from an earlier attachment of the same channel object', async () => {
+    const counter = makeCounter()
+    let finishVerification!: (value: { identity: string }) => void
+    let verificationStarted!: () => void
+    const started = new Promise<void>((resolve) => {
+      verificationStarted = resolve
+    })
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      bridgeHandshakeTimeoutMs: 10,
+      bridgeCallTimeoutMs: 15,
+      verifyBridgeSession: () =>
+        new Promise((resolve) => {
+          verificationStarted()
+          finishVerification = resolve
+        }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    const frames: string[] = []
+    const bridge = makeFakeBridge((frame) => frames.push(frame))
+    const detach = server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'old',
+        sessionIdentity: 'old',
+      }),
+    )
+    await started
+    detach()
+    server.attachBridge(bridge)
+    finishVerification({ identity: 'old' })
+    const denied = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(denied.code).toBe(503)
+    expect(frames.filter((frame) => frame.includes('"invoke"'))).toHaveLength(0)
+  })
+
+  it('redacts peer values from malformed and mismatched hello errors', async () => {
+    for (const hello of [
+      { protocol: 'peer-marker-protocol' },
+      { protocol: BRIDGE_PROTOCOL_VERSION, nonce: 'peer-marker-nonce' },
+      { protocol: BRIDGE_PROTOCOL_VERSION, nonce: null, sessionToken: 'peer-marker-token' },
+    ]) {
+      const counter = makeCounter()
+      const server = spawn({
+        target: { node: counter.node, agentBinding: counter.agentBinding },
+        createHost: host,
+        bridgeHandshakeTimeoutMs: 5,
+        verifyBridgeSession: (token) => ({ identity: token }),
+        reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+      })
+      const bridge = makeFakeBridge(() => {})
+      server.attachBridge(bridge)
+      bridge.reply(JSON.stringify({ type: 'hello', ...hello }))
+      const result = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+        code?: number
+        error?: string
+      }
+      expect(result.code).toBe(503)
+      expect(result.error).toBe(
+        'BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed',
+      )
+      expect(JSON.stringify(result)).not.toContain('peer-marker')
+      server.dispose()
+    }
+  })
+
+  it('revocation rejects an in-flight call immediately and withholds action results', async () => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    const frames: string[] = []
+    const bridge = makeFakeBridge((frame) => frames.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'identity-a',
+        sessionIdentity: 'identity-a',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const pending = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const invoke = JSON.parse(frames.find((frame) => frame.includes('"invoke"'))!) as {
+      callId: string
+    }
+    server.revokeBridgeSession('identity-a')
+    const denied = (await pending) as { code?: number; error?: string }
+    expect(denied.code).toBe(403)
+    expect(denied.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
+    bridge.reply(JSON.stringify({ type: 'result', callId: invoke.callId, result: 'secret-marker' }))
+    expect(await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })).toMatchObject({
+      code: 403,
+      error: 'BRIDGE_REVOKED: bridge session was revoked',
+    })
+  })
+
+  it('denies revoked state reads after forwarding without returning protected data', async () => {
+    const counter = makeCounter()
+    let authorized = true
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      authPlugin: {
+        verify: async (token: string) => (token === 'valid-jwt' ? { sub: 'user-1' } : null),
+        checkScope: () => true,
+      },
+      actorResolver: {
+        resolveActor: (principal) => ({
+          kind: 'human',
+          subject: principal.sub ?? 'user-1',
+          organizationId: 'org-1',
+          scopes: [],
+          issuer: null,
+          audience: null,
+          grantId: 'grant-1',
+          grantVersion: 'g1',
+        }),
+      },
+      authorizeDataRead: () => ({ granted: true, projection: ['count'] }),
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => (authorized ? { identity: binding.identity } : false),
+    })
+    const bridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId) {
+        authorized = false
+        bridge.reply(
+          JSON.stringify({
+            type: 'result',
+            callId: message.callId,
+            result: { count: 42, secret: 'protected' },
+          }),
+        )
+      }
+    })
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'identity-read',
+        sessionIdentity: 'identity-read',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const result = (await server.callTool(`${TAG}/count`, [], {
+      userId: 'user-1',
+      jwt: 'valid-jwt',
+    })) as {
+      code?: number
+      error?: string
+      result?: unknown
+    }
+    expect(result.code).toBe(403)
+    expect(result.error).toBe('BRIDGE_REVOKED: session or grant is no longer current')
+    expect(result.result).toBeUndefined()
+    expect(JSON.stringify(result)).not.toContain('protected')
+  })
+
+  it('returns the withheld-result code when post-forward reauthorization times out', async () => {
+    const counter = makeCounter()
+    let calls = 0
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      securityHookTimeoutMs: 5,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) =>
+        ++calls === 1 ? { identity: binding.identity } : new Promise(() => {}),
+    })
+    const bridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type?: string; callId?: string }
+      if (message.type === 'invoke' && message.callId)
+        bridge.reply(JSON.stringify({ type: 'result', callId: message.callId, result: 'done' }))
+    })
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'identity-timeout',
+        sessionIdentity: 'identity-timeout',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const result = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(result.code).toBe(403)
+    expect(result.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
   })
 
   it('rejects a per-invoke binding that changes identity or grant version', async () => {
@@ -422,7 +634,9 @@ describe('conformance — a reconnected bridge channel must independently re-ver
     expect(revoked.code).toBe(403)
     expect(revoked.error).toBe('BRIDGE_REVOKED: session or grant is no longer current')
     expect(cancelled.code).toBe(403)
-    expect(cancelled.error).toBe('BRIDGE_REVOKED: session or grant is no longer current')
+    expect(cancelled.error).toBe(
+      'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+    )
     expect(frames.filter((frame) => frame.includes('"invoke"'))).toHaveLength(1)
   })
 
@@ -559,7 +773,7 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       code?: number
     }
     expect(res.code).toBe(503)
-    expect(res.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_SESSION_INVALID: session verification failed')
+    expect(res.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed')
     expect(sent.filter((s) => s.includes('"invoke"'))).toHaveLength(0)
   })
 
@@ -707,9 +921,7 @@ describe('conformance — a reconnected bridge channel must independently re-ver
       error?: string
     }
     expect(res.code).toBe(503)
-    expect(res.error).toBe(
-      'BRIDGE_UNVERIFIED: BRIDGE_NONCE_INVALID: missing, unknown, expired, or replayed nonce',
-    )
+    expect(res.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed')
     expect(sent.filter((s) => s.includes('"invoke"'))).toHaveLength(0)
   })
 })

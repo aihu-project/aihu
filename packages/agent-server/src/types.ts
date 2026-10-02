@@ -100,6 +100,8 @@ export interface AgentServerOptions {
     /** Actor resolved by the service gate for this invocation, if verified. */
     readonly actor?: Actor
   }) => BridgeVerifiedSession | false | Promise<BridgeVerifiedSession | false>
+  /** Optional host-side diagnostics for rejected bridge frames. Disabled when omitted. */
+  onBridgeDiagnostic?: (diagnostic: { readonly event: string; readonly detail?: unknown }) => void
 }
 
 export interface BridgeVerifiedSession {
@@ -260,6 +262,9 @@ export interface AgentServer {
 
   /** Issue a single-use nonce for a forthcoming bridge handshake. */
   issueBridgeNonce(ttlMs?: number): BridgeNonce
+
+  /** Revoke a verified bridge identity (or its exact grant) and cancel its pending calls. */
+  revokeBridgeSession(identity: string, grantVersion?: string): void
 
   /**
    * Build the MCP `Server` (stdio-ready) exposing each component action as an

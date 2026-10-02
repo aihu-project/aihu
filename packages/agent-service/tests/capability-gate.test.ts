@@ -12,6 +12,7 @@ import {
   authorizeCapability,
   type CapabilityGrantResolver,
   projectCapabilityResult,
+  withSecurityTimeout,
 } from '../src/capability-gate.ts'
 import type {
   AnonymousPrincipal,
@@ -220,5 +221,48 @@ describe('projectCapabilityResult', () => {
     expect(() => projectCapabilityResult(new Map([['secret', 'value']]), ['id'])).toThrow(
       'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
     )
+  })
+
+  it('fails closed when a selected leaf exposes a callable toJSON', () => {
+    const withToJson = { id: 1, toJSON: () => ({ secret: 'unprojected-marker' }) }
+    expect(() => {
+      const projected = projectCapabilityResult({ record: withToJson }, ['record.toJSON'])
+      JSON.stringify(projected)
+    }).toThrow('CAPABILITY_UNAVAILABLE: result shape cannot be projected')
+  })
+
+  it('fails closed for a selected Date leaf', () => {
+    expect(() => projectCapabilityResult({ created: new Date() }, ['created'])).toThrow(
+      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+    )
+  })
+})
+
+describe('withSecurityTimeout', () => {
+  it('keeps the timeout denial when the hook resolves after its deadline', async () => {
+    let resolve!: (value: string) => void
+    const hook = new Promise<string>((done) => {
+      resolve = done
+    })
+    const result = withSecurityTimeout(hook, 2)
+    const outcome = result.then(
+      () => new Error('unexpected hook success'),
+      (error: unknown) => error,
+    )
+    await new Promise((done) => setTimeout(done, 5))
+    resolve('late allow')
+    expect(await outcome).toMatchObject({ message: 'security hook timed out' })
+  })
+
+  it('observes a rejection that arrives after timeout without an unhandled rejection', async () => {
+    let reject!: (reason: Error) => void
+    const hook = new Promise<never>((_resolve, done) => {
+      reject = done
+    })
+    const result = withSecurityTimeout(hook, 2)
+    await expect(result).rejects.toThrow('security hook timed out')
+    reject(new Error('late hook failure'))
+    await new Promise((done) => setTimeout(done, 0))
+    await expect(result).rejects.toThrow('security hook timed out')
   })
 })

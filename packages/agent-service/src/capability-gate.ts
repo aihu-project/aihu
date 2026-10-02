@@ -227,19 +227,42 @@ export function projectCapabilityResult(
   const paths = projection.map((path) => path.split('.').filter(Boolean))
   const project = (current: unknown, relevant: string[][]): unknown => {
     if (current === null || typeof current !== 'object') {
-      if (typeof current === 'function') throw new TypeError('unsupported projection value')
-      return current
+      if (
+        typeof current === 'string' ||
+        typeof current === 'boolean' ||
+        (typeof current === 'number' && Number.isFinite(current))
+      )
+        return current
+      if (current === null) return null
+      throw new TypeError('unsupported projection value')
     }
-    if (Array.isArray(current)) return current.map((item) => project(item, relevant))
+    for (
+      let cursor: object | null = current;
+      cursor !== null;
+      cursor = Object.getPrototypeOf(cursor)
+    ) {
+      const descriptor = Object.getOwnPropertyDescriptor(cursor, 'toJSON')
+      if (
+        descriptor &&
+        (typeof descriptor.value === 'function' || descriptor.get || descriptor.set)
+      )
+        throw new TypeError('unsupported projection value')
+    }
+    if (Array.isArray(current)) return Array.from(current, (item) => project(item, relevant))
     const proto = Object.getPrototypeOf(current)
     if (proto !== Object.prototype && proto !== null)
       throw new TypeError('unsupported projection value')
     const out = Object.create(null) as Record<string, unknown>
+    const includeAll = relevant.some((path) => path.length === 0)
     for (const [key, child] of Object.entries(current as Record<string, unknown>)) {
+      if (includeAll) {
+        out[key] = project(child, [[]])
+        continue
+      }
       const matching = relevant.filter((path) => path[0] === key)
       if (matching.length === 0) continue
       const tails = matching.map((path) => path.slice(1))
-      if (tails.some((path) => path.length === 0)) out[key] = child
+      if (tails.some((path) => path.length === 0)) out[key] = project(child, [[]])
       else out[key] = project(child, tails)
     }
     return out

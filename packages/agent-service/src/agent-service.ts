@@ -557,6 +557,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
         }
         return {
           authorized: true,
+          readOnly: true,
           ...(gated.actor ? { actor: gated.actor } : {}),
           ...(verdict.projection !== undefined ? { projection: verdict.projection } : {}),
         }
