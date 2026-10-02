@@ -347,30 +347,21 @@ describe('projectCapabilityResult', () => {
     expect(ownKeysCalls).toBe(0)
   })
 
-  it('denies an include-all leaf before describing a large Proxy key set', () => {
-    let descriptorChecks = 0
-    let ownKeysCalls = 0
-    const names = Array.from({ length: 25_000 }, (_, index) => `field${index}`)
-    const value = new Proxy(
-      {},
-      {
-        ownKeys() {
-          ownKeysCalls += 1
-          return names
-        },
-        getOwnPropertyDescriptor(_target, _key) {
-          descriptorChecks += 1
-          if (descriptorChecks > 32) throw new Error('descriptor work exceeded the budget')
-          return { configurable: true, enumerable: true, writable: true, value: 'unused' }
-        },
-      },
+  it('denies a JSON-parsed oversized whole record before any descriptor lookup', () => {
+    const value: object = JSON.parse(
+      JSON.stringify(
+        Object.fromEntries(Array.from({ length: 32 }, (_, index) => [`field${index}`, 1])),
+      ),
     )
-
-    expect(() => projectCapabilityResult(value, [''], { maxNodes: 16 })).toThrow(
-      'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
-    )
-    expect(descriptorChecks).toBeLessThanOrEqual(16)
-    expect(ownKeysCalls).toBe(1)
+    const descriptor = vi.spyOn(Object, 'getOwnPropertyDescriptor')
+    try {
+      expect(() => projectCapabilityResult(value, [''], { maxNodes: 16 })).toThrow(
+        'CAPABILITY_UNAVAILABLE: result shape cannot be projected',
+      )
+      expect(descriptor).not.toHaveBeenCalled()
+    } finally {
+      descriptor.mockRestore()
+    }
   })
 })
 

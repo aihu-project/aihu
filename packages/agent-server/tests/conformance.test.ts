@@ -676,6 +676,53 @@ describe('conformance — a reconnected bridge channel must independently re-ver
     expect(sent.some((frame) => frame.includes('"invoke"'))).toBe(true)
   })
 
+  it.each([
+    { maxPendingBridgeCalls: 1, maxPendingBridgeCallsTotal: 2 },
+    { maxPendingBridgeCalls: 2, maxPendingBridgeCallsTotal: 1 },
+  ])('rejects excess pending bridge calls before a timer or invoke frame: %o', async (limits) => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      ...limits,
+      bridgeCallTimeoutMs: 12_345,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    const sent: string[] = []
+    const bridge = makeFakeBridge((frame) => sent.push(frame))
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const first = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })
+    await vi.waitFor(() =>
+      expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(1),
+    )
+    const timer = vi.spyOn(globalThis, 'setTimeout')
+    try {
+      const denied = (await server.callTool(`${TAG}/increment`, [2], { userId: 'u1' })) as {
+        code?: number
+        error?: string
+      }
+      expect(denied).toEqual({ code: 503, error: 'BRIDGE_OVERLOADED: pending call limit reached' })
+      expect(sent.filter((frame) => frame.includes('"invoke"'))).toHaveLength(1)
+      expect(timer.mock.calls.filter(([, delay]) => delay === 12_345)).toHaveLength(0)
+    } finally {
+      timer.mockRestore()
+      bridge.close()
+      await first
+    }
+  })
+
   it('withholds action outcomes after a bridge error frame', async () => {
     const counter = makeCounter()
     const server = spawn({

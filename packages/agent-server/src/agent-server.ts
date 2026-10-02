@@ -127,6 +127,16 @@ function ensureServerDom(): void {
 export function createAgentServer(options: AgentServerOptions): AgentServer {
   const { target } = options
   const handshakeTimeoutMs = options.bridgeHandshakeTimeoutMs ?? DEFAULT_BRIDGE_HANDSHAKE_TIMEOUT_MS
+  const maxPendingBridgeCalls = options.maxPendingBridgeCalls ?? 64
+  const maxPendingBridgeCallsTotal = options.maxPendingBridgeCallsTotal ?? 1024
+  if (
+    !Number.isSafeInteger(maxPendingBridgeCalls) ||
+    maxPendingBridgeCalls < 1 ||
+    !Number.isSafeInteger(maxPendingBridgeCallsTotal) ||
+    maxPendingBridgeCallsTotal < 1
+  ) {
+    throw new RangeError('bridge pending-call limits must be positive safe integers')
+  }
 
   // ── Step 1: mount server-side so the LiveBinding registers ─────────────────
   let scope: MountScope
@@ -613,6 +623,11 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     if (bridge !== channel || attachmentGeneration !== generation || !channel.connected) {
       return Promise.reject(new Error('BRIDGE_DETACHED: bridge disconnected before invocation'))
     }
+    // One attachment is active at a time. Replacement clears pending, so this
+    // server-owned map bounds both the current attachment and the server total.
+    if (pending.size >= maxPendingBridgeCalls || pending.size >= maxPendingBridgeCallsTotal) {
+      return Promise.reject(new Error('BRIDGE_OVERLOADED: pending call limit reached'))
+    }
     const callId = crypto.randomUUID()
     const frame: BridgeInvokeMessage = { type: 'invoke', callId, opaqueActionId, args }
     return new Promise<unknown>((resolve, reject) => {
@@ -917,6 +932,9 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         }
         if (err instanceof Error && err.message.startsWith('BRIDGE_TIMEOUT:')) {
           return { error: 'BRIDGE_TIMEOUT: bridge call timed out', code: 503 }
+        }
+        if (err instanceof Error && err.message.startsWith('BRIDGE_OVERLOADED:')) {
+          return { error: 'BRIDGE_OVERLOADED: pending call limit reached', code: 503 }
         }
         if (err instanceof Error && err.message.startsWith('BRIDGE_DETACHED:')) {
           return { error: 'BRIDGE_DETACHED: bridge disconnected before invocation', code: 503 }

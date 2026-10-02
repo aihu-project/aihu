@@ -93,6 +93,10 @@ export interface AgentServerOptions {
   bridgeHandshakeTimeoutMs?: number
   /** Maximum duration for a bridge invocation reply. Defaults to 5000ms. */
   bridgeCallTimeoutMs?: number
+  /** Maximum in-flight bridge calls for one attachment. Defaults to 64. */
+  maxPendingBridgeCalls?: number
+  /** Maximum in-flight bridge calls across the server. Defaults to 1024. */
+  maxPendingBridgeCallsTotal?: number
   /** Bounds projected bridge read results. Defaults to depth 32 and 10,000 total nodes. */
   projectionLimits?: CapabilityProjectionLimits
   /** Revocation memory lifetime. Defaults to 24 hours; host session storage remains authoritative. */

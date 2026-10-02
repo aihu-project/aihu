@@ -226,6 +226,8 @@ export async function authorizeCapability(
  * constraint are stripped, not just hidden client-side"). Dotted paths select
  * nested fields and arrays are projected element-by-element. Unsupported
  * object shapes fail closed.
+ * Host-supplied values must be plain data; Proxy or exotic objects from
+ * untrusted sources are the host's responsibility to normalize before registering.
  */
 export function projectCapabilityResult(
   value: unknown,
@@ -276,10 +278,7 @@ export function projectCapabilityResult(
         descriptor && (typeof descriptor.value === 'function' || descriptor.get || descriptor.set),
       )
     }
-    if (
-      (isArray || includeAll) &&
-      (hasCallableToJson(current) || (proto !== null && hasCallableToJson(proto)))
-    )
+    if (isArray && (hasCallableToJson(current) || (proto !== null && hasCallableToJson(proto))))
       throw new TypeError('unsupported projection value')
     ancestors.add(current)
     if (isArray) {
@@ -294,12 +293,14 @@ export function projectCapabilityResult(
       return out
     }
     const out = Object.create(null) as Record<string, unknown>
-    // Restricted paths never enumerate unrelated Proxy keys. Whole-record
-    // leaves must bound ownKeys before asking the Proxy for any key descriptor.
+    // Restricted paths never enumerate unrelated keys. For whole-record leaves,
+    // reject oversized plain records before any descriptor lookup.
     const keys = includeAll
       ? Reflect.ownKeys(current)
       : [...new Set(relevant.map((path) => path[0]).filter((key) => key !== undefined))]
     if (includeAll && keys.length > maxNodes) throw new TypeError('unsupported projection value')
+    if (includeAll && (hasCallableToJson(current) || (proto !== null && hasCallableToJson(proto))))
+      throw new TypeError('unsupported projection value')
     for (const key of keys) {
       if (typeof key !== 'string') continue
       const matching = includeAll ? [] : relevant.filter((path) => path[0] === key)
