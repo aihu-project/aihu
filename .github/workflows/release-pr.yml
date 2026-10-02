@@ -140,13 +140,18 @@ jobs:
           git checkout -B changeset-release/main
           git add -A
           git diff --cached --quiet || git commit -m 'chore(release): version packages'
+          bun scripts/release-pr-body.ts origin/main > "$RUNNER_TEMP/version-pr-body.md"
           git push --force-with-lease origin HEAD:changeset-release/main
-          if gh pr view changeset-release/main --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh pr edit changeset-release/main --repo "$GITHUB_REPOSITORY" \
+          # OPEN PRs only: `gh pr view <branch>` also finds the merged Version
+          # PR of the previous release, and editing that one would leave no
+          # open Version PR at all.
+          open_pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --head changeset-release/main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$open_pr" ]; then
+            gh pr edit "$open_pr" --repo "$GITHUB_REPOSITORY" \
               --title 'chore(release): version packages' \
-              --body 'Automated Changesets Version PR. Platform binaries publish before their exact pins are committed.'
+              --body-file "$RUNNER_TEMP/version-pr-body.md"
           else
             gh pr create --repo "$GITHUB_REPOSITORY" --base main --head changeset-release/main \
               --title 'chore(release): version packages' \
-              --body 'Automated Changesets Version PR. Platform binaries publish before their exact pins are committed.'
+              --body-file "$RUNNER_TEMP/version-pr-body.md"
           fi
