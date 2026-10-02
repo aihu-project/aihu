@@ -1,111 +1,147 @@
 name: Changesets release PR
 
-# Opens / updates a "Release PR" whenever a `.changeset/*.md` lands on main.
-# Merging that Release PR commits the version bumps + per-package CHANGELOGs.
-# It does NOT tag or publish — this workflow has no publish step. To ship, a
-# maintainer then pushes a `v*` tag manually (see docs/RELEASING.md), which
-# triggers `release.yml` to build binaries + WASM and publish all tier
-# A/B/C/D `@aihu/*` packages to npm.
-#
-# This is the standard Changesets release flow; do not publish from this
-# workflow. Tag-driven publish lives in `release.yml`.
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
-  release-pr:
-    name: Open release PR
+  prepare-version:
+    name: Compute release versions
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    outputs:
+      version_changed: ${{ steps.prepare.outputs.version_changed }}
+      css_engine_platform_moved: ${{ steps.prepare.outputs.css_engine_platform_moved }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.8'
+      - run: bun install --frozen-lockfile
+      - name: Version, stamp css-engine binaries, and export the tree patch
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run release:version
+
+          moved=false
+          latest_tag=$(git describe --tags --match 'v*' --abbrev=0)
+          if git diff --name-only "$latest_tag"...HEAD | rg -q '^packages/css-engine/crates/aihu-css-core/(src/.*\.rs|Cargo\.toml|build\.rs|recipes/.*\.css)$'; then
+            published_versions=$(for package in \
+              @aihu/css-engine-darwin-arm64 \
+              @aihu/css-engine-darwin-x64 \
+              @aihu/css-engine-linux-x64-gnu \
+              @aihu/css-engine-win32-x64-msvc; do npm view "$package" version; done)
+            published_version=$(printf '%s\n' "$published_versions" | sort -V | tail -n 1)
+            stamp_output=$(bun scripts/stamp-platform-versions.ts --host css-engine --bump-css-engine --published-version "$published_version")
+            printf '%s\n' "$stamp_output"
+            if printf '%s\n' "$stamp_output" | rg -q 'CSS_ENGINE_PLATFORM_VERSION_MOVED=true'; then
+              moved=true
+            fi
+          fi
+
+          git add -N .
+          git diff --binary HEAD > "$RUNNER_TEMP/version-pr.patch"
+          if [ -s "$RUNNER_TEMP/version-pr.patch" ]; then
+            echo 'version_changed=true' >> "$GITHUB_OUTPUT"
+            echo 'css_engine_platform_moved='"$moved" >> "$GITHUB_OUTPUT"
+          else
+            echo 'version_changed=false' >> "$GITHUB_OUTPUT"
+            echo 'css_engine_platform_moved=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Upload version PR patch for same-run publish
+        if: steps.prepare.outputs.version_changed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: version-pr-patch
+          path: ${{ runner.temp }}/version-pr.patch
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-css-engine-platforms:
+    name: Publish css-engine before its pins
+    needs: prepare-version
+    if: needs.prepare-version.outputs.version_changed == 'true' && needs.prepare-version.outputs.css_engine_platform_moved == 'true'
+    uses: ./.github/workflows/release-platforms.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      is_release: true
+      canary: false
+      dry_run: false
+      scope: css-engine
+      stamped_version_artifact: true
+    secrets: inherit
+
+  update-release-pr:
+    name: Resolve pins and update Version PR
+    needs: [prepare-version, publish-css-engine-platforms]
+    # GitHub marks a skipped reusable workflow job as successful for `needs`;
+    # the publish job is skipped on ordinary Version PRs with no native change.
+    if: always() && needs.prepare-version.result == 'success' && needs.prepare-version.outputs.version_changed == 'true' && (needs.publish-css-engine-platforms.result == 'success' || needs.publish-css-engine-platforms.result == 'skipped')
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
-      # Mint a GitHub App installation token. This is NOT a tidy-up.
-      #
-      # A PR opened with the default `secrets.GITHUB_TOKEN` does NOT trigger
-      # workflows — GitHub suppresses events raised by GITHUB_TOKEN to prevent
-      # recursion. So every Release PR this workflow has ever opened reported
-      # ZERO check-runs, `ci-ok` never appeared, and the PR was permanently
-      # unmergeable under branch protection. The observed workaround was
-      # `enforce_admins=false`, which weakened protection for EVERY PR and every
-      # admin push, repo-wide, to route around a defect on one branch — leaving
-      # the one PR that leads to an npm publish as the only PR CI never built.
-      # See FEL-429.
-      #
-      # An App token is a real actor, so the PR it opens DOES trigger workflows.
-      # Unlike a PAT it does not expire and is not tied to one person's account;
-      # a silently-expired PAT would reintroduce exactly this bug, invisibly.
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+      - name: Mint GitHub App installation token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         id: app-token
         with:
           app-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-
-      # BOTH the checkout token and the changesets `env` below must carry the
-      # App token. The `env` covers the PR-creation API call; this one
-      # authenticates the git remote so the branch PUSH is attributed to the App
-      # too. Setting only one is the common half-fix: the PR appears, and still
-      # gets no CI.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
-
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          # Pinned, not `latest`: this job WRITES generated content (the
-          # `release:version` script runs sync-readme.ts), and plan-a.yml's
-          # readme-sync + gate-wiring jobs VERIFY it under a pinned version.
-          # A bun-version-dependent difference in that output (glob ordering,
-          # JSON serialization) would make every Release PR a phantom red
-          # against a writer it can never match. Keep in sync with plan-a.yml.
           bun-version: '1.3.8'
-
-      - run: bun install --frozen-lockfile
-
-      - name: Open / update Release PR
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
+      - name: Apply prepared Version PR changes
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          # Compound version step, run via the `release:version` package script:
-          #   1. changeset version  — bump package.json + write CHANGELOGs
-          #   2. bun install        — refresh bun.lock for the bumped versions
-          #                            (avoids CI's --frozen-lockfile mismatch on
-          #                             the release tag's downstream workflow)
-          #   3. sync-readme.ts     — regenerate autogen sections of root README,
-          #                            per-package READMEs, and the package
-          #                            inventory cache. Without this, every
-          #                            Release-PR ships drift that downstream
-          #                            CI's sync-readme --check would flag.
-          #   4. gen-api.ts         — regenerate the API datasheets, which embed
-          #                            each package's `version` and so are
-          #                            invalidated by a bump for exactly the
-          #                            same reason the READMEs are. Added after
-          #                            a Release PR went red on `gen:api
-          #                            --check` with five stale sheets; step 3
-          #                            had covered the READMEs since forever,
-          #                            and the datasheets were simply never
-          #                            added alongside them.
-          # MUST be a single command: changesets/action runs the `version` input
-          # as one command (it does NOT shell-chain a multi-line block — a `|`
-          # block collapses to space-joined args and `changeset version` then
-          # rejects them as "too many arguments"). So the chaining lives inside
-          # the `release:version` npm script (`&&`-separated), invoked here.
-          # changesets/action commits whatever is in the working tree after it.
-          version: bun run release:version
-          # No `publish` script here — actual publishing happens on tag push
-          # via release.yml, gated on the binary builds completing first.
-          commit: 'chore(release): version packages'
-          title: 'chore(release): version packages'
+          name: version-pr-patch
+          path: .
+      - name: Publish-before-pins assertions
+        run: |
+          set -euo pipefail
+          git apply version-pr.patch
+          bun install
+          bun scripts/check-lockfile-platform-pins.ts
+          for attempt in $(seq 1 12); do
+            if bun scripts/check-pins-published.ts --strict; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 12 ]; then sleep 10; fi
+          done
+          exit 1
+      - name: Commit and update the Version PR
         env:
-          # App token, NOT secrets.GITHUB_TOKEN — see the comment on the
-          # create-github-app-token step. This is the line that decides whether
-          # the Release PR gets CI at all.
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          # Prevent husky pre-push hook from running on the CI runner — moon
-          # and other dev tools are not available in this minimal workflow.
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           HUSKY: '0'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -B changeset-release/main
+          git add -A
+          git diff --cached --quiet || git commit -m 'chore(release): version packages'
+          git push --force-with-lease origin HEAD:changeset-release/main
+          if gh pr view changeset-release/main --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh pr edit changeset-release/main --repo "$GITHUB_REPOSITORY" \
+              --title 'chore(release): version packages' \
+              --body 'Automated Changesets Version PR. Platform binaries publish before their exact pins are committed.'
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head changeset-release/main \
+              --title 'chore(release): version packages' \
+              --body 'Automated Changesets Version PR. Platform binaries publish before their exact pins are committed.'
+          fi

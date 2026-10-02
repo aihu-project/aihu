@@ -1,61 +1,19 @@
 #!/usr/bin/env bun
-/**
- * CI guard: a change to aihu-css-core's Rust source MUST bump
- * @aihu/css-engine's platform binary packages, or the fix never ships.
- *
- * One family — packages/css-engine/npm/<platform> → @aihu/css-engine-<platform>
- * (the aihu-css-compile CLI binary). Unlike the compiler package, which is
- * released in its own repository, this package ships
- * no napi addon, so there is only one family to keep in lockstep; the general
- * rule (shared source, lockstep, host-pin repoint) lives in
- * scripts/lib/native-binary-bump.ts.
- *
- * Added after the binary drifted silently: aba7e70d (#714) added a `tag`
- * field to aihu-css-core's SfcAst wire format, but the published platform
- * binaries stayed at 0.1.3 (last bumped in #293, long before #714) — every
- * compileSfc() call started throwing `missing field 'tag'`, caught non-fatally
- * and silently degraded to a no-op fallback (utility-class CSS compilation
- * stopped working, with only a console warning as a symptom). This is the
- * exact FEL-414 failure shape @aihu/compiler's guard
- * (the former root compiler guard) already prevented — this file is the same
- * protection for aihu-css-core.
- *
- * Usage:
- *   bun scripts/check-css-engine-binary-bump.ts            # diff vs origin/<base>
- *   BASE_REF=main bun scripts/check-css-engine-binary-bump.ts
- *   CHANGED_FILES='a,b' bun scripts/check-css-engine-binary-bump.ts
- *
- * Exit 0 = ok (or nothing to check), 1 = a required platform bump is missing.
+/** Feature PR policy for css-engine native binaries.
+ * Native source changes need a changeset for @aihu/css-engine. Platform
+ * manifests and pins are generated in the Version PR after the packages have
+ * been published, so editing them in a feature PR is an error.
  */
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createBumpChecker } from './lib/native-binary-bump.ts'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-
 export const HOST_MANIFEST = 'packages/css-engine/package.json'
+const PLATFORM_DIR = 'packages/css-engine/npm/'
+const CHANGESET_DIR = '.changeset/'
 
-export type Family = 'cli'
-
-export const FAMILIES: Record<Family, { dir: string; label: string }> = {
-  cli: {
-    dir: 'packages/css-engine/npm',
-    label: '@aihu/css-engine-<platform> (aihu-css-compile CLI binary)',
-  },
-}
-
-/**
- * True when the file feeds the compiled aihu-css-core binary — Rust source
- * under `src/`, the crate manifest, `build.rs`, OR a `recipes/*.css` file.
- * The last two were a real gap (tailwind-animations port doc, Track A
- * Slice 13): `build.rs` `include_str!`s every `recipes/*.css` file into
- * `RECIPE_SOURCES` (see that file's own doc comment) — a recipe-family CSS
- * edit changes the compiled binary's output exactly like a `.rs` edit does,
- * but neither file matched the old `src/**.rs`-only predicate, so this guard
- * could pass while the binary silently went stale — the exact FEL-414
- * failure shape this file exists to prevent, just for CSS instead of Rust.
- */
 export function isCssCoreRustSource(file: string): boolean {
   const crateRoot = 'packages/css-engine/crates/aihu-css-core/'
   return (
@@ -66,44 +24,110 @@ export function isCssCoreRustSource(file: string): boolean {
   )
 }
 
-const checker = createBumpChecker<Family>(
-  {
-    hostManifest: HOST_MANIFEST,
-    families: FAMILIES,
-    isSharedSource: isCssCoreRustSource,
-  },
-  ROOT,
-)
+export function isPlatformManifest(file: string): boolean {
+  return (
+    file.startsWith(PLATFORM_DIR) && /^packages\/css-engine\/npm\/[^/]+\/package\.json$/.test(file)
+  )
+}
 
-export const platformManifestFamily = checker.platformManifestFamily
-export const isPlatformManifest = checker.isPlatformManifest
-export const discoverPlatforms = checker.discoverPlatforms
-export const checkBump = checker.checkBump
+export function isVersionPr(branch: string | undefined): boolean {
+  return branch === 'changeset-release/main'
+}
 
-function changedFilesVsBase(): string[] {
+export function checkBump(
+  changedFiles: string[],
+  changesetContents: Record<string, string> = {},
+  versionPr = false,
+  hostPinsChanged = false,
+): { ok: boolean; message: string } {
+  if (!versionPr) {
+    const handBumps = changedFiles.filter(isPlatformManifest)
+    if (handBumps.length || hostPinsChanged) {
+      return {
+        ok: false,
+        message: `Platform versions and pins are generated in the Version PR; remove these feature-PR edits:\n${[
+          ...handBumps.map((f) => `  - ${f}`),
+          ...(hostPinsChanged ? [`  - ${HOST_MANIFEST} optionalDependencies`] : []),
+        ].join('\n')}`,
+      }
+    }
+  }
+
+  const native = changedFiles.filter(isCssCoreRustSource)
+  if (!native.length) return { ok: true, message: 'ok' }
+
+  const hasChangeset = changedFiles.some((file) => {
+    if (!file.startsWith(CHANGESET_DIR) || !file.endsWith('.md')) return false
+    const body = changesetContents[file] ?? ''
+    return /^['"]?@aihu\/css-engine['"]?:\s*patch\s*$/m.test(body)
+  })
+  if (hasChangeset) return { ok: true, message: 'ok' }
+  return {
+    ok: false,
+    message: `Native css-engine source changed (${native.join(', ')}), but no changeset for @aihu/css-engine was found. Add a patch changeset.`,
+  }
+}
+
+function changedFilesVsBase(): { files: string[]; mergeBase: string } | null {
   const base = process.env.BASE_REF || process.env.GITHUB_BASE_REF || 'main'
-  const ref = `origin/${base}`
   let mergeBase: string
   try {
-    mergeBase = execFileSync('git', ['merge-base', ref, 'HEAD'], { encoding: 'utf8' }).trim()
+    mergeBase = execFileSync('git', ['merge-base', `origin/${base}`, 'HEAD'], {
+      encoding: 'utf8',
+    }).trim()
   } catch {
-    return []
+    return null
   }
-  return execFileSync('git', ['diff', '--name-only', mergeBase, 'HEAD'], { encoding: 'utf8' })
+  const files = execFileSync('git', ['diff', '--name-only', mergeBase, 'HEAD'], {
+    encoding: 'utf8',
+  })
     .split('\n')
-    .map((l) => l.trim())
+    .map((file) => file.trim())
     .filter(Boolean)
+  return { files, mergeBase }
+}
+
+function hostPinsDifferFromBase(base: string): boolean {
+  try {
+    const baseManifest = JSON.parse(
+      execFileSync('git', ['show', `${base}:${HOST_MANIFEST}`], { encoding: 'utf8' }),
+    ) as { optionalDependencies?: Record<string, string> }
+    const headManifest = JSON.parse(readFileSync(join(ROOT, HOST_MANIFEST), 'utf8')) as {
+      optionalDependencies?: Record<string, string>
+    }
+    return (
+      JSON.stringify(baseManifest.optionalDependencies ?? {}) !==
+      JSON.stringify(headManifest.optionalDependencies ?? {})
+    )
+  } catch {
+    return false
+  }
 }
 
 if (import.meta.main) {
   const override = process.env.CHANGED_FILES
+  const diff = override ? null : changedFilesVsBase()
   const files = override
     ? override
         .split(/[\n,]/)
-        .map((l) => l.trim())
+        .map((file) => file.trim())
         .filter(Boolean)
-    : changedFilesVsBase()
-  const result = checkBump(files)
+    : (diff?.files ?? [])
+  const changesets: Record<string, string> = {}
+  if (process.env.CSS_ENGINE_CHANGESET_CONTENTS) {
+    Object.assign(changesets, JSON.parse(process.env.CSS_ENGINE_CHANGESET_CONTENTS))
+  }
+  for (const file of files.filter((f) => f.startsWith(CHANGESET_DIR) && f.endsWith('.md'))) {
+    try {
+      changesets[file] ??= readFileSync(join(ROOT, file), 'utf8')
+    } catch {
+      // Deleted changesets and synthetic paths are not usable changesets.
+    }
+  }
+  const branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
+  const hostPinsChanged =
+    files.includes(HOST_MANIFEST) && diff ? hostPinsDifferFromBase(diff.mergeBase) : false
+  const result = checkBump(files, changesets, isVersionPr(branch), hostPinsChanged)
   if (!result.ok) {
     console.error(`FAIL: ${result.message}`)
     process.exit(1)
