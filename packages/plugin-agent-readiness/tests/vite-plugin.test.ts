@@ -36,6 +36,25 @@ describe('@aihu-plugin/agent-readiness createAgentReadinessRoutes', () => {
     expect(body).toContain('## Docs')
   })
 
+  it('rejects an Agentmap URL containing an injected robots directive', () => {
+    expect(() =>
+      createAgentReadinessRoutes({
+        name: 'Test App',
+        agentMap: 'https://example.com/catalog.json\nAllow: /',
+      }),
+    ).toThrow(/agentMap must not contain CR or LF/)
+  })
+
+  it.each([
+    '/catalog.json',
+    'ftp://example.com/catalog.json',
+    'https://',
+  ])('rejects non-absolute HTTP(S) Agentmap URL %s', (agentMap) => {
+    expect(() => createAgentReadinessRoutes({ name: 'Test App', agentMap })).toThrow(
+      /agentMap must be an absolute HTTP\(S\) URL/,
+    )
+  })
+
   it('llmsFullTxt handler returns 200 with full content', async () => {
     const routes = createAgentReadinessRoutes(config)
     const req = new Request('https://test.example.com/llms-full.txt')

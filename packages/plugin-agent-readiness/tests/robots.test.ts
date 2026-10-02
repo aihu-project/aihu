@@ -31,6 +31,22 @@ describe('@aihu-plugin/agent-readiness robots', () => {
     })
     expect(out).toMatch(/Sitemap: https:\/\/aihu\.dev\/sitemap\.xml$/)
   })
+
+  it('appends Agentmap line (ARD) when agentMap is provided, after Sitemap', () => {
+    const out = generateRobotsTxt({
+      aiAgents: 'allow-all',
+      sitemap: 'https://aihu.dev/sitemap.xml',
+      agentMap: 'https://aihu.dev/.well-known/ai-catalog.json',
+    })
+    expect(out).toMatch(
+      /Sitemap: https:\/\/aihu\.dev\/sitemap\.xml\n\nAgentmap: https:\/\/aihu\.dev\/\.well-known\/ai-catalog\.json$/,
+    )
+  })
+
+  it('omits Agentmap line when agentMap is not provided', () => {
+    const out = generateRobotsTxt({ aiAgents: 'allow-all' })
+    expect(out).not.toContain('Agentmap:')
+  })
 })
 
 describe('#430 — tiered default (allow-agents)', () => {
