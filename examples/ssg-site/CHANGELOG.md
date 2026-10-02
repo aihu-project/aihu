@@ -1,5 +1,12 @@
 # @aihu/example-ssg-site
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [[`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae), [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9)]:
+  - @aihu/app@10.2.2
+
 ## 0.0.13
 
 ### Patch Changes

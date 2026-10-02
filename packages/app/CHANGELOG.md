@@ -1,5 +1,13 @@
 # @aihu/app
 
+## 10.2.2
+
+### Patch Changes
+
+- [#914](https://github.com/aihu-project/aihu/pull/914) [`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae) Thanks [@srmcguirt](https://github.com/srmcguirt)! - A popstate that changes only the URL hash (a native same-page `#fragment` link, or back/forward between fragments of one page) no longer re-renders the route. The re-render replaced the outlet's DOM and dropped the focus the browser or the page had just moved, which broke skip links and in-page focus targets.
+
+- [#912](https://github.com/aihu-project/aihu/pull/912) [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Make route context available to app-shell components outside the outlet, with a configurable context root for applications that share a document.
+
 ## 10.2.1
 
 ### Patch Changes

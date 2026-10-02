@@ -1,121 +1,74 @@
-diff --git a/.changeset/app-native-link-clicks.md b/.changeset/app-native-link-clicks.md
+diff --git a/.changeset/app-hash-popstate.md b/.changeset/app-hash-popstate.md
 deleted file mode 100644
-index 1e71a263..00000000
---- a/.changeset/app-native-link-clicks.md
+index 252c4eed..00000000
+--- a/.changeset/app-hash-popstate.md
 +++ /dev/null
 @@ -1,5 +0,0 @@
 ----
 -"@aihu/app": patch
 ----
 -
--The app's delegated link handler now defers to `@aihu/router`'s `shouldInterceptLinkClick`, so Ctrl/Cmd/Shift/Alt and middle clicks, `target`/`download` links, other origins and same-page fragments stay native instead of navigating the current tab. A second `createApp()` on the same document (dev HMR re-running the entry) now replaces the previous app's document listeners instead of stacking them.
-diff --git a/.changeset/css-theme-comments.md b/.changeset/css-theme-comments.md
+-A popstate that changes only the URL hash (a native same-page `#fragment` link, or back/forward between fragments of one page) no longer re-renders the route. The re-render replaced the outlet's DOM and dropped the focus the browser or the page had just moved, which broke skip links and in-page focus targets.
+diff --git a/.changeset/tidy-routes-context.md b/.changeset/tidy-routes-context.md
 deleted file mode 100644
-index ba43207f..00000000
---- a/.changeset/css-theme-comments.md
+index 1bc3553d..00000000
+--- a/.changeset/tidy-routes-context.md
 +++ /dev/null
 @@ -1,5 +0,0 @@
 ----
--'@aihu/css-engine': patch
+-'@aihu/app': patch
 ----
 -
--Comments inside `@theme { }` no longer drop the whole project theme. A bare `:root { --token: value }` block used in place of `@theme` is now a compile error that points to `@theme`. Compound selectors such as `:root.dark` remain ordinary CSS.
-diff --git a/.changeset/fuzzy-bats-wait.md b/.changeset/fuzzy-bats-wait.md
-deleted file mode 100644
-index 4834cee3..00000000
---- a/.changeset/fuzzy-bats-wait.md
-+++ /dev/null
-@@ -1,5 +0,0 @@
-----
--"@aihu/app": patch
-----
--
--Fix router view transition wiring and keep the Vite hook tests narrowly typed.
-diff --git a/.changeset/router-scroll-top.md b/.changeset/router-scroll-top.md
-deleted file mode 100644
-index ffed4f01..00000000
---- a/.changeset/router-scroll-top.md
-+++ /dev/null
-@@ -1,6 +0,0 @@
-----
--"@aihu/router": patch
--"@aihu/app": patch
-----
--
--A push navigation (a clicked link, or `navigate()` without `replace`) now scrolls the new page to its `#fragment` target, or to the top when there is none, instead of leaving it at the previous page's scroll offset. Replace navigations keep the scroll position, and back/forward keep the browser's own scroll restoration.
-diff --git a/.changeset/stamp-native-source.md b/.changeset/stamp-native-source.md
-deleted file mode 100644
-index 5d16ba25..00000000
---- a/.changeset/stamp-native-source.md
-+++ /dev/null
-@@ -1,5 +0,0 @@
-----
--'@aihu/css-engine': patch
-----
--
--Record the native source identity on published css-engine platform packages so release preparation can reuse builds of unchanged native source.
+-Make route context available to app-shell components outside the outlet, with a configurable context root for applications that share a document.
 diff --git a/apps/docs/src/data/api/generated/adapter-cloudflare.ts b/apps/docs/src/data/api/generated/adapter-cloudflare.ts
-index 0d369fa6..349cb7bc 100644
+index 349cb7bc..17030fa3 100644
 --- a/apps/docs/src/data/api/generated/adapter-cloudflare.ts
 +++ b/apps/docs/src/data/api/generated/adapter-cloudflare.ts
 @@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
    name: '@aihu/adapter-cloudflare',
    slug: 'adapter-cloudflare',
    tier: 'App & routing',
--  version: '15.0.0',
-+  version: '15.0.1',
+-  version: '15.0.1',
++  version: '15.0.2',
    tagline: 'Cloudflare Workers/Pages deployment adapter for @aihu/app.',
    note: '',
  }
 diff --git a/apps/docs/src/data/api/generated/adapter-vercel.ts b/apps/docs/src/data/api/generated/adapter-vercel.ts
-index 683a5682..b2fb220b 100644
+index b2fb220b..f22778e3 100644
 --- a/apps/docs/src/data/api/generated/adapter-vercel.ts
 +++ b/apps/docs/src/data/api/generated/adapter-vercel.ts
 @@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
    name: '@aihu/adapter-vercel',
    slug: 'adapter-vercel',
    tier: 'App & routing',
--  version: '15.0.0',
-+  version: '15.0.1',
+-  version: '15.0.1',
++  version: '15.0.2',
    tagline: 'Vercel deployment adapter for @aihu/app.',
    note: '',
  }
 diff --git a/apps/docs/src/data/api/generated/app.ts b/apps/docs/src/data/api/generated/app.ts
-index 2442752c..27a168ae 100644
+index 3f7538b5..94473a68 100644
 --- a/apps/docs/src/data/api/generated/app.ts
 +++ b/apps/docs/src/data/api/generated/app.ts
 @@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
    name: '@aihu/app',
    slug: 'app',
    tier: 'App & routing',
--  version: '10.2.0',
-+  version: '10.2.1',
+-  version: '10.2.1',
++  version: '10.2.2',
    tagline: 'Top-level app integration — wires runtime, router, and adapters into a Vite app.',
    note: '',
  }
-diff --git a/apps/docs/src/data/api/generated/css-engine.ts b/apps/docs/src/data/api/generated/css-engine.ts
-index 6e0a1663..ced2b417 100644
---- a/apps/docs/src/data/api/generated/css-engine.ts
-+++ b/apps/docs/src/data/api/generated/css-engine.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/css-engine',
-   slug: 'css-engine',
-   tier: 'Runtime core',
--  version: '0.7.1',
-+  version: '0.7.2',
-   tagline: 'aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output.',
-   note: '',
- }
 diff --git a/apps/docs/src/data/api/generated/index.ts b/apps/docs/src/data/api/generated/index.ts
-index b4fcb441..b7dc0fc8 100644
+index b7dc0fc8..dd410407 100644
 --- a/apps/docs/src/data/api/generated/index.ts
 +++ b/apps/docs/src/data/api/generated/index.ts
 @@ -66,7 +66,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
      name: '@aihu/adapter-cloudflare',
      slug: 'adapter-cloudflare',
      tier: 'App & routing',
--    version: '15.0.0',
-+    version: '15.0.1',
+-    version: '15.0.1',
++    version: '15.0.2',
      tagline: 'Cloudflare Workers/Pages deployment adapter for @aihu/app.',
      note: '',
      exportCount: 2,
@@ -123,8 +76,8 @@ index b4fcb441..b7dc0fc8 100644
      name: '@aihu/adapter-vercel',
      slug: 'adapter-vercel',
      tier: 'App & routing',
--    version: '15.0.0',
-+    version: '15.0.1',
+-    version: '15.0.1',
++    version: '15.0.2',
      tagline: 'Vercel deployment adapter for @aihu/app.',
      note: '',
      exportCount: 2,
@@ -132,147 +85,112 @@ index b4fcb441..b7dc0fc8 100644
      name: '@aihu/app',
      slug: 'app',
      tier: 'App & routing',
--    version: '10.2.0',
-+    version: '10.2.1',
+-    version: '10.2.1',
++    version: '10.2.2',
      tagline: 'Top-level app integration — wires runtime, router, and adapters into a Vite app.',
      note: '',
      exportCount: 42,
-@@ -225,7 +225,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/css-engine',
-     slug: 'css-engine',
-     tier: 'Runtime core',
--    version: '0.7.1',
-+    version: '0.7.2',
-     tagline: 'aihu CSS engine — Tailwind v4 hard fork with WC-native scoped output.',
-     note: '',
-     exportCount: 20,
-@@ -327,7 +327,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/router',
-     slug: 'router',
-     tier: 'App & routing',
--    version: '0.5.2',
-+    version: '0.5.3',
-     tagline: 'File-based router for the aihu meta-framework.',
-     note: '',
-     exportCount: 52,
-diff --git a/apps/docs/src/data/api/generated/router.ts b/apps/docs/src/data/api/generated/router.ts
-index e20fe005..a0715a4b 100644
---- a/apps/docs/src/data/api/generated/router.ts
-+++ b/apps/docs/src/data/api/generated/router.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/router',
-   slug: 'router',
-   tier: 'App & routing',
--  version: '0.5.2',
-+  version: '0.5.3',
-   tagline: 'File-based router for the aihu meta-framework.',
-   note: '',
- }
 diff --git a/bun.lock b/bun.lock
-index 198fb212296c46f4ee70e2eb038d1c8578c9efa4..2882451c878993ce9125930829c7bddc06e4c715 100644
+index 3492067aa2458bd480711c2507782437a5fe0fbd..717e8b6f4bed834501f720ad7e114f2c37147521 100644
 GIT binary patch
-delta 212
-zcmeC*r`W$wal<7kMvKW4*|azRladf-GzK!KPM$9rFj-G^%H|3BM>!b{Cm*oWn%rQy
-z2+j)LyuhlOb#jxF_T&vr(vxR-=uEs|KKWdt^5hR9T$2@?RVPniQkuLjLJefl=5>yr
-zStd6|Xis(!Fq(Y9lWQ^;AJ^o9FpkNya|9+AcnD06m*bjzqLO#=n;4GCUGDOmE8IB+
-x!4A=yeBWDRvaYJf<O#8Y&AO58x{-`P%ml>DK+FQftU$~L#O&L3BRL+i0syxoOz;2z
+delta 140
+zcmeC*r`W$wal<7kM$5?)*|azRladf-GyyWFPM$9rFj-G^%H|3BM>!ddCLgfVn%rQy
+z2+j)LyuhlOb@D<t?a3RMq$khv(3yC_eDb+O<;fpJxF#z&t4^N4q%?V5gc``8=5>zk
+d>l_(@m<foPftUq|S%H`hh}pNVbL2>r1pp$pHZcGI
 
-delta 212
-zcmeC*r`W$wal<7kM)S!N*|azRladggywFW&@&SIe$vI3eljlnYOx9DKvU!63QO?Qx
-z?X)L1ST2In!J8LYRkKb`64#!*fk}GuEDxQD7tAN0OH`ixL4<3vg0t%62~0|p*F~s-
-z4B5QS@iWWhCMWI54gyA#FL-iI=Hla;ToA@Fd3KJ#<N^<Y$?<YrlTTFgPJR=^F}cfK
-zeshI8ry$TN+LP~lYfRQv^_V;%R<Kz&vRyZl5r~<9m>Gy!fS47C*?^dRyKW@MBUS*J
-CG)~9>
+delta 146
+zcmeC*r`W$wal<7kMvKW4*|azRladgg+!&!f*+ANBvV(x)<oS{Tll4@mY@VQhl#|hL
+z@&P-o$qkl^;H==y3#_VHCpS51Pu{>JJ$aUg&cqAmlg}k8PyQgnHCe$~b@BuzrOE3e
+k)IbI`uXAi)=g0`eOhC*G#4JF}3dC$c%)Wh{BS)ev04!xU+5i9m
 
 diff --git a/examples/cf-adapter/CHANGELOG.md b/examples/cf-adapter/CHANGELOG.md
-index f3f9fe55..5d8ad58c 100644
+index 5d8ad58c..362d6267 100644
 --- a/examples/cf-adapter/CHANGELOG.md
 +++ b/examples/cf-adapter/CHANGELOG.md
 @@ -1,5 +1,13 @@
  # @aihu/example-cf-adapter
  
-+## 0.0.38
++## 0.0.39
 +
 +### Patch Changes
 +
-+- Updated dependencies [[`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee), [`9076898`](https://github.com/aihu-project/aihu/commit/9076898dbc4e271d836f5d7aab9d9359a9e50b7b), [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee)]:
-+  - @aihu/app@10.2.1
-+  - @aihu/adapter-cloudflare@15.0.1
++- Updated dependencies [[`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae), [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9)]:
++  - @aihu/app@10.2.2
++  - @aihu/adapter-cloudflare@15.0.2
 +
- ## 0.0.37
+ ## 0.0.38
  
  ### Patch Changes
 diff --git a/examples/cf-adapter/package.json b/examples/cf-adapter/package.json
-index ed2475c9..78759a97 100644
+index 78759a97..da45e5f3 100644
 --- a/examples/cf-adapter/package.json
 +++ b/examples/cf-adapter/package.json
 @@ -1,7 +1,7 @@
  {
    "name": "@aihu/example-cf-adapter",
    "private": true,
--  "version": "0.0.37",
-+  "version": "0.0.38",
+-  "version": "0.0.38",
++  "version": "0.0.39",
    "type": "module",
    "scripts": {
      "dev": "vite --port 5110",
 diff --git a/examples/ssg-site/CHANGELOG.md b/examples/ssg-site/CHANGELOG.md
-index 78d36939..152fba58 100644
+index 152fba58..8af5517b 100644
 --- a/examples/ssg-site/CHANGELOG.md
 +++ b/examples/ssg-site/CHANGELOG.md
-@@ -1,5 +1,13 @@
+@@ -1,5 +1,12 @@
  # @aihu/example-ssg-site
  
-+## 0.0.13
++## 0.0.14
 +
 +### Patch Changes
 +
-+- Updated dependencies [[`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee), [`9076898`](https://github.com/aihu-project/aihu/commit/9076898dbc4e271d836f5d7aab9d9359a9e50b7b), [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee)]:
-+  - @aihu/app@10.2.1
-+  - @aihu/router@0.5.3
++- Updated dependencies [[`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae), [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9)]:
++  - @aihu/app@10.2.2
 +
- ## 0.0.12
+ ## 0.0.13
  
  ### Patch Changes
 diff --git a/examples/ssg-site/package.json b/examples/ssg-site/package.json
-index 49cbf1bc..91e674d1 100644
+index 91e674d1..1082b495 100644
 --- a/examples/ssg-site/package.json
 +++ b/examples/ssg-site/package.json
 @@ -1,7 +1,7 @@
  {
    "name": "@aihu/example-ssg-site",
    "private": true,
--  "version": "0.0.12",
-+  "version": "0.0.13",
+-  "version": "0.0.13",
++  "version": "0.0.14",
    "type": "module",
    "scripts": {
      "dev": "vite --port 5120",
 diff --git a/packages/adapter-cloudflare/CHANGELOG.md b/packages/adapter-cloudflare/CHANGELOG.md
-index f9276c87..b1c2e3b1 100644
+index b1c2e3b1..b01a68c3 100644
 --- a/packages/adapter-cloudflare/CHANGELOG.md
 +++ b/packages/adapter-cloudflare/CHANGELOG.md
 @@ -1,5 +1,12 @@
  # @aihu/adapter-cloudflare
  
-+## 15.0.1
++## 15.0.2
 +
 +### Patch Changes
 +
-+- Updated dependencies [[`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee), [`9076898`](https://github.com/aihu-project/aihu/commit/9076898dbc4e271d836f5d7aab9d9359a9e50b7b), [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee)]:
-+  - @aihu/app@10.2.1
++- Updated dependencies [[`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae), [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9)]:
++  - @aihu/app@10.2.2
 +
- ## 15.0.0
+ ## 15.0.1
  
  ### Patch Changes
 diff --git a/packages/adapter-cloudflare/README.md b/packages/adapter-cloudflare/README.md
-index 0d0d48d2..a3207d48 100644
+index a3207d48..96274200 100644
 --- a/packages/adapter-cloudflare/README.md
 +++ b/packages/adapter-cloudflare/README.md
 @@ -21,7 +21,7 @@ npm install @aihu/adapter-cloudflare
  bun add @aihu/adapter-cloudflare
  ```
  
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: install -->
  
@@ -280,14 +198,14 @@ index 0d0d48d2..a3207d48 100644
  
  | | |
  |---|---|
--| **Version** | `15.0.0` |
-+| **Version** | `15.0.1` |
+-| **Version** | `15.0.1` |
++| **Version** | `15.0.2` |
  | **Tier** | B — Meta-framework — Cloudflare Workers/Pages deploy adapter |
  | **Published files** | 3 entries |
  | **License** | MIT |
  
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: stats -->
  
@@ -295,8 +213,8 @@ index 0d0d48d2..a3207d48 100644
  |---|---|---|
  | `.` | `./dist/index.js` | `—` |
  
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: exports -->
  
@@ -304,8 +222,8 @@ index 0d0d48d2..a3207d48 100644
  - `@aihu/app` — `workspace:*`
  - `vite` — `>=5.0.0`
  
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: deps -->
  
@@ -313,8 +231,8 @@ index 0d0d48d2..a3207d48 100644
  - [@aihu/server](../server)
  - [Aihu framework root](../../README.md)
  
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: see-also -->
  
@@ -322,49 +240,49 @@ index 0d0d48d2..a3207d48 100644
  
  MIT — see [LICENSE](../../LICENSE).
  
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: license -->
 diff --git a/packages/adapter-cloudflare/package.json b/packages/adapter-cloudflare/package.json
-index 47f137d5..6c8b13b8 100644
+index 6c8b13b8..30128679 100644
 --- a/packages/adapter-cloudflare/package.json
 +++ b/packages/adapter-cloudflare/package.json
 @@ -1,6 +1,6 @@
  {
    "name": "@aihu/adapter-cloudflare",
--  "version": "15.0.0",
-+  "version": "15.0.1",
+-  "version": "15.0.1",
++  "version": "15.0.2",
    "license": "MIT",
    "type": "module",
    "main": "./dist/index.js",
 diff --git a/packages/adapter-vercel/CHANGELOG.md b/packages/adapter-vercel/CHANGELOG.md
-index 92067070..e8c3a7c9 100644
+index e8c3a7c9..a7fa43a7 100644
 --- a/packages/adapter-vercel/CHANGELOG.md
 +++ b/packages/adapter-vercel/CHANGELOG.md
 @@ -1,5 +1,12 @@
  # @aihu/adapter-vercel
  
-+## 15.0.1
++## 15.0.2
 +
 +### Patch Changes
 +
-+- Updated dependencies [[`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee), [`9076898`](https://github.com/aihu-project/aihu/commit/9076898dbc4e271d836f5d7aab9d9359a9e50b7b), [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee)]:
-+  - @aihu/app@10.2.1
++- Updated dependencies [[`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae), [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9)]:
++  - @aihu/app@10.2.2
 +
- ## 15.0.0
+ ## 15.0.1
  
  ### Patch Changes
 diff --git a/packages/adapter-vercel/README.md b/packages/adapter-vercel/README.md
-index efcaafba..3d16c545 100644
+index 3d16c545..11e4b3da 100644
 --- a/packages/adapter-vercel/README.md
 +++ b/packages/adapter-vercel/README.md
 @@ -21,7 +21,7 @@ npm install @aihu/adapter-vercel
  bun add @aihu/adapter-vercel
  ```
  
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: install -->
  
@@ -372,14 +290,14 @@ index efcaafba..3d16c545 100644
  
  | | |
  |---|---|
--| **Version** | `15.0.0` |
-+| **Version** | `15.0.1` |
+-| **Version** | `15.0.1` |
++| **Version** | `15.0.2` |
  | **Tier** | B — Meta-framework — Vercel deploy adapter |
  | **Published files** | 3 entries |
  | **License** | MIT |
  
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: stats -->
  
@@ -387,8 +305,8 @@ index efcaafba..3d16c545 100644
  |---|---|---|
  | `.` | `./dist/index.js` | `—` |
  
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: exports -->
  
@@ -396,8 +314,8 @@ index efcaafba..3d16c545 100644
  - `@aihu/app` — `workspace:*`
  - `vite` — `>=5.0.0`
  
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: deps -->
  
@@ -405,8 +323,8 @@ index efcaafba..3d16c545 100644
  - [@aihu/server](../server)
  - [Aihu framework root](../../README.md)
  
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: see-also -->
  
@@ -414,55 +332,50 @@ index efcaafba..3d16c545 100644
  
  MIT — see [LICENSE](../../LICENSE).
  
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
  
  <!-- END_AUTOGEN: license -->
 diff --git a/packages/adapter-vercel/package.json b/packages/adapter-vercel/package.json
-index d0e83ca7..27d7be28 100644
+index 27d7be28..e7ebc17a 100644
 --- a/packages/adapter-vercel/package.json
 +++ b/packages/adapter-vercel/package.json
 @@ -1,6 +1,6 @@
  {
    "name": "@aihu/adapter-vercel",
--  "version": "15.0.0",
-+  "version": "15.0.1",
+-  "version": "15.0.1",
++  "version": "15.0.2",
    "license": "MIT",
    "type": "module",
    "main": "./dist/index.js",
 diff --git a/packages/app/CHANGELOG.md b/packages/app/CHANGELOG.md
-index 56f48a1a..31b54b0c 100644
+index 31b54b0c..76ef927b 100644
 --- a/packages/app/CHANGELOG.md
 +++ b/packages/app/CHANGELOG.md
-@@ -1,5 +1,18 @@
+@@ -1,5 +1,13 @@
  # @aihu/app
  
-+## 10.2.1
++## 10.2.2
 +
 +### Patch Changes
 +
-+- [#905](https://github.com/aihu-project/aihu/pull/905) [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee) Thanks [@srmcguirt](https://github.com/srmcguirt)! - The app's delegated link handler now defers to `@aihu/router`'s `shouldInterceptLinkClick`, so Ctrl/Cmd/Shift/Alt and middle clicks, `target`/`download` links, other origins and same-page fragments stay native instead of navigating the current tab. A second `createApp()` on the same document (dev HMR re-running the entry) now replaces the previous app's document listeners instead of stacking them.
++- [#914](https://github.com/aihu-project/aihu/pull/914) [`019cb7e`](https://github.com/aihu-project/aihu/commit/019cb7eceb1a8e88dafc55183ef0d52303657cae) Thanks [@srmcguirt](https://github.com/srmcguirt)! - A popstate that changes only the URL hash (a native same-page `#fragment` link, or back/forward between fragments of one page) no longer re-renders the route. The re-render replaced the outlet's DOM and dropped the focus the browser or the page had just moved, which broke skip links and in-page focus targets.
 +
-+- [#866](https://github.com/aihu-project/aihu/pull/866) [`9076898`](https://github.com/aihu-project/aihu/commit/9076898dbc4e271d836f5d7aab9d9359a9e50b7b) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fix router view transition wiring and keep the Vite hook tests narrowly typed.
++- [#912](https://github.com/aihu-project/aihu/pull/912) [`b0435e8`](https://github.com/aihu-project/aihu/commit/b0435e863f1dc4c7cfc6a9dda60a7a35c68c3cb9) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Make route context available to app-shell components outside the outlet, with a configurable context root for applications that share a document.
 +
-+- [#905](https://github.com/aihu-project/aihu/pull/905) [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee) Thanks [@srmcguirt](https://github.com/srmcguirt)! - A push navigation (a clicked link, or `navigate()` without `replace`) now scrolls the new page to its `#fragment` target, or to the top when there is none, instead of leaving it at the previous page's scroll offset. Replace navigations keep the scroll position, and back/forward keep the browser's own scroll restoration.
-+
-+- Updated dependencies [[`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee)]:
-+  - @aihu/router@0.5.3
-+
- ## 10.2.0
+ ## 10.2.1
  
- ### Minor Changes
+ ### Patch Changes
 diff --git a/packages/app/README.md b/packages/app/README.md
-index b123c541..e7031c23 100644
+index e7031c23..99d5fced 100644
 --- a/packages/app/README.md
 +++ b/packages/app/README.md
 @@ -43,7 +43,7 @@ npm install @aihu/app
  bun add @aihu/app
  ```
  
--<sub><i>Auto-generated against `@aihu/app@10.2.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
  
  <!-- END_AUTOGEN: install -->
  
@@ -470,15 +383,15 @@ index b123c541..e7031c23 100644
  
  | | |
  |---|---|
--| **Version** | `10.2.0` |
-+| **Version** | `10.2.1` |
+-| **Version** | `10.2.1` |
++| **Version** | `10.2.2` |
  | **Tier** | B — Meta-framework — top-level integration of runtime, router, adapter |
  | **Bundle size** | 1.77 kB (gz) — limit 1900 B |
  | **Published files** | 3 entries |
  | **License** | MIT |
  
--<sub><i>Auto-generated against `@aihu/app@10.2.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
  
  <!-- END_AUTOGEN: stats -->
  
@@ -486,8 +399,8 @@ index b123c541..e7031c23 100644
  | `./client` | `./dist/client.js` | `—` |
  | `./ssr-document` | `./dist/ssr-document.js` | `—` |
  
--<sub><i>Auto-generated against `@aihu/app@10.2.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
  
  <!-- END_AUTOGEN: exports -->
  
@@ -495,8 +408,8 @@ index b123c541..e7031c23 100644
  - `@aihu/store` — `workspace:*`
  - `vite` — `>=5.0.0`
  
--<sub><i>Auto-generated against `@aihu/app@10.2.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
  
  <!-- END_AUTOGEN: deps -->
  
@@ -504,8 +417,8 @@ index b123c541..e7031c23 100644
  - [@aihu/adapter-cloudflare](../adapter-cloudflare)
  - [Aihu framework root](../../README.md)
  
--<sub><i>Auto-generated against `@aihu/app@10.2.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
  
  <!-- END_AUTOGEN: see-also -->
  
@@ -513,449 +426,140 @@ index b123c541..e7031c23 100644
  
  MIT — see [LICENSE](../../LICENSE).
  
--<sub><i>Auto-generated against `@aihu/app@10.2.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/app@10.2.1`.</i></sub>
++<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
  
  <!-- END_AUTOGEN: license -->
 diff --git a/packages/app/package.json b/packages/app/package.json
-index 00c25b46..44a72cfb 100644
+index 44a72cfb..f727db7a 100644
 --- a/packages/app/package.json
 +++ b/packages/app/package.json
 @@ -1,6 +1,6 @@
  {
    "name": "@aihu/app",
--  "version": "10.2.0",
-+  "version": "10.2.1",
+-  "version": "10.2.1",
++  "version": "10.2.2",
    "license": "MIT",
    "type": "module",
    "main": "./dist/index.js",
 diff --git a/packages/cli/src/dep-versions.ts b/packages/cli/src/dep-versions.ts
-index 091cdb31..f0a7c0bd 100644
+index f0a7c0bd..44cebca1 100644
 --- a/packages/cli/src/dep-versions.ts
 +++ b/packages/cli/src/dep-versions.ts
-@@ -18,26 +18,26 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
+@@ -18,15 +18,15 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
    '@aihu-plugin/data': '^2.0.5',
    '@aihu-plugin/drizzle': '^0.1.7',
    '@aihu-plugin/kindly-note': '^0.2.4',
--  '@aihu/adapter-cloudflare': '^15.0.0',
--  '@aihu/adapter-vercel': '^15.0.0',
-+  '@aihu/adapter-cloudflare': '^15.0.1',
-+  '@aihu/adapter-vercel': '^15.0.1',
+-  '@aihu/adapter-cloudflare': '^15.0.1',
+-  '@aihu/adapter-vercel': '^15.0.1',
++  '@aihu/adapter-cloudflare': '^15.0.2',
++  '@aihu/adapter-vercel': '^15.0.2',
    '@aihu/agent': '^0.2.0',
    '@aihu/agent-a2a': '^1.0.1',
    '@aihu/agent-acp': '^0.2.1',
    '@aihu/agent-server': '^0.4.4',
    '@aihu/agent-service': '^0.4.0',
    '@aihu/ai': '^0.1.0',
--  '@aihu/app': '^10.2.0',
-+  '@aihu/app': '^10.2.1',
+-  '@aihu/app': '^10.2.1',
++  '@aihu/app': '^10.2.2',
    '@aihu/auth': '^6.0.1',
    '@aihu/cli': '^1.4.0',
    '@aihu/context': '^0.2.1',
--  '@aihu/css-engine': '^0.7.1',
-+  '@aihu/css-engine': '^0.7.2',
-   '@aihu/editor': '^0.1.2',
-   '@aihu/language-server': '^0.4.2',
-   '@aihu/magna': '^0.2.9',
-   '@aihu/mcp': '^0.2.1',
-   '@aihu/plugin': '^0.1.2',
-   '@aihu/primitives': '^0.2.4',
--  '@aihu/router': '^0.5.2',
-+  '@aihu/router': '^0.5.3',
-   '@aihu/runtime': '^6.1.1',
-   '@aihu/seo': '^1.0.6',
-   '@aihu/server': '^0.6.1',
-diff --git a/packages/css-engine/CHANGELOG.md b/packages/css-engine/CHANGELOG.md
-index a7620dd6..709cf9c1 100644
---- a/packages/css-engine/CHANGELOG.md
-+++ b/packages/css-engine/CHANGELOG.md
-@@ -1,5 +1,13 @@
- # @aihu/css-engine
- 
-+## 0.7.2
-+
-+### Patch Changes
-+
-+- [#898](https://github.com/aihu-project/aihu/pull/898) [`87a6eb9`](https://github.com/aihu-project/aihu/commit/87a6eb9dbcf97ba8e55e7e84a4ba50fcf50d1188) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Comments inside `@theme { }` no longer drop the whole project theme. A bare `:root { --token: value }` block used in place of `@theme` is now a compile error that points to `@theme`. Compound selectors such as `:root.dark` remain ordinary CSS.
-+
-+- [#911](https://github.com/aihu-project/aihu/pull/911) [`d39ea3f`](https://github.com/aihu-project/aihu/commit/d39ea3feead3b9f19c55d1f2917be0ebfa82c8ed) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Record the native source identity on published css-engine platform packages so release preparation can reuse builds of unchanged native source.
-+
- ## 0.7.1
- 
- ### Patch Changes
-diff --git a/packages/css-engine/README.md b/packages/css-engine/README.md
-index d32ce52a..486aade2 100644
---- a/packages/css-engine/README.md
-+++ b/packages/css-engine/README.md
-@@ -250,7 +250,7 @@ npm install @aihu/css-engine
- bun add @aihu/css-engine
- ```
- 
--<sub><i>Auto-generated against `@aihu/css-engine@0.7.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/css-engine@0.7.2`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -261,12 +261,12 @@ bun add @aihu/css-engine
- 
- | | |
- |---|---|
--| **Version** | `0.7.1` |
-+| **Version** | `0.7.2` |
- | **Tier** | D — Compiler — CSS engine (Tailwind v4 hard fork, WC-native scoped output) |
- | **Published files** | 5 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/css-engine@0.7.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/css-engine@0.7.2`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -285,7 +285,7 @@ bun add @aihu/css-engine
- | `./runtime/cn` | `./dist/runtime/cn.js` | `—` |
- | `./runtime/progressive` | `./dist/runtime/progressive.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/css-engine@0.7.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/css-engine@0.7.2`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -306,7 +306,7 @@ bun add @aihu/css-engine
- - `@aihu/css-engine-linux-x64-gnu` — `0.1.19`
- - `@aihu/css-engine-win32-x64-msvc` — `0.1.19`
- 
--<sub><i>Auto-generated against `@aihu/css-engine@0.7.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/css-engine@0.7.2`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -319,7 +319,7 @@ bun add @aihu/css-engine
- - [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/css-engine@0.7.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/css-engine@0.7.2`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -330,6 +330,6 @@ bun add @aihu/css-engine
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/css-engine@0.7.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/css-engine@0.7.2`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/css-engine/npm/darwin-arm64/package.json b/packages/css-engine/npm/darwin-arm64/package.json
-index cc586374..95dd46ad 100644
---- a/packages/css-engine/npm/darwin-arm64/package.json
-+++ b/packages/css-engine/npm/darwin-arm64/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/css-engine-darwin-arm64",
--  "version": "0.1.19",
-+  "version": "0.1.21",
-   "repository": {
-     "type": "git",
-     "url": "git+https://github.com/aihu-project/aihu.git",
-@@ -15,5 +15,6 @@
-   ],
-   "files": [
-     "aihu-css-compile"
--  ]
-+  ],
-+  "aihuNativeSource": "d692c83fd70bcf6ca492e7d725df07f90c31e388"
- }
-diff --git a/packages/css-engine/npm/darwin-x64/package.json b/packages/css-engine/npm/darwin-x64/package.json
-index d9fdb414..409c1181 100644
---- a/packages/css-engine/npm/darwin-x64/package.json
-+++ b/packages/css-engine/npm/darwin-x64/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/css-engine-darwin-x64",
--  "version": "0.1.19",
-+  "version": "0.1.21",
-   "repository": {
-     "type": "git",
-     "url": "git+https://github.com/aihu-project/aihu.git",
-@@ -15,5 +15,6 @@
-   ],
-   "files": [
-     "aihu-css-compile"
--  ]
-+  ],
-+  "aihuNativeSource": "d692c83fd70bcf6ca492e7d725df07f90c31e388"
- }
-diff --git a/packages/css-engine/npm/linux-x64-gnu/package.json b/packages/css-engine/npm/linux-x64-gnu/package.json
-index f2a7ae63..ccc5c7b1 100644
---- a/packages/css-engine/npm/linux-x64-gnu/package.json
-+++ b/packages/css-engine/npm/linux-x64-gnu/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/css-engine-linux-x64-gnu",
--  "version": "0.1.19",
-+  "version": "0.1.21",
-   "repository": {
-     "type": "git",
-     "url": "git+https://github.com/aihu-project/aihu.git",
-@@ -18,5 +18,6 @@
-   ],
-   "files": [
-     "aihu-css-compile"
--  ]
-+  ],
-+  "aihuNativeSource": "d692c83fd70bcf6ca492e7d725df07f90c31e388"
- }
-diff --git a/packages/css-engine/npm/win32-x64-msvc/package.json b/packages/css-engine/npm/win32-x64-msvc/package.json
-index ecda1a1d..89862b71 100644
---- a/packages/css-engine/npm/win32-x64-msvc/package.json
-+++ b/packages/css-engine/npm/win32-x64-msvc/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/css-engine-win32-x64-msvc",
--  "version": "0.1.19",
-+  "version": "0.1.21",
-   "repository": {
-     "type": "git",
-     "url": "git+https://github.com/aihu-project/aihu.git",
-@@ -15,5 +15,6 @@
-   ],
-   "files": [
-     "aihu-css-compile.exe"
--  ]
-+  ],
-+  "aihuNativeSource": "d692c83fd70bcf6ca492e7d725df07f90c31e388"
- }
-diff --git a/packages/css-engine/package.json b/packages/css-engine/package.json
-index ce58ce68..9408a06b 100644
---- a/packages/css-engine/package.json
-+++ b/packages/css-engine/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/css-engine",
--  "version": "0.7.1",
-+  "version": "0.7.2",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-@@ -41,10 +41,10 @@
-     "@aihu/compiler": "^1.3.5"
-   },
-   "optionalDependencies": {
--    "@aihu/css-engine-darwin-arm64": "0.1.19",
--    "@aihu/css-engine-darwin-x64": "0.1.19",
--    "@aihu/css-engine-linux-x64-gnu": "0.1.19",
--    "@aihu/css-engine-win32-x64-msvc": "0.1.19"
-+    "@aihu/css-engine-darwin-arm64": "0.1.21",
-+    "@aihu/css-engine-darwin-x64": "0.1.21",
-+    "@aihu/css-engine-linux-x64-gnu": "0.1.21",
-+    "@aihu/css-engine-win32-x64-msvc": "0.1.21"
-   },
-   "scripts": {
-     "build": "bun run gen:style-packs && rolldown -c",
-diff --git a/packages/router/CHANGELOG.md b/packages/router/CHANGELOG.md
-index b261cfef..8cec7c44 100644
---- a/packages/router/CHANGELOG.md
-+++ b/packages/router/CHANGELOG.md
-@@ -1,5 +1,11 @@
- # @aihu/router
- 
-+## 0.5.3
-+
-+### Patch Changes
-+
-+- [#905](https://github.com/aihu-project/aihu/pull/905) [`f84635f`](https://github.com/aihu-project/aihu/commit/f84635f1c4e7e9fb137cffff5dd2a055752ae3ee) Thanks [@srmcguirt](https://github.com/srmcguirt)! - A push navigation (a clicked link, or `navigate()` without `replace`) now scrolls the new page to its `#fragment` target, or to the top when there is none, instead of leaving it at the previous page's scroll offset. Replace navigations keep the scroll position, and back/forward keep the browser's own scroll restoration.
-+
- ## 0.5.2
- 
- ### Patch Changes
-diff --git a/packages/router/README.md b/packages/router/README.md
-index f195dde0..99a05d27 100644
---- a/packages/router/README.md
-+++ b/packages/router/README.md
-@@ -21,7 +21,7 @@ npm install @aihu/router
- bun add @aihu/router
- ```
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -32,13 +32,13 @@ bun add @aihu/router
- 
- | | |
- |---|---|
--| **Version** | `0.5.2` |
-+| **Version** | `0.5.3` |
- | **Tier** | B — Meta-framework — file-based router |
- | **Bundle size** | 1.71 kB (gz) — limit 2400 B |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -53,7 +53,7 @@ bun add @aihu/router
- | `./server` | `./dist/server.js` | `—` |
- | `./plugin` | `./dist/plugin.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -68,7 +68,7 @@ bun add @aihu/router
- - `@aihu/server` — `workspace:*`
- - `@aihu/signals` — `^0.5.1`
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -82,7 +82,7 @@ bun add @aihu/router
- - [@aihu/server](../server)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -93,6 +93,6 @@ bun add @aihu/router
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/router/package.json b/packages/router/package.json
-index b93b7015..df39493e 100644
---- a/packages/router/package.json
-+++ b/packages/router/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/router",
--  "version": "0.5.2",
-+  "version": "0.5.3",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
 diff --git a/packages/templates/cf-solo/template.config.js b/packages/templates/cf-solo/template.config.js
-index dac82c27..8d13ae37 100644
+index 8d13ae37..d793c9af 100644
 --- a/packages/templates/cf-solo/template.config.js
 +++ b/packages/templates/cf-solo/template.config.js
-@@ -59,9 +59,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
+@@ -61,7 +61,7 @@ export const config = {
      '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.2',
-+    '@aihu/router': '^0.5.3',
+     '@aihu/router': '^0.5.3',
      '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.0',
-+    '@aihu/adapter-cloudflare': '^15.0.1',
+-    '@aihu/adapter-cloudflare': '^15.0.1',
++    '@aihu/adapter-cloudflare': '^15.0.2',
    },
  }
  
 diff --git a/packages/templates/cf-solo/template.config.ts b/packages/templates/cf-solo/template.config.ts
-index 74594dd0..cbba79e4 100644
+index cbba79e4..6fd71e95 100644
 --- a/packages/templates/cf-solo/template.config.ts
 +++ b/packages/templates/cf-solo/template.config.ts
-@@ -59,9 +59,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
+@@ -61,7 +61,7 @@ export const config = {
      '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.2',
-+    '@aihu/router': '^0.5.3',
+     '@aihu/router': '^0.5.3',
      '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.0',
-+    '@aihu/adapter-cloudflare': '^15.0.1',
+-    '@aihu/adapter-cloudflare': '^15.0.1',
++    '@aihu/adapter-cloudflare': '^15.0.2',
    },
  } satisfies TemplateManifest
  
 diff --git a/packages/templates/cf-solo/template/package.json.tmpl b/packages/templates/cf-solo/template/package.json.tmpl
-index ca4f706b..e1aff095 100644
+index e1aff095..c7292119 100644
 --- a/packages/templates/cf-solo/template/package.json.tmpl
 +++ b/packages/templates/cf-solo/template/package.json.tmpl
-@@ -21,8 +21,8 @@
-     "@aihu/runtime": "^6.1.1",
+@@ -22,7 +22,7 @@
      "@aihu/arbor": "^4.1.2",
      "@aihu/signals": "^0.5.1",
--    "@aihu/router": "^0.5.2",
--    "@aihu/adapter-cloudflare": "^15.0.0",
-+    "@aihu/router": "^0.5.3",
-+    "@aihu/adapter-cloudflare": "^15.0.1",
+     "@aihu/router": "^0.5.3",
+-    "@aihu/adapter-cloudflare": "^15.0.1",
++    "@aihu/adapter-cloudflare": "^15.0.2",
      "@aihu/compiler": "^1.3.5",
      "@aihu/server": "^0.6.1"
    },
 diff --git a/packages/templates/cf-team/template.config.js b/packages/templates/cf-team/template.config.js
-index 8e221433..07fa4442 100644
+index 07fa4442..7f2f93a2 100644
 --- a/packages/templates/cf-team/template.config.js
 +++ b/packages/templates/cf-team/template.config.js
-@@ -89,9 +89,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
+@@ -91,7 +91,7 @@ export const config = {
      '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.2',
-+    '@aihu/router': '^0.5.3',
+     '@aihu/router': '^0.5.3',
      '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.0',
-+    '@aihu/adapter-cloudflare': '^15.0.1',
+-    '@aihu/adapter-cloudflare': '^15.0.1',
++    '@aihu/adapter-cloudflare': '^15.0.2',
    },
    appPeerDepsConditional: {
      'better-auth': { version: '^1.0.0', when: 'auth === "better-auth"' },
 diff --git a/packages/templates/cf-team/template.config.ts b/packages/templates/cf-team/template.config.ts
-index 8bcaf6ee..29b282d6 100644
+index 29b282d6..9e9b8081 100644
 --- a/packages/templates/cf-team/template.config.ts
 +++ b/packages/templates/cf-team/template.config.ts
-@@ -112,9 +112,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
+@@ -114,7 +114,7 @@ export const config = {
      '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.2',
-+    '@aihu/router': '^0.5.3',
+     '@aihu/router': '^0.5.3',
      '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.0',
-+    '@aihu/adapter-cloudflare': '^15.0.1',
+-    '@aihu/adapter-cloudflare': '^15.0.1',
++    '@aihu/adapter-cloudflare': '^15.0.2',
    },
    appPeerDepsConditional: {
      'better-auth': { version: '^1.0.0', when: 'auth === "better-auth"' },
 diff --git a/packages/templates/cf-team/template/apps/web/package.json.tmpl b/packages/templates/cf-team/template/apps/web/package.json.tmpl
-index cc88e92c..db5f2ca6 100644
+index db5f2ca6..9b56e070 100644
 --- a/packages/templates/cf-team/template/apps/web/package.json.tmpl
 +++ b/packages/templates/cf-team/template/apps/web/package.json.tmpl
-@@ -17,8 +17,8 @@
-     "@aihu/runtime": "^6.1.1",
+@@ -18,7 +18,7 @@
      "@aihu/arbor": "^4.1.2",
      "@aihu/signals": "^0.5.1",
--    "@aihu/router": "^0.5.2",
--    "@aihu/adapter-cloudflare": "^15.0.0",
-+    "@aihu/router": "^0.5.3",
-+    "@aihu/adapter-cloudflare": "^15.0.1",
+     "@aihu/router": "^0.5.3",
+-    "@aihu/adapter-cloudflare": "^15.0.1",
++    "@aihu/adapter-cloudflare": "^15.0.2",
      "@aihu/compiler": "^1.3.5",
      "@aihu/server": "^0.6.1"__APP_CONDITIONAL_DEPS__
    },
 diff --git a/scripts/__package-inventory.json b/scripts/__package-inventory.json
-index 35f24e31..f36f2359 100644
+index e9a4e4c0..23d60c38 100644
 --- a/scripts/__package-inventory.json
 +++ b/scripts/__package-inventory.json
 @@ -25,13 +25,13 @@
    },
    {
      "name": "@aihu/adapter-cloudflare",
--    "version": "15.0.0",
-+    "version": "15.0.1",
+-    "version": "15.0.1",
++    "version": "15.0.2",
      "dir": "packages/adapter-cloudflare",
      "isPlatform": false
    },
    {
      "name": "@aihu/adapter-vercel",
--    "version": "15.0.0",
-+    "version": "15.0.1",
+-    "version": "15.0.1",
++    "version": "15.0.2",
      "dir": "packages/adapter-vercel",
      "isPlatform": false
    },
@@ -963,26 +567,8 @@ index 35f24e31..f36f2359 100644
    },
    {
      "name": "@aihu/app",
--    "version": "10.2.0",
-+    "version": "10.2.1",
+-    "version": "10.2.1",
++    "version": "10.2.2",
      "dir": "packages/app",
-     "isPlatform": false
-   },
-@@ -103,7 +103,7 @@
-   },
-   {
-     "name": "@aihu/css-engine",
--    "version": "0.7.1",
-+    "version": "0.7.2",
-     "dir": "packages/css-engine",
-     "isPlatform": false
-   },
-@@ -181,7 +181,7 @@
-   },
-   {
-     "name": "@aihu/router",
--    "version": "0.5.2",
-+    "version": "0.5.3",
-     "dir": "packages/router",
      "isPlatform": false
    },

@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/app',
   slug: 'app',
   tier: 'App & routing',
-  version: '10.2.1',
+  version: '10.2.2',
   tagline: 'Top-level app integration — wires runtime, router, and adapters into a Vite app.',
   note: '',
 }
