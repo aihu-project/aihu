@@ -20,10 +20,11 @@
  */
 
 import { getAllAgentMetadata } from '@aihu/agent'
-import type { RequestContext } from '@aihu/agent-service'
-import { createAgentService } from '@aihu/agent-service'
+import type { Actor, RequestContext } from '@aihu/agent-service'
+import { createAgentService, projectCapabilityResult } from '@aihu/agent-service'
 import type { MountScope, Snapshot } from '@aihu/arbor'
 import { _getComponentInstanceRegistry, mount } from '@aihu/arbor'
+import { createBridgeNonceStore } from './bridge-nonce.ts'
 import { opaqueActionIdForTool } from './opaque-id.ts'
 import type {
   AgentServer,
@@ -39,9 +40,6 @@ interface PendingBridgeCall {
   resolve(value: unknown): void
   reject(err: Error): void
 }
-
-/** Monotonic id source for bridge `callId`s. */
-let _callIdCounter = 0
 
 /**
  * How long a `callTool` waits for an attached channel's `hello` before
@@ -154,6 +152,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     ...(options.authPlugin ? { authPlugin: options.authPlugin } : {}),
     ...(options.rateLimitPlugin ? { rateLimitPlugin: options.rateLimitPlugin } : {}),
     ...(options.resolveAuth ? { resolveAuth: options.resolveAuth } : {}),
+    ...(options.actorResolver ? { actorResolver: options.actorResolver } : {}),
+    ...(options.authorizeDataRead ? { authorizeDataRead: options.authorizeDataRead } : {}),
     ...(options.authDiscoveryUrl ? { authDiscoveryUrl: options.authDiscoveryUrl } : {}),
   })
 
@@ -162,6 +162,11 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   let detachBridge: (() => void) | null = null
   const pending = new Map<string, PendingBridgeCall>()
   let lastBridgeSnapshot: Snapshot | null = null
+  const bridgeNonces = createBridgeNonceStore()
+  let verifiedSessionToken: string | undefined
+  let verifiedGrantVersion: string | undefined
+  let helloSeen = false
+  let peerRevoked = false
 
   // ── Bridge handshake state (thesis §3: the client is never the authority) ──
   //
@@ -219,7 +224,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     return { ok: true }
   }
 
-  function handleBridgeFrame(data: string): void {
+  function handleBridgeFrame(data: string, peer: BridgeChannel): void {
+    if (bridge !== peer) return
     let msg: BridgeClientMessage
     try {
       msg = JSON.parse(data) as BridgeClientMessage
@@ -233,11 +239,54 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     if (handshake !== 'verified' && msg.type !== 'hello') return
     switch (msg.type) {
       case 'hello': {
+        if (helloSeen) {
+          peerRevoked = true
+          handshake = 'rejected'
+          handshakeReason = 'BRIDGE_REPLAY: duplicate hello on an established peer'
+          rejectAllPending(handshakeReason)
+          return
+        }
+        helloSeen = true
         const verdict = checkHelloProtocol((msg as { protocol?: unknown }).protocol)
-        settleHandshake(
-          verdict.ok ? 'verified' : 'rejected',
-          verdict.ok ? '' : (verdict as { reason: string }).reason,
-        )
+        if (!verdict.ok) {
+          settleHandshake('rejected', verdict.reason)
+          return
+        }
+        const hello = msg as Extract<BridgeClientMessage, { type: 'hello' }>
+        if (!bridgeNonces.consume(hello.nonce)) {
+          settleHandshake(
+            'rejected',
+            'BRIDGE_NONCE_INVALID: missing, unknown, expired, or replayed nonce',
+          )
+          return
+        }
+        if (typeof hello.sessionToken !== 'string' || !options.verifyBridgeSession) {
+          settleHandshake(
+            'rejected',
+            'BRIDGE_SESSION_UNVERIFIED: session verifier and token are required',
+          )
+          return
+        }
+        Promise.resolve()
+          .then(() => options.verifyBridgeSession!(hello.sessionToken!))
+          .then(
+            (ok) => {
+              if (bridge !== peer || handshake !== 'pending') return
+              if (!ok) {
+                settleHandshake('rejected', 'BRIDGE_SESSION_INVALID: session verification failed')
+                return
+              }
+              verifiedSessionToken = hello.sessionToken
+              verifiedGrantVersion =
+                typeof hello.grantVersion === 'string' ? hello.grantVersion : undefined
+              settleHandshake('verified', '')
+            },
+            () => {
+              if (bridge === peer && handshake === 'pending') {
+                settleHandshake('rejected', 'BRIDGE_SESSION_INVALID: session verification failed')
+              }
+            },
+          )
         return
       }
       case 'snapshot':
@@ -321,7 +370,11 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     handshake = 'pending'
     handshakeReason = ''
     handshakeWaiters = []
-    const offMsg = channel.onMessage(handleBridgeFrame)
+    verifiedSessionToken = undefined
+    verifiedGrantVersion = undefined
+    helloSeen = false
+    peerRevoked = false
+    const offMsg = channel.onMessage((data) => handleBridgeFrame(data, channel))
     const offClose = channel.onClose(() => {
       rejectAllPending('bridge disconnected')
       if (bridge === channel) bridge = null
@@ -344,7 +397,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     if (!bridge?.connected) {
       return Promise.resolve(undefined)
     }
-    const callId = `c${_callIdCounter++}`
+    const callId = crypto.randomUUID()
     const frame: BridgeInvokeMessage = { type: 'invoke', callId, opaqueActionId, args }
     return new Promise<unknown>((resolve, reject) => {
       pending.set(callId, { resolve, reject })
@@ -378,22 +431,53 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
       // dispatcher; the gate carries no policy info onto the wire.
       const verdict = await service.authorize(toolName, params, ctx)
       if (isGateRejection(verdict)) return verdict
+      const projection =
+        typeof verdict === 'object' &&
+        verdict !== null &&
+        Array.isArray((verdict as { projection?: unknown }).projection)
+          ? (verdict as { projection: readonly string[] }).projection
+          : undefined
+      const actor =
+        typeof verdict === 'object' &&
+        verdict !== null &&
+        typeof (verdict as { actor?: unknown }).actor === 'object'
+          ? (verdict as { actor: Actor }).actor
+          : undefined
 
       // The agent-service gate has approved the CALL; this verifies the
       // CHANNEL. Deliberately ordered after `authorize` so the security
       // ordering invariant (404 → 401 → 403 → 429) still wins: an unauthorized
       // call is refused for its own reason, not masked by a transport error,
       // and is still never forwarded.
-      if ((await awaitHandshake()) !== 'verified') {
+      if ((await awaitHandshake()) !== 'verified' || peerRevoked) {
         return { error: `BRIDGE_UNVERIFIED: ${handshakeReason}`, code: 503 }
       }
+
+      if (!options.reauthorizeBridgeInvoke) {
+        return {
+          error: 'BRIDGE_AUTH_UNAVAILABLE: per-invoke authorization is not configured',
+          code: 503,
+        }
+      }
+      let reauthorized = false
+      try {
+        reauthorized = await options.reauthorizeBridgeInvoke({
+          ...(verifiedSessionToken !== undefined ? { sessionToken: verifiedSessionToken } : {}),
+          ...(verifiedGrantVersion !== undefined ? { grantVersion: verifiedGrantVersion } : {}),
+          ...(actor !== undefined ? { actor } : {}),
+        })
+      } catch {
+        return { error: 'BRIDGE_AUTH_UNAVAILABLE: per-invoke authorization failed', code: 503 }
+      }
+      if (!reauthorized)
+        return { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
 
       const opaqueActionId = opaqueActionIdForTool(toolName)
       if (!opaqueActionId) return { error: `bad tool: ${toolName}`, code: 400 }
 
       try {
         const bridgeResult = await forwardToBridge(opaqueActionId, args)
-        return { result: bridgeResult ?? null }
+        return { result: projectCapabilityResult(bridgeResult ?? null, projection) }
       } catch (err) {
         // WS-disconnect mid-drive must be surfaced, not silently dropped.
         return {
@@ -423,6 +507,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     callTool,
     serialize,
     attachBridge,
+    issueBridgeNonce: (ttlMs?: number) => bridgeNonces.issue(ttlMs),
     dispose,
   }
 }

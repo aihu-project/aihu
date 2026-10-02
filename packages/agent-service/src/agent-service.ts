@@ -10,6 +10,9 @@
  * This ordering is a security invariant — do NOT reorder.
  */
 import type { AgentMetadata } from '@aihu/agent'
+import type { Actor } from './actor.ts'
+import { authorizeCapability, projectCapabilityResult } from './capability-gate.ts'
+import type { Principal } from './principal-gate.ts'
 import {
   decideEmission,
   isScopeValue,
@@ -93,6 +96,22 @@ function metadataToToolEntry(meta: AgentMetadata): AgentToolEntry {
   }
 }
 
+function sanitizeActor(actor: Actor | null, principalScopes: readonly string[]): Actor | undefined {
+  if (!actor || typeof actor !== 'object') return undefined
+  if (!['human', 'delegated-agent', 'machine'].includes(actor.kind)) return undefined
+  if (typeof actor.subject !== 'string' || actor.subject === '') return undefined
+  if (typeof actor.organizationId !== 'string' || actor.organizationId === '') return undefined
+  if (!Array.isArray(actor.scopes) || actor.scopes.some((scope) => typeof scope !== 'string'))
+    return undefined
+  if (actor.issuer !== null && typeof actor.issuer !== 'string') return undefined
+  if (actor.audience !== null && typeof actor.audience !== 'string') return undefined
+  if (actor.grantId !== null && typeof actor.grantId !== 'string') return undefined
+  if (actor.grantVersion !== null && typeof actor.grantVersion !== 'string') return undefined
+  const verifiedScopes = new Set(principalScopes)
+  const scopes = Object.freeze(actor.scopes.filter((scope) => verifiedScopes.has(scope)))
+  return Object.freeze({ ...actor, scopes })
+}
+
 // ─── Service factory ─────────────────────────────────────────────────────────
 
 /**
@@ -116,6 +135,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
   const rateLimitPlugin = options?.rateLimitPlugin
   const getRegistry = options?.getRegistry
   const authDiscoveryUrl = options?.authDiscoveryUrl
+  const actorResolver = options?.actorResolver
 
   /**
    * Run the security gate (RFC §5 steps 1-4: 404 → 401 → 403 → 429) WITHOUT
@@ -137,7 +157,14 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
     toolName: string,
     requestContext?: RequestContext,
   ): Promise<
-    | { ok: true; binding: LiveBinding; tag: string; action: string }
+    | {
+        ok: true
+        binding: LiveBinding
+        tag: string
+        action: string
+        actor?: Actor
+        principal: Principal
+      }
     | { ok: false; envelope: ReturnType<typeof jsonrpcError> }
   > {
     const slash = toolName.indexOf('/')
@@ -261,6 +288,51 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
     }
     const verifiedSub: string | null = principal.class === 'anonymous' ? null : principal.sub
 
+    // ── Step 2b: tenant-aware actor resolution (#870) ─────────────────────
+    //
+    // Runs AFTER the principal is verified and the static call-axis meet
+    // passed, so `actorResolver` is never consulted for an anonymous or
+    // refused caller. Fail-closed by construction: `actor` starts undefined
+    // and stays that way unless a resolver is configured AND returns a
+    // non-null result for this exact principal. Nothing downstream in THIS
+    // gate reads `actor` yet — it is surfaced to callers (`authorize()`) for
+    // a host's own authorization layer to consult; the framework makes no
+    // enforcement decision from it (that is the remaining scope of #871).
+    let actor: Actor | undefined
+    const readingState =
+      meta?.state !== undefined && action in meta.state && !(meta.actions && action in meta.actions)
+    if (readingState && principal.class !== 'anonymous') {
+      if (!actorResolver) {
+        return {
+          ok: false,
+          envelope: jsonrpcError(503, 'ACTOR_UNAVAILABLE: actor resolver is not configured'),
+        }
+      }
+      try {
+        actor = sanitizeActor(await actorResolver.resolveActor(principal), principal.scopes)
+      } catch {
+        return {
+          ok: false,
+          envelope: jsonrpcError(503, 'ACTOR_UNAVAILABLE: actor resolution failed'),
+        }
+      }
+      if (!actor) {
+        return {
+          ok: false,
+          envelope: jsonrpcError(403, 'ACTOR_DENIED: no current actor grant for this principal'),
+        }
+      }
+    } else if (actorResolver && principal.class !== 'anonymous') {
+      try {
+        actor = sanitizeActor(await actorResolver.resolveActor(principal), principal.scopes)
+      } catch {
+        return {
+          ok: false,
+          envelope: jsonrpcError(503, 'ACTOR_UNAVAILABLE: actor resolution failed'),
+        }
+      }
+    }
+
     // ── Step 3b: live entitlement (GX Phase 4 #466, 70-spec §4.6) ─────────
     //
     // AFTER the static meet, BEFORE the rate limit. For every scope in the
@@ -363,7 +435,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
       }
     }
 
-    return { ok: true, binding, tag, action }
+    return { ok: true, binding, tag, action, principal, ...(actor ? { actor } : {}) }
   }
 
   return {
@@ -378,7 +450,7 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
     ): Promise<unknown> {
       const gated = await runGate(toolName, requestContext)
       if (!gated.ok) return gated.envelope
-      const { binding, action } = gated
+      const { binding, action, tag, principal } = gated
 
       // ── Step 5: dispatch ──────────────────────────────────────────────────
       // Try callAction first, then getSignal for read-only signals.
@@ -394,8 +466,27 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
         // If callAction throws "no action: <name>", try getSignal.
         if (err instanceof Error && err.message.startsWith('no action:')) {
           const value = binding.getSignal(action)
-          if (value !== undefined) return { result: value }
-          return jsonrpcError(404, `no action: ${action}`)
+          if (value === undefined) return jsonrpcError(404, `no action: ${action}`)
+          if (principal.class !== 'anonymous' && !gated.actor) {
+            return jsonrpcError(503, 'ACTOR_UNAVAILABLE: actor resolver is not configured')
+          }
+          const verdict = await authorizeCapability(
+            principal,
+            {
+              capability: `${tag}.${action}`,
+              resource: requestContext?.resource,
+              ...(gated.actor ? { actor: gated.actor } : {}),
+            },
+            { resolve: options?.authorizeDataRead },
+          )
+          if (!verdict.allow) {
+            return jsonrpcError(
+              verdict.code,
+              verdict.message,
+              verdict.code === 401 ? authDiscoveryUrl : undefined,
+            )
+          }
+          return { result: projectCapabilityResult(value, verdict.projection) }
         }
         throw err
       }
@@ -410,7 +501,41 @@ function buildService(metas: AgentMetadata[], options?: AgentServiceOptions): Ag
       // action. Used by the capability bridge so the visible browser instance
       // is the sole executor while the server stays the policy authority.
       const gated = await runGate(toolName, requestContext)
-      return gated.ok ? { authorized: true } : gated.envelope
+      if (!gated.ok) return gated.envelope
+      // #870: surface the resolved actor (when an `actorResolver` produced
+      // one) so a capability-bridge host can layer its own session-bound
+      // authorization on top. Omitted entirely when absent — never a `null`
+      // placeholder a caller might mistake for "resolved to no actor".
+      const meta = byTag.get(gated.tag)
+      if (!meta) return jsonrpcError(404, `no agent metadata: ${gated.tag}`)
+      const isRead =
+        meta?.state !== undefined &&
+        gated.action in meta.state &&
+        !(meta.actions && gated.action in meta.actions)
+      if (isRead) {
+        const verdict = await authorizeCapability(
+          gated.principal,
+          {
+            capability: `${gated.tag}.${gated.action}`,
+            resource: requestContext?.resource,
+            ...(gated.actor ? { actor: gated.actor } : {}),
+          },
+          { resolve: options?.authorizeDataRead },
+        )
+        if (!verdict.allow) {
+          return jsonrpcError(
+            verdict.code,
+            verdict.message,
+            verdict.code === 401 ? authDiscoveryUrl : undefined,
+          )
+        }
+        return {
+          authorized: true,
+          ...(gated.actor ? { actor: gated.actor } : {}),
+          ...(verdict.projection !== undefined ? { projection: verdict.projection } : {}),
+        }
+      }
+      return gated.actor ? { authorized: true, actor: gated.actor } : { authorized: true }
     },
 
     asMiddleware(): (req: Request) => Promise<Response | null> {

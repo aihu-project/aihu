@@ -169,6 +169,19 @@ describe('G7a — the generated loader serves the governed route', () => {
     expect(Object.keys(payload.preview as object)).toEqual(['headword'])
   })
 
+  it('denied data never appears in rendered HTML or route loader metadata', async () => {
+    const fx = makeFixture()
+    const res = await fx.router.handle(req('/lexicon/hello'))
+    const html = await res.text()
+    const payload = loaderPayload(html) as Record<string, unknown>
+    expect(html).not.toContain(SECRET_SENSES)
+    expect(payload).toEqual({
+      preview: { headword: HEADWORD },
+      $gx: { entitled: false, reason: 'auth' },
+    })
+    expect(Object.keys(payload).sort()).toEqual(['$gx', 'preview'])
+  })
+
   it('E3 endpoint transport parity: identical decisions, JSON transport', async () => {
     const fx = makeFixture()
     const anon = await fx.router.handle(req('/__aihu/data/lexicon/hello'))

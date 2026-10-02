@@ -37,6 +37,12 @@ export interface BridgeClientOptions {
   dispatcher: AgentDispatcher
   /** Duplex channel to the server (a `ws` WebSocket in production). */
   channel: BridgeChannel
+  /** Server-issued single-use handshake nonce. */
+  nonce?: string
+  /** Verified session credential, bound to this bridge peer. */
+  sessionToken?: string
+  /** Current actor/grant version, rechecked by the server on every invoke. */
+  grantVersion?: string
   /**
    * Optional snapshot source (e.g. the mount's `serialize`). When provided, a
    * `snapshot` frame is pushed after each successful invocation so the server
@@ -64,7 +70,13 @@ export function createBridgeClient(options: BridgeClientOptions): BridgeClient {
   }
 
   // Handshake — lets the server reject an incompatible protocol version.
-  send({ type: 'hello', protocol: BRIDGE_PROTOCOL_VERSION })
+  send({
+    type: 'hello',
+    protocol: BRIDGE_PROTOCOL_VERSION,
+    ...(options.sessionToken ? { sessionToken: options.sessionToken } : {}),
+    ...(options.nonce ? { nonce: options.nonce } : {}),
+    ...(options.grantVersion ? { grantVersion: options.grantVersion } : {}),
+  })
 
   async function handleInvoke(
     callId: string,

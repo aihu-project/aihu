@@ -9,13 +9,17 @@
  */
 
 import type {
+  Actor,
+  ActorResolver,
   AgentService,
   AgentServiceOptions,
   AuthPlugin,
+  CapabilityGrantResolver,
   RateLimitPlugin,
   RequestContext,
 } from '@aihu/agent-service'
 import type { AgentBindingSpec, MountScope, Node, Snapshot } from '@aihu/arbor'
+import type { BridgeNonce } from './bridge-nonce.ts'
 
 // ─── createAgentServer options ───────────────────────────────────────────────
 
@@ -63,6 +67,8 @@ export interface AgentServerOptions {
    * Lets scoped/rate-limited tools be reachable over the bundled HTTP path.
    */
   resolveAuth?: AgentServiceOptions['resolveAuth']
+  actorResolver?: ActorResolver
+  authorizeDataRead?: CapabilityGrantResolver
   /**
    * Auth-discovery URL forwarded to `createAgentService` — included in every
    * 401 envelope so a refused agent knows where to obtain a credential (e.g.
@@ -70,6 +76,8 @@ export interface AgentServerOptions {
    * only; never a policy input.
    */
   authDiscoveryUrl?: AgentServiceOptions['authDiscoveryUrl']
+  /** Verify the session token bound to a bridge handshake. Missing verifier denies attachment. */
+  verifyBridgeSession?: (token: string) => boolean | Promise<boolean>
   /**
    * How long (ms) `callTool` waits for an attached bridge channel to complete
    * its `hello` handshake before refusing to delegate to it (503
@@ -80,6 +88,13 @@ export interface AgentServerOptions {
    * protocol version is rejected immediately, without waiting out this timeout.
    */
   bridgeHandshakeTimeoutMs?: number
+  /** Re-check the bound session/grant before every invocation. */
+  reauthorizeBridgeInvoke?: (binding: {
+    readonly sessionToken?: string
+    readonly grantVersion?: string
+    /** Actor resolved by the service gate for this invocation, if verified. */
+    readonly actor?: Actor
+  }) => boolean | Promise<boolean>
 }
 
 // ─── WS capability-bridge contract (T2 → T3) ─────────────────────────────────
@@ -161,6 +176,9 @@ export interface BridgeSnapshotMessage {
 export interface BridgeHelloMessage {
   type: 'hello'
   protocol: number
+  sessionToken?: string
+  nonce?: string
+  grantVersion?: string
 }
 
 /** Any message a client may send to the server over the bridge. */
@@ -227,6 +245,9 @@ export interface AgentServer {
    * inherited from a previous peer.
    */
   attachBridge(channel: BridgeChannel): () => void
+
+  /** Issue a single-use nonce for a forthcoming bridge handshake. */
+  issueBridgeNonce(ttlMs?: number): BridgeNonce
 
   /**
    * Build the MCP `Server` (stdio-ready) exposing each component action as an

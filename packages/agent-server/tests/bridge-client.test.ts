@@ -185,13 +185,18 @@ describe('full loop: server gates, the BROWSER instance is driven (not the twin)
     const server = createAgentServer({
       target: { node: twin.node, agentBinding: twin.agentBinding },
       createHost: () => new JSDOM('<!DOCTYPE html><body></body>').window.document.body,
+      verifyBridgeSession: (token) => token === 'test-session',
+      reauthorizeBridgeInvoke: () => true,
     })
     servers.push(server)
     server.attachBridge(serverSide)
+    const nonce = server.issueBridgeNonce().nonce
     clients.push(
       createBridgeClient({
         dispatcher: browser.dispatcher,
         channel: clientSide,
+        sessionToken: 'test-session',
+        nonce,
         serialize: browser.serialize,
       }),
     )
