@@ -94,6 +94,12 @@ export const EXPORTS: readonly ApiExport[] = [
       "Generate `virtual:aihu-server-components` — the SERVER-side child registry source, for `output: 'ssr'` builds.",
   },
   {
+    name: 'isActiveRouteLink',
+    kind: 'function',
+    signature: 'function isActiveRouteLink(href: string, pathname: string): boolean',
+    summary: '',
+  },
+  {
     name: 'jsSourceLiteral',
     kind: 'function',
     signature: 'function jsSourceLiteral(value: unknown): string',
@@ -149,6 +155,13 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'scanPages',
     kind: 'function',
     signature: 'function scanPages(root: string, pd: string): MiddlewareScan',
+    summary: '',
+  },
+  {
+    name: 'shouldInterceptLinkClick',
+    kind: 'function',
+    signature:
+      'function shouldInterceptLinkClick(event: MouseEvent, anchor: HTMLAnchorElement): boolean',
     summary: '',
   },
   {
