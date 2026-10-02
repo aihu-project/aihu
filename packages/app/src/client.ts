@@ -38,6 +38,14 @@ export interface AppConfig {
   /** Id of the outlet element in index.html. Default: 'outlet' */
   outletId?: string
   /**
+   * DOM root for the app's hierarchical context scope. Defaults to
+   * `document.documentElement`, which makes route context available to shell
+   * components outside the outlet when this app owns the document. Set a
+   * separate root for each app when multiple apps share a document; it must
+   * contain the configured outlet.
+   */
+  contextRoot?: HTMLElement
+  /**
    * App-level values hoisted into globalThis before any component runs.
    * Use this for singletons (db clients, auth helpers, i18n) that are
    * referenced as bare identifiers inside @state blocks.
@@ -53,9 +61,9 @@ export interface AppConfig {
   provide?: Record<string, unknown>
   /**
    * App-root context scope. Runs ONCE at bootstrap, inside a real
-   * `@aihu/context` scope owned by the outlet element — so every
+   * `@aihu/context` scope owned by {@link AppConfig.contextRoot} — so every
    * `provide(Token, value)` made here is visible to `inject(Token)` in every
-   * page, layout and nested component the app renders.
+   * shell, page, layout and nested component under that root.
    *
    * This is the app-root seam that several packages' docs already assume
    * exists ("provide at app root" — `@aihu/magna`'s `MagnaFetchToken`,
@@ -244,6 +252,10 @@ export function createApp(config?: AppConfig): AppHandle {
     )
   }
   const outlet: HTMLElement = outletEl
+  const contextRoot = config?.contextRoot ?? document.documentElement
+  if (!contextRoot.contains(outlet)) {
+    throw new Error('@aihu/app: contextRoot must contain the configured outlet')
+  }
 
   const router = createRouter(routes)
 
@@ -266,11 +278,13 @@ export function createApp(config?: AppConfig): AppHandle {
   //      such root to be provided from.
   //
   // The fix is therefore the general seam, not a RouteContext special case:
-  // `_withOwnerContext` installs a context scope OWNED BY THE OUTLET ELEMENT —
-  // a DOM ancestor of every page and layout this app renders. The runtime's
+  // `_withOwnerContext` installs a context scope owned by the configured app
+  // root — the document element by default, so shell components outside the
+  // outlet can also resolve app context. For multiple apps, callers give each
+  // one a distinct contextRoot. The runtime's
   // per-component `_enterOwnerContext` walks `parentNode` / shadow `host`
   // looking for ANY node carrying a provides object, so rooting the chain on
-  // the outlet needs no synthetic wrapper component and no change to
+  // the app root needs no synthetic wrapper component and no change to
   // `inject`'s hot path. `config.context` opens the same scope to app authors.
   //
   // Note `config.provide` (above) is an unrelated `globalThis` hoist that never
@@ -294,7 +308,7 @@ export function createApp(config?: AppConfig): AppHandle {
     viewTransitions: config?.router?.viewTransitions,
   } as RouteContextValue
   bindRouteSignalWriter(routeContext, renderNav)
-  _withOwnerContext(outlet, () => {
+  _withOwnerContext(contextRoot, () => {
     provideRouteContext(routeContext)
     // Author-supplied providers run second so an app may deliberately override
     // the framework's own tokens (both write to the same scope; last wins).
