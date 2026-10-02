@@ -10,6 +10,28 @@ Part of the **meta-framework** layer of Aihu. Provides whole-app capability — 
 _(Hand-written prose lives in this block. Replace this placeholder; everything below is auto-generated.)_
 <!-- END_HANDWRITTEN: prose -->
 
+## Static output
+
+Set `output: 'static'` to prerender each route with its route head into the
+build output. The default `static.format: 'directory'` writes `/about` to
+`about/index.html`; use `static: { format: 'file' }` to write `about.html`
+for hosts that serve extensionless paths without a trailing-slash redirect.
+The root route always writes `index.html`.
+
+`dir.components` accepts one directory or an array of directories. Include
+workspace component packages there so they are registered in the client and
+available to the static renderer, for example:
+
+```ts
+viteAihuPlugin({
+  output: 'static',
+  dir: { components: ['src/components', '../../packages/components'] },
+})
+```
+
+Static builds fail with the route and source file when a route cannot load or
+render, so incomplete output cannot be mistaken for a successful build.
+
 ## Install
 
 <!-- BEGIN_AUTOGEN: install -->

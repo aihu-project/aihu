@@ -19,6 +19,7 @@ import {
   readAihuComponentTag,
   readAihuLayoutComponents,
   scanComponents,
+  scanPages,
   viteRouterPlugin,
 } from '../src/vite-plugin.ts'
 
@@ -446,6 +447,25 @@ describe('genR — route `components` from route metadata', () => {
       components: ['hn-comment'],
     }
     expect(route.components).toEqual(['hn-comment'])
+  })
+})
+
+describe('scanPages — generated type-check sidecars', () => {
+  it('does not treat *.aihu.ts type sidecars as routes', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'aihu-route-sidecar-'))
+    const pages = join(tmp, 'pages')
+    mkdirSync(pages)
+    try {
+      writeFileSync(join(pages, 'index.aihu'), '@template { <main>home</main> }\n')
+      writeFileSync(join(pages, 'about.aihu.ts'), 'export type AboutPage = {}\n')
+      writeFileSync(join(pages, 'about.ts'), 'export default function About() {}\n')
+      expect(scanPages(tmp, 'pages').routes.map((path) => path.split('/').at(-1))).toEqual([
+        'about.ts',
+        'index.aihu',
+      ])
+    } finally {
+      rmSync(tmp, { recursive: true, force: true })
+    }
   })
 })
 

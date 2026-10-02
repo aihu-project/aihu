@@ -464,10 +464,10 @@ function resolveComponent(
 }
 
 /** Convert a route pattern to its `index.html` output path under outDir. */
-function patternToHtmlPath(pattern: string): string {
+function patternToHtmlPath(pattern: string, format: 'directory' | 'file' = 'directory'): string {
   if (pattern === '/') return 'index.html'
   const clean = pattern.replace(/^\//, '').replace(/\/$/, '')
-  return join(clean, 'index.html')
+  return format === 'file' ? `${clean}.html` : join(clean, 'index.html')
 }
 
 export interface RunPrerenderOptions {
@@ -530,14 +530,23 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
   // because render-time recursion is already bounded by `__aihu_schild`'s depth
   // cap: a cycle would not hang the build, it would quietly emit 32 nested
   // copies of the same subtree and write them to disk.
-  const componentsDir = config?.dir?.components ?? 'src/components'
-  const { found: discoveredComponents, failures: componentLoadFailures } = await discoverComponents(
-    root,
-    componentsDir,
-    loadModule,
-    pushWarn,
-    _listComponentDir ?? defaultComponentDirLister,
+  const componentsDirs = config?.dir?.components ?? 'src/components'
+  const componentPaths = (Array.isArray(componentsDirs) ? componentsDirs : [componentsDirs])
+    .map((dir) => resolvePath(root, dir))
+    .sort()
+  const discovered = await Promise.all(
+    componentPaths.map((componentsDir) =>
+      discoverComponents(
+        root,
+        componentsDir,
+        loadModule,
+        pushWarn,
+        _listComponentDir ?? defaultComponentDirLister,
+      ),
+    ),
   )
+  const discoveredComponents = discovered.flatMap(({ found }) => found)
+  const componentLoadFailures = discovered.flatMap(({ failures }) => failures)
   // `buildChildRegistry`'s warnings are BUFFERED, not emitted where they are
   // raised, for the same reason the two diagnostics below are: the registry is
   // built before the render loop, so nothing that reads "does anything reference
@@ -704,7 +713,8 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
       if (explainedByLoadFailure.has(tag)) continue
       pushWarn(
         `[@aihu/app] static output: <${tag}> is referenced but was not found under ` +
-          `"${componentsDir}", so it prerenders as an empty element and fills in on the ` +
+          `"${Array.isArray(componentsDirs) ? componentsDirs.join(', ') : componentsDirs}", ` +
+          `so it prerenders as an empty element and fills in on the ` +
           `client. Move it there, or ignore this if it is not an aihu component.`,
       )
     }
@@ -783,6 +793,7 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
     name: string,
     routePattern: string,
     concretePath: string,
+    routeFile: string,
   ): Promise<string | null> => {
     const cacheKey = `${name}\u0000${concretePath}`
     const cached = layoutShellCache.get(cacheKey)
@@ -839,8 +850,10 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        pushWarn(
-          `[@aihu/app] static output: failed to render layout "${name}" for ${routePattern}: ${msg}`,
+        throw new Error(
+          `[@aihu/app] static output: failed to load or render layout "${name}" for route ` +
+            `${routePattern} (${routeFile}; layout ${layoutFile}): ${msg}`,
+          { cause: err },
         )
       }
     }
@@ -872,8 +885,10 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
       mod = await loadModule(route.file)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      pushWarn(`[@aihu/app] static output: failed to load route ${route.pattern}: ${msg}`)
-      continue
+      throw new Error(
+        `[@aihu/app] static output: failed to load route ${route.pattern} (${route.file}): ${msg}`,
+        { cause: err },
+      )
     }
     // §22: a page's own template references components — `<weather-demo>` in
     // apps/docs is referenced from pages ONLY. Folded in before any `continue`
@@ -920,11 +935,9 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
 
     const component = resolveComponent(mod)
     if (!component) {
-      pushWarn(
-        `[@aihu/app] static output: route ${route.pattern} has no renderable default export — ` +
-          `skipping content prerender (the SPA shell still ships).`,
+      throw new Error(
+        `[@aihu/app] static output: route ${route.pattern} (${route.file}) has no renderable default export`,
       )
-      continue
     }
 
     const layoutName = declaredLayout
@@ -988,8 +1001,10 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
         })
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        pushWarn(`[@aihu/app] static output: render failed for ${concretePath}: ${msg}`)
-        continue
+        throw new Error(
+          `[@aihu/app] static output: render failed for route ${concretePath} (${route.file}): ${msg}`,
+          { cause: err },
+        )
       }
 
       // SSR layout parity (#7): render the route's layout shell, then inject the
@@ -1001,7 +1016,7 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
       // sees `RouteContext`, so a dynamic route's pages get their own chrome
       // rather than every `/posts/:slug` page reusing the first slug's.
       let layoutShell = layoutName
-        ? await renderLayoutShell(layoutName, route.pattern, concretePath)
+        ? await renderLayoutShell(layoutName, route.pattern, concretePath, route.file)
         : null
       if (layoutShell !== null && injectIntoOutlet(layoutShell, '') === null) {
         pushWarn(
@@ -1034,8 +1049,14 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
       }
       html = spliced ?? html
 
-      const relPath = patternToHtmlPath(concretePath)
+      const relPath = patternToHtmlPath(concretePath, config?.static?.format)
       const absPath = resolvePath(outDir, relPath)
+      if (absPath !== outDir && !absPath.startsWith(`${outDir}${sep}`)) {
+        throw new Error(
+          `[@aihu/app] static output: route ${route.pattern} (${route.file}) resolved to an ` +
+            `HTML path outside build.outDir: ${relPath}`,
+        )
+      }
       await mkdir(dirname(absPath), { recursive: true })
       await writeFile(absPath, html, 'utf8')
       result.written.push(relPath.replace(/\\/g, '/'))
@@ -1077,6 +1098,24 @@ export async function prerenderClose(
     configFile: false,
     appType: 'custom',
     logLevel: 'silent',
+    // This is a loader for an already-resolved app, not a second project
+    // config. Preserve settings that affect source resolution/transforms, while
+    // disabling dependency discovery so esbuild cannot prebundle @aihu/app's
+    // Vite virtual imports.
+    ...(resolvedViteConfig.resolve?.alias
+      ? { resolve: { alias: resolvedViteConfig.resolve.alias } }
+      : {}),
+    ...(resolvedViteConfig.define ? { define: resolvedViteConfig.define } : {}),
+    ...(resolvedViteConfig.css ? { css: resolvedViteConfig.css } : {}),
+    ssr: {
+      ...(resolvedViteConfig.ssr?.noExternal !== undefined
+        ? { noExternal: resolvedViteConfig.ssr.noExternal }
+        : {}),
+      ...(resolvedViteConfig.ssr?.external !== undefined
+        ? { external: resolvedViteConfig.ssr.external }
+        : {}),
+    },
+    optimizeDeps: { noDiscovery: true, include: [] },
     server: { middlewareMode: true, hmr: false },
     plugins: plugins as never,
   })

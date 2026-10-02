@@ -1,0 +1,3 @@
+@template {
+  <div class="site-layout"><header>Static site layout</header><outlet /></div>
+}

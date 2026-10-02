@@ -306,9 +306,8 @@ export function viteAihuPlugin(config?: AihuConfig): PluginOption[] {
   const routerOpts = {
     pagesDir: config?.dir?.pages ?? 'pages',
     layoutsDir: config?.dir?.layouts ?? 'src/layouts',
-    // `componentsDir` has existed on RouterPluginOptions all along but was
-    // unreachable from aihu.config.ts — changing it meant calling
-    // viteRouterIntegration() yourself, i.e. abandoning viteAihuPlugin.
+    // Keep the app, client/server virtual registries, and SSG discovery on the
+    // same component directories, including shared workspace packages.
     ...(config?.dir?.components != null ? { componentsDir: config.dir.components } : {}),
     // Give the router's route generator the compiler's route-metadata extractor
     // so per-route head/middleware/params/ssr flow into virtual:aihu-routes in
@@ -323,6 +322,21 @@ export function viteAihuPlugin(config?: AihuConfig): PluginOption[] {
     // derivation rather than a fourth copy of the rule.
     deriveChildTags: makeDeriveChildTags(config?.dir?.layouts ?? 'src/layouts'),
   } satisfies RouterPluginOptions
+
+  // Framework entries import Vite-only virtual modules. Excluding these
+  // packages keeps esbuild's dependency scanner from trying to resolve them.
+  const virtualModulesOptOutPlugin: Plugin = {
+    name: 'aihu-virtual-modules-optimize-deps',
+    config(userConfig) {
+      const existing = userConfig.optimizeDeps?.exclude ?? []
+      return {
+        optimizeDeps: {
+          ...userConfig.optimizeDeps,
+          exclude: [...new Set([...existing, '@aihu/app'])],
+        },
+      }
+    },
+  }
 
   // Agent readiness: opt-in only. No safe default for `name`.
   let agentPlugin: PluginOption
@@ -754,6 +768,7 @@ export function viteAihuPlugin(config?: AihuConfig): PluginOption[] {
     }) as unknown as Plugin,
     cssThemeWatchPlugin,
     viteRouterIntegration(routerOpts) as unknown as Plugin,
+    virtualModulesOptOutPlugin,
     agentPlugin,
     entryPlugin,
     headPlugin,

@@ -1,0 +1,3 @@
+@template {
+  <section class="shared-banner"><header><slot name="header">Default banner heading</slot></header><p>Shared workspace component</p></section>
+}
