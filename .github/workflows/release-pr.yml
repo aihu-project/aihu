@@ -63,6 +63,12 @@ jobs:
             fi
           fi
 
+          # release:version already ran sync-readme and gen-api, but the css-engine
+          # stamp above changes platform versions afterwards. Regenerate so the
+          # Version PR's READMEs and package inventory match (readme-sync check).
+          bun scripts/sync-readme.ts
+          bun apps/docs/scripts/gen-api.ts
+
           git add -N .
           git diff --binary HEAD > "$RUNNER_TEMP/version-pr.patch"
           if [ -s "$RUNNER_TEMP/version-pr.patch" ]; then
