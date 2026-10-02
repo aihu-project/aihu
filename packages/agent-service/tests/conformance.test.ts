@@ -51,7 +51,7 @@ describe('conformance — pinned package versions and API surface', () => {
     // A major/minor bump in any of these can change observable behavior
     // (e.g. vitest's module-mocking semantics, TS's strictness defaults).
     // Bumping on purpose is fine — bump this pin in the same change.
-    expect(rootPackageJson.devDependencies.vitest).toBe('^3.2.6')
+    expect(rootPackageJson.devDependencies.vitest).toBe('^4.1.11')
     expect(rootPackageJson.devDependencies.typescript).toBe('^5.6.2')
     expect(rootPackageJson.devDependencies.vite).toBe('^8.0.16')
   })
