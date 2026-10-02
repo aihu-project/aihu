@@ -9,21 +9,20 @@ name: Build and publish platform native packages
 # docs/plans/2026-08-10-platforms-before-pins.md §2.2 for the asset-loss
 # mechanism that rules that shape out.
 #
-# Builds the two root-owned native addon families (@aihu/server and
+# Builds the selected root-owned native addon families (@aihu/server and
 # @aihu/css-engine) and publishes their @aihu/*-<platform> optionalDependency
-# package sets to npm. The build-* jobs always run, so the GitHub Release always
-# has fresh binaries; the publish-* jobs only run on a real tag push. Canary
+# package sets to npm. The default `all` scope builds both families, so the
+# GitHub Release receives fresh binaries; the publish-* jobs only run when
+# requested by a stable release or Version PR. Canary
 # dispatches keep the last stable native pins while the root JavaScript packages
 # are published, because these native families have independent version streams.
 #
 # Called from:
 #   - release.yml, unconditionally, on every trigger (tag push, dry-run
 #     dispatch, canary dispatch) — identical behavior to before the split.
-#   - release-pr.yml, per docs/plans/2026-08-10-platforms-before-pins.md step
-#     3 (not yet implemented as of this file's introduction): publish
-#     platform packages at the new version BEFORE the pins that name them
-#     land on main, gated on the stamp having actually moved a platform
-#     version.
+#   - release-pr.yml: publish css-engine platform packages at their new
+#     version BEFORE the pins that name them land on main, gated on the stamp
+#     having actually moved a platform version.
 #
 # `github.event_name`/`inputs.canary`/`inputs.dry_run` are NOT read directly
 # in this file even though they were in the pre-split release.yml — a called
@@ -44,6 +43,16 @@ name: Build and publish platform native packages
       dry_run:
         description: 'Passthrough of the top-level workflow_dispatch `dry_run` input (false on any other trigger)'
         required: true
+        type: boolean
+      scope:
+        description: 'Platform families to build: all, server, or css-engine'
+        required: false
+        default: all
+        type: string
+      stamped_version_artifact:
+        description: 'Apply the same-run version PR patch before publishing css-engine packages'
+        required: false
+        default: false
         type: boolean
 
 # Least-privilege default for jobs below that declare no permissions of their
@@ -67,6 +76,7 @@ jobs:
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 30
+    if: inputs.scope != 'css-engine'
     strategy:
       fail-fast: false
       matrix:
@@ -144,7 +154,7 @@ jobs:
     # Native platform packages publish on stable tags only. Canary root
     # packages keep their last stable native pins; these families are versioned
     # independently from the root snapshot.
-    if: inputs.is_release && !inputs.canary
+    if: inputs.is_release && !inputs.canary && inputs.scope != 'css-engine'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -166,7 +176,7 @@ jobs:
           set -euo pipefail
           for dir in packages/server/npm/*/; do
             platform=$(basename "$dir")
-            node_file=$(ls native-artifacts/native-$platform/*.node 2>/dev/null || true)
+            node_file=$(ls native-artifacts/native-"$platform"/*.node 2>/dev/null || true)
             # HARD FAIL, not silent skip: a missing binary here would publish
             # an empty platform package and brick install resolution for that
             # platform (see publish-native's comment on why this
@@ -216,6 +226,7 @@ jobs:
     # Longest observed run of this job is ~3 min; without a bound a hang
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 30
+    if: inputs.scope != 'server'
     strategy:
       fail-fast: false
       matrix:
@@ -288,10 +299,21 @@ jobs:
     # inherits GitHub's 360 min default and stalls the release for six hours.
     timeout-minutes: 20
     # Native platform packages publish on stable tags only; see publish-native.
-    if: inputs.is_release && !inputs.canary
+    if: inputs.is_release && !inputs.canary && inputs.scope != 'server'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Download stamped Version PR tree
+        if: inputs.stamped_version_artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: version-pr-patch
+          path: .
+
+      - name: Apply stamped Version PR patch
+        if: inputs.stamped_version_artifact
+        run: git apply version-pr.patch
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -312,7 +334,7 @@ jobs:
             platform=$(basename "$dir")
             # The css binary is a raw executable named aihu-css-compile[.exe];
             # match either to be platform-agnostic in the copy.
-            bin_file=$(ls css-native-artifacts/css-native-$platform/aihu-css-compile* 2>/dev/null || true)
+            bin_file=$(ls css-native-artifacts/css-native-"$platform"/aihu-css-compile* 2>/dev/null || true)
             # HARD FAIL, not silent skip: a missing binary here would publish
             # an empty platform package and brick install resolution for that
             # platform (see publish-css-native's comment on why this

@@ -19,9 +19,9 @@
 use crate::ast::{SfcAst, SfcStyleScope};
 use crate::progressive::ProgressiveRegistry;
 use crate::scanner::{scan, ScanResult};
-use crate::theme::{extract_theme_blocks, ThemeRegistry};
+use crate::theme::{extract_theme_blocks, has_bare_root_theme_block, mask_comments, ThemeRegistry};
 use crate::tokens::{animation_keyframes, utility_to_css};
-use crate::variants::{split_variants, AttrMatch, Variant};
+use crate::variants::{AttrMatch, Variant, split_variants};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputMode {
@@ -394,8 +394,13 @@ pub fn emit_sfc_scoped_channels(ast: &SfcAst) -> Result<ScopedCssChannels, Compi
     // declarations: the values reach the CSS only as `var()` fallbacks, so an
     // inherited document theme still wins (#836).
     if let Some(project) = &ast.theme {
-        if project.contains("@theme") {
+        let masked_project = mask_comments(project);
+        if masked_project.contains("@theme") {
             theme.register_defaults(&extract_theme_blocks(project));
+        } else if has_bare_root_theme_block(project) {
+            return Err(CompileError::MalformedTheme {
+                detail: "found a `:root { --token: value; }` block but expected `@theme { ... }`; `:root` is not a theme wrapper".to_string(),
+            });
         } else {
             theme.register_defaults(project);
         }
@@ -407,6 +412,10 @@ pub fn emit_sfc_scoped_channels(ast: &SfcAst) -> Result<ScopedCssChannels, Compi
         let theme_bodies = extract_theme_blocks(&style.content);
         if !theme_bodies.is_empty() {
             theme.apply_theme_block(&theme_bodies);
+        } else if has_bare_root_theme_block(&style.content) {
+            return Err(CompileError::MalformedTheme {
+                detail: "found a `:root { --token: value; }` block but expected `@theme { ... }`; `:root` is not a theme wrapper".to_string(),
+            });
         }
     }
 
@@ -574,22 +583,23 @@ pub fn emit_sfc_scoped(ast: &SfcAst) -> Result<String, CompileError> {
 /// the broken text verbatim — the first real error this `Result` channel
 /// surfaces. Later passes (`@apply`, variant validation) add more variants.
 fn strip_theme_blocks(style_content: &str) -> Result<String, CompileError> {
+    let mask = mask_comments(style_content);
     let mut out = String::new();
-    let mut rest = style_content;
-    while let Some(at) = rest.find("@theme") {
-        out.push_str(&rest[..at]);
-        let after = &rest[at + "@theme".len()..];
-        let Some(open) = after.find('{') else {
-            // Malformed: `@theme` with no `{` body. Hard-error rather than
-            // emitting the broken text verbatim.
+    let mut cursor = 0;
+    while let Some(relative) = mask[cursor..].find("@theme") {
+        let at = cursor + relative;
+        let after = at + "@theme".len();
+        let Some(open_relative) = mask[after..].find('{') else {
             return Err(CompileError::MalformedTheme {
                 detail: "expected `{` after `@theme`".to_string(),
             });
         };
+        let open = after + open_relative;
+        out.push_str(&style_content[cursor..at]);
         let body_start = open + 1;
         let mut depth = 1u32;
         let mut end = body_start;
-        for (i, c) in after[body_start..].char_indices() {
+        for (i, c) in mask[body_start..].char_indices() {
             match c {
                 '{' => depth += 1,
                 '}' => {
@@ -602,8 +612,8 @@ fn strip_theme_blocks(style_content: &str) -> Result<String, CompileError> {
                 _ => {}
             }
         }
-        rest = &after[end + 1..];
+        cursor = end + 1;
     }
-    out.push_str(rest);
+    out.push_str(&style_content[cursor..]);
     Ok(out)
 }

@@ -75,10 +75,11 @@ jobs:
       # failing TS2307 nondeterministically. Reads only source + moon.yml text,
       # so it runs with the other cheap graph guards, before typecheck.
       - run: bun run check:moon-graph
-      # Guard: a css-engine / server native change must bump those platform
-      # binary packages, or the rebuilt binary is silently skipped at publish
-      # (see the scripts). The css-engine one was added after it went stale
-      # silently for weeks — see that script's own history.
+      # Guard: css-engine native source changes need a @aihu/css-engine patch
+      # changeset; the Version PR publishes its platform binaries before pins.
+      # Server native changes still bump platform manifests in the feature PR.
+      # The css-engine guard was added after its binary went stale silently
+      # for weeks — see that script's own history.
       #
       # The compiler equivalent is deliberately absent: compiler platform
       # artifacts are released by the standalone aihu-compiler repository.

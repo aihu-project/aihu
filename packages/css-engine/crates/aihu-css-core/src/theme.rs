@@ -290,19 +290,43 @@ fn var_is_referenced(body: &str, name: &str) -> bool {
     false
 }
 
+/// Return a same-byte-length copy with CSS comments replaced by spaces.
+/// Structural scans can use offsets from this string to slice the source.
+pub(crate) fn mask_comments(source: &str) -> String {
+    let mut bytes = source.as_bytes().to_vec();
+    let mut cursor = 0;
+    while cursor + 1 < bytes.len() {
+        if &bytes[cursor..cursor + 2] == b"/*" {
+            let end = source[cursor + 2..]
+                .find("*/")
+                .map_or(bytes.len(), |relative| cursor + relative + 4);
+            bytes[cursor..end].fill(b' ');
+            cursor = end;
+        } else {
+            cursor += 1;
+        }
+    }
+    String::from_utf8(bytes).expect("comment mask preserves valid UTF-8")
+}
+
 /// Extract the body of every `@theme { ... }` directive from a style-block
 /// string, returning the concatenated declaration text.
 pub fn extract_theme_blocks(style_content: &str) -> String {
+    let mask = mask_comments(style_content);
     let mut bodies = String::new();
-    let mut rest = style_content;
-    while let Some(at) = rest.find("@theme") {
-        let after = &rest[at + "@theme".len()..];
-        let Some(open) = after.find('{') else { break };
+    let mut cursor = 0;
+    while let Some(relative) = mask[cursor..].find("@theme") {
+        let at = cursor + relative;
+        let after = at + "@theme".len();
+        let Some(open_relative) = mask[after..].find('{') else {
+            break;
+        };
+        let open = after + open_relative;
         // Find the matching close brace.
         let body_start = open + 1;
         let mut depth = 1u32;
         let mut end = body_start;
-        for (i, c) in after[body_start..].char_indices() {
+        for (i, c) in mask[body_start..].char_indices() {
             match c {
                 '{' => depth += 1,
                 '}' => {
@@ -315,16 +339,64 @@ pub fn extract_theme_blocks(style_content: &str) -> String {
                 _ => {}
             }
         }
-        bodies.push_str(&after[body_start..end]);
+        bodies.push_str(&style_content[body_start..end]);
         bodies.push('\n');
-        rest = &after[end + 1..];
+        cursor = end + 1;
     }
     bodies
 }
 
-/// Parse `--name: value;` declarations from a CSS body. Tolerates whitespace,
-/// comments are NOT stripped (kept simple); values keep `oklch(...)` intact.
+/// Detect a standalone `:root { --token: value; }` wrapper that is commonly
+/// mistaken for a theme declaration. Compound selectors such as `:root.dark`
+/// remain ordinary authored CSS.
+pub(crate) fn has_bare_root_theme_block(style_content: &str) -> bool {
+    let mask = mask_comments(style_content);
+    let mut cursor = 0;
+    while let Some(relative) = mask[cursor..].find(":root") {
+        let start = cursor + relative;
+        let before_ok = start == 0
+            || mask[..start]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_whitespace() || matches!(c, '{' | '}' | ';'));
+        let after = start + ":root".len();
+        let rest = mask[after..].trim_start();
+        if before_ok && rest.starts_with('{') {
+            let open = mask[after..]
+                .find('{')
+                .map(|offset| after + offset)
+                .unwrap_or(after);
+            let body_start = open + 1;
+            let mut depth = 1u32;
+            let mut end = body_start;
+            for (offset, c) in mask[body_start..].char_indices() {
+                match c {
+                    '{' => depth += 1,
+                    '}' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            end = body_start + offset;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            if !parse_theme_declarations(&style_content[body_start..end]).is_empty() {
+                return true;
+            }
+            cursor = end.saturating_add(1);
+        } else {
+            cursor = after;
+        }
+    }
+    false
+}
+
+/// Parse `--name: value;` declarations from a CSS body. Tolerates whitespace
+/// and comments; values keep `oklch(...)` intact.
 fn parse_theme_declarations(body: &str) -> Vec<(String, String)> {
+    let body = mask_comments(body);
     let mut out = Vec::new();
     for decl in body.split(';') {
         let decl = decl.trim();

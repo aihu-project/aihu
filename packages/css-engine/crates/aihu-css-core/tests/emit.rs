@@ -401,6 +401,25 @@ fn malformed_theme_block_is_a_compile_error() {
 }
 
 #[test]
+fn bare_root_theme_wrapper_is_a_compile_error() {
+    let json = r#"{"tag":"X","astVersion":1,
+      "style":{"content":":root { --color-primary: #ff00aa; }","scope":"scoped"},
+      "meta":{"name":"X"},"template":null}"#;
+    let err = compile_sfc_scoped(&ast(json)).unwrap_err();
+    assert!(matches!(err, CompileError::MalformedTheme { .. }));
+    assert!(err.to_string().contains("@theme"), "{err}");
+}
+
+#[test]
+fn compound_root_selector_remains_authored_css() {
+    let json = r#"{"tag":"X","astVersion":1,
+      "style":{"content":":root.dark { --color-primary: #111; }","scope":"scoped"},
+      "meta":{"name":"X"},"template":null}"#;
+    let css = compile_sfc_scoped(&ast(json)).unwrap();
+    assert!(css.contains(":root.dark"), "{css}");
+}
+
+#[test]
 fn well_formed_theme_block_still_succeeds() {
     // Success path is byte-identical to before the Result conversion.
     let json = r#"{"tag":"X","astVersion":1,
