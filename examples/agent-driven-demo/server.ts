@@ -19,6 +19,7 @@
  * Start with:  bun --watch server.ts
  * Then open the Vite dev server (bun run dev) and drive it:
  *   curl -XPOST localhost:5208/agent/call \
+ *     -H 'authorization: Bearer local-demo-secret' \
  *     -H 'content-type: application/json' \
  *     -d '{"tool":"task-list/addTask","params":["Write the launch post"]}'
  */
@@ -26,12 +27,20 @@
 import { registerAgentMetadata } from '@aihu/agent'
 import type { BridgeChannel } from '@aihu/agent-server'
 import { createAgentServer, verifyBridgeUpgrade } from '@aihu/agent-server'
+import { projectCapabilityResult } from '@aihu/agent-service'
 import { branch, leaf } from '@aihu/arbor'
 import { type Signal, signal } from '@aihu/signals'
+import { createDemoSecurity } from './demo-security'
 
 const TAG = 'task-list'
 const PORT = 5208
 const VITE_PORT = 5108
+const DEMO_GRANT_VERSION = '1'
+const demoSecurity = createDemoSecurity(process.env.DEMO_AGENT_TOKEN)
+
+// One visible browser owns this demo's single bridge attachment. The token is
+// generated for that socket and invalidated on replacement or disconnect.
+let demoSession: { token: string; identity: string; grantVersion: string } | null = null
 
 // Origins allowed to open the `/bridge` WebSocket and become the trusted
 // browser peer. A WS upgrade is not subject to the same-origin policy the way
@@ -85,16 +94,39 @@ const server = createAgentServer({
       rateLimit: undefined,
     },
   },
+  verifyBridgeSession: (token) =>
+    demoSession?.token === token
+      ? { identity: demoSession.identity, grantVersion: demoSession.grantVersion }
+      : { identity: '' },
+  reauthorizeBridgeInvoke: ({ sessionToken, identity, grantVersion }) => {
+    const current = demoSession
+    return current !== null &&
+      current.token === sessionToken &&
+      current.identity === identity &&
+      current.grantVersion === grantVersion
+      ? { identity, grantVersion }
+      : false
+  },
+  authPlugin: demoSecurity.authPlugin,
+  actorResolver: demoSecurity.actorResolver,
+  authorizeDataRead: demoSecurity.authorizeDataRead,
   // No `createHost` and no jsdom glue: @aihu/agent-server stands up its own
   // server-side DOM internally when the runtime (plain Bun here) has none.
 })
 
 // ── Wrap a Bun ServerWebSocket as a BridgeChannel. ────────────────────────────
 type BunWs = { send(data: string): void; readyState: number }
-const messageHandlers = new Set<(data: string) => void>()
-const closeHandlers = new Set<() => void>()
+const channelHandlers = new Map<
+  BunWs,
+  { messages: Set<(data: string) => void>; closes: Set<() => void> }
+>()
 
 function bridgeChannelFor(ws: BunWs): BridgeChannel {
+  const handlers = {
+    messages: new Set<(data: string) => void>(),
+    closes: new Set<() => void>(),
+  }
+  channelHandlers.set(ws, handlers)
   return {
     get connected() {
       return ws.readyState === 1 // OPEN
@@ -103,17 +135,18 @@ function bridgeChannelFor(ws: BunWs): BridgeChannel {
       ws.send(data)
     },
     onMessage(handler) {
-      messageHandlers.add(handler)
-      return () => messageHandlers.delete(handler)
+      handlers.messages.add(handler)
+      return () => handlers.messages.delete(handler)
     },
     onClose(handler) {
-      closeHandlers.add(handler)
-      return () => closeHandlers.delete(handler)
+      handlers.closes.add(handler)
+      return () => handlers.closes.delete(handler)
     },
   }
 }
 
 let detachBridge: (() => void) | null = null
+let activeBridge: BunWs | null = null
 
 Bun.serve<{ bridge: boolean }>({
   port: PORT,
@@ -134,16 +167,27 @@ Bun.serve<{ bridge: boolean }>({
     // External-agent entry point: gate + (if a browser is connected) delegate to
     // the visible instance over the bridge.
     if (url.pathname === '/agent/call' && req.method === 'POST') {
-      const body = (await req.json()) as { tool: string; params?: unknown; userId?: string }
+      const caller = await demoSecurity.authorizeRequest(req)
+      if (!caller) return Response.json({ error: 'AUTH_REQUIRED', code: 401 }, { status: 401 })
+      const body = (await req.json()) as { tool: string; params?: unknown }
       const result = await server.callTool(body.tool, body.params ?? [], {
-        userId: body.userId ?? 'demo-agent',
+        userId: caller.actor.subject,
+        jwt: caller.credential,
       })
       return Response.json(result)
     }
 
     // The component's current state, as the visible instance last streamed it.
     if (url.pathname === '/agent/state') {
-      return Response.json(server.serialize())
+      const verdict = await demoSecurity.authorizeSnapshot(req)
+      if (!verdict.allowed) {
+        return Response.json({ error: verdict.error, code: verdict.code }, { status: verdict.code })
+      }
+      try {
+        return Response.json(projectCapabilityResult(server.serialize(), verdict.projection))
+      } catch {
+        return Response.json({ error: 'CAPABILITY_UNAVAILABLE', code: 503 }, { status: 503 })
+      }
     }
 
     return new Response('not found', { status: 404 })
@@ -151,23 +195,48 @@ Bun.serve<{ bridge: boolean }>({
   websocket: {
     open(ws) {
       detachBridge?.()
-      detachBridge = server.attachBridge(bridgeChannelFor(ws as unknown as BunWs))
+      const peer = ws as unknown as BunWs
+      activeBridge = peer
+      detachBridge = server.attachBridge(bridgeChannelFor(peer))
+      demoSession = {
+        token: crypto.randomUUID(),
+        identity: crypto.randomUUID(),
+        grantVersion: DEMO_GRANT_VERSION,
+      }
+      // The nonce is bound to the attachment generation and can be consumed
+      // only once. Send it after attachBridge so the hello matches this peer.
+      ws.send(
+        JSON.stringify({
+          type: 'bridge-bootstrap',
+          nonce: server.issueBridgeNonce().nonce,
+          sessionToken: demoSession.token,
+          sessionIdentity: demoSession.identity,
+          grantVersion: demoSession.grantVersion,
+        }),
+      )
       console.log('[agent-driven-demo] browser bridge connected')
     },
-    message(_ws, message) {
+    message(ws, message) {
       const data = typeof message === 'string' ? message : message.toString()
-      for (const h of [...messageHandlers]) h(data)
+      const handlers = channelHandlers.get(ws as unknown as BunWs)
+      for (const h of handlers?.messages ?? []) h(data)
     },
-    close() {
-      for (const h of [...closeHandlers]) h()
-      messageHandlers.clear()
-      closeHandlers.clear()
+    close(ws) {
+      const peer = ws as unknown as BunWs
+      const handlers = channelHandlers.get(peer)
+      for (const h of handlers?.closes ?? []) h()
+      channelHandlers.delete(peer)
+      if (activeBridge === peer) {
+        demoSession = null
+        activeBridge = null
+        detachBridge = null
+      }
       console.log('[agent-driven-demo] browser bridge disconnected')
     },
   },
 })
 
 console.log(`[agent-driven-demo] API + bridge listening on http://localhost:${PORT}`)
-console.log('  POST /agent/call   { tool, params, userId }   drive the component')
-console.log('  GET  /agent/state                              read current state')
+console.log('  POST /agent/call   { tool, params }   drive the component (Bearer token required)')
+console.log('  GET  /agent/state                     read task count (Bearer token required)')
 console.log('  WS   /bridge                                   browser capability bridge')

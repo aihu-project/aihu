@@ -54,7 +54,7 @@ Two processes — the Bun API/bridge server and the Vite dev server:
 
 ```bash
 # terminal 1 — API + WebSocket bridge on :5208
-bun run server
+DEMO_AGENT_TOKEN=local-demo-secret bun run server
 
 # terminal 2 — Vite dev server on :5108 (proxies /agent + /bridge to :5208)
 bun run dev
@@ -65,7 +65,20 @@ Open <http://localhost:5108>. The `<task-list>` mounts and connects its bridge.
 The server only accepts `/bridge` WebSocket upgrades from an allowlisted
 `Origin` (via `verifyBridgeUpgrade` from `@aihu/agent-server`), defaulting to
 the Vite dev origin above. Set `BRIDGE_ALLOWED_ORIGINS` (comma separated) to
-override it for a different port or a real deployment origin.
+override it for a different port or a real deployment origin. After the
+upgrade, the host attaches the socket, issues a one-use nonce, and sends a
+`bridge-bootstrap` frame with the nonce and a fresh demo session binding. The
+browser sends protocol v2 `hello` with that binding. The host verifies it and
+reauthorizes the same session and grant before and after each invocation; a
+replacement or disconnected browser loses its demo session. The session token
+is never placed in a URL or logged.
+
+This local demo's Origin allowlist and in-memory session represent the host
+boundary. The HTTP agent endpoints require `DEMO_AGENT_TOKEN`; the state
+endpoint resolves a demo actor, authorizes `task-list.snapshot`, and projects
+the response to `taskCount`. A deployed app should authenticate the browser
+before issuing its bridge session and use a durable host session store with
+revocation, plus its own actor and capability resolver.
 
 ### Record the proof
 
@@ -74,25 +87,25 @@ override it for a different port or a real deployment origin.
 2. Drive it from an external process (no browser interaction):
    ```bash
    curl -XPOST localhost:5208/agent/call \
-     -H 'content-type: application/json' \
+     -H 'authorization: Bearer local-demo-secret' -H 'content-type: application/json' \
      -d '{"tool":"task-list/addTask","params":["Write the launch post"]}'
    ```
    Watch the on-screen list gain a row — the **visible** instance was driven.
 3. Add another, then toggle it:
    ```bash
-   curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \
+   curl -XPOST localhost:5208/agent/call -H 'authorization: Bearer local-demo-secret' -H 'content-type: application/json' \
      -d '{"tool":"task-list/addTask","params":["Record the demo"]}'
-   curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \
+   curl -XPOST localhost:5208/agent/call -H 'authorization: Bearer local-demo-secret' -H 'content-type: application/json' \
      -d '{"tool":"task-list/toggleTask","params":[2]}'
    ```
 4. Read the streamed state the server sees from the visible instance:
    ```bash
-   curl localhost:5208/agent/state
+   curl localhost:5208/agent/state -H 'authorization: Bearer local-demo-secret'
    ```
 5. Try an un-exposed action and confirm it is rejected loudly (the component is
    never mutated):
    ```bash
-   curl -XPOST localhost:5208/agent/call -H 'content-type: application/json' \
+   curl -XPOST localhost:5208/agent/call -H 'authorization: Bearer local-demo-secret' -H 'content-type: application/json' \
      -d '{"tool":"task-list/deleteEverything","params":[]}'
    ```
 

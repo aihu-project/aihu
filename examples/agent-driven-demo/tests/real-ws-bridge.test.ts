@@ -40,6 +40,27 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { WebSocket, WebSocketServer } from 'ws'
 
 const TAG = 'task-list'
+const DEMO_SESSION = 'demo-browser-session'
+const DEMO_GRANT_VERSION = '1'
+
+function demoBridgeAuthorization() {
+  return {
+    verifyBridgeSession: (token: string) =>
+      token === DEMO_SESSION
+        ? { identity: DEMO_SESSION, grantVersion: DEMO_GRANT_VERSION }
+        : { identity: '' },
+    reauthorizeBridgeInvoke: (binding: {
+      sessionToken?: string
+      identity: string
+      grantVersion?: string
+    }) =>
+      binding.sessionToken === DEMO_SESSION &&
+      binding.identity === DEMO_SESSION &&
+      binding.grantVersion === DEMO_GRANT_VERSION
+        ? { identity: DEMO_SESSION, grantVersion: DEMO_GRANT_VERSION }
+        : false,
+  }
+}
 
 /** Poll `cond` until true (real-socket frames are async). */
 async function waitFor(cond: () => boolean, timeoutMs = 1000): Promise<void> {
@@ -116,7 +137,7 @@ function wrapWs(ws: WebSocket): BridgeChannel {
 
 /** Stand up a real loopback ws server + client and return both ends wrapped. */
 async function makeRealWsPair(): Promise<WsPair> {
-  const wss = new WebSocketServer({ port: 0 })
+  const wss = new WebSocketServer({ host: '127.0.0.1', port: 0 })
   await new Promise<void>((res) => wss.on('listening', res))
   const addr = wss.address()
   const port = typeof addr === 'object' && addr ? addr.port : 0
@@ -212,13 +233,19 @@ describe('REAL compiled component driven over a REAL ws socket', () => {
     const server = createAgentServer({
       target: { node: twin.node, agentBinding: twin.agentBinding },
       createHost: () => document.createElement('div'),
+      ...demoBridgeAuthorization(),
     })
     disposers.push(() => server.dispose())
     server.attachBridge(pair.serverChannel)
+    const nonce = server.issueBridgeNonce().nonce
 
     const client = createBridgeClient({
       dispatcher: instanceDispatcher as AgentDispatcher,
       channel: pair.clientChannel,
+      nonce,
+      sessionToken: DEMO_SESSION,
+      sessionIdentity: DEMO_SESSION,
+      grantVersion: DEMO_GRANT_VERSION,
       serialize: () => ({ taskCount: liveTaskCount() }),
     })
     disposers.push(() => client.dispose())
@@ -226,7 +253,9 @@ describe('REAL compiled component driven over a REAL ws socket', () => {
     // ── EXTERNAL AGENT: drive the component via the server's gate. ────────────
     const res = (await server.callTool(`${TAG}/addTask`, ['Write the launch post'], {
       userId: 'agent-1',
-    })) as { result: unknown }
+    })) as { result?: unknown; error?: string; code?: number }
+
+    if (res.error) console.error('[agent-driven-demo] bridge denial:', res.code, res.error)
 
     // 2. The result envelope came back over the REAL socket.
     expect(res).toHaveProperty('result')
@@ -266,24 +295,29 @@ describe('REAL compiled component driven over a REAL ws socket', () => {
     const server = createAgentServer({
       target: { node: twin.node, agentBinding: twin.agentBinding },
       createHost: () => document.createElement('div'),
+      ...demoBridgeAuthorization(),
     })
     disposers.push(() => server.dispose())
     server.attachBridge(pair.serverChannel)
+    const nonce = server.issueBridgeNonce().nonce
     disposers.push(
-      createBridgeClient({ dispatcher: instanceDispatcher, channel: pair.clientChannel }).dispose,
+      createBridgeClient({
+        dispatcher: instanceDispatcher,
+        channel: pair.clientChannel,
+        nonce,
+        sessionToken: DEMO_SESSION,
+        sessionIdentity: DEMO_SESSION,
+        grantVersion: DEMO_GRANT_VERSION,
+      }).dispose,
     )
 
     const res = (await server.callTool(`${TAG}/deleteEverything`, [], { userId: 'agent-1' })) as {
       code?: number
+      error?: string
     }
-    // An unknown action is rejected LOUDLY (never silently dropped), and the
-    // VISIBLE instance is never mutated. With a live binding registered for the
-    // tag, the agent-service gate authorizes by tag (it does not re-validate the
-    // action name against a live binding — see agent-service `runGate`), so the
-    // loud rejection here surfaces from the browser-side opaque-ID desync as a
-    // 503 BRIDGE_ERROR rather than a 404. Either way it is a non-undefined error
-    // code ≥ 400 and the component's DOM is untouched.
-    expect(res.code).toBeGreaterThanOrEqual(400)
+    // The service gate rejects an unknown action before any bridge invoke.
+    expect(res.code).toBe(404)
+    expect(res.error).toBe('no action: deleteEverything')
     expect((el.shadowRoot ?? el).querySelectorAll('.tl-item').length).toBe(0)
     el.remove()
   })
