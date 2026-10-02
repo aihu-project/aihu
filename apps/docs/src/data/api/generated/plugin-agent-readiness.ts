@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu-plugin/agent-readiness',
   slug: 'plugin-agent-readiness',
   tier: 'Plugins',
-  version: '2.4.0',
+  version: '2.4.1',
   tagline: 'Discovery + readiness manifest emitter so agents can introspect aihu apps.',
   note: '',
 }

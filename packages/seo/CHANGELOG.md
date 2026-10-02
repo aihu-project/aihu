@@ -1,5 +1,13 @@
 # @aihu/seo
 
+## 1.0.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/server@0.6.2
+  - @aihu-plugin/agent-readiness@2.4.1
+
 ## 1.0.6
 
 ### Patch Changes

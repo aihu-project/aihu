@@ -1,6 +1,6 @@
 {
   "name": "@aihu/seo",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD).",
   "license": "MIT",
   "type": "module",

@@ -1,5 +1,14 @@
 # @aihu/example-auth-magna-seo
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/server@0.6.2
+  - @aihu/auth@6.0.1
+  - @aihu/seo@1.0.7
+
 ## 0.0.11
 
 ### Patch Changes

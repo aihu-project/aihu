@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/router',
   slug: 'router',
   tier: 'App & routing',
-  version: '0.5.3',
+  version: '0.5.4',
   tagline: 'File-based router for the aihu meta-framework.',
   note: '',
 }

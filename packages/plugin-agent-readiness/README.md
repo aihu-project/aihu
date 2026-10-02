@@ -21,7 +21,7 @@ npm install @aihu-plugin/agent-readiness
 bun add @aihu-plugin/agent-readiness
 ```
 
-<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
 
 <!-- END_AUTOGEN: install -->
 
@@ -32,12 +32,12 @@ bun add @aihu-plugin/agent-readiness
 
 | | |
 |---|---|
-| **Version** | `2.4.0` |
+| **Version** | `2.4.1` |
 | **Tier** | C — Agent surface — discovery manifests (llms.txt, MCP Server Card, robots) |
 | **Published files** | 3 entries |
 | **License** | MIT |
 
-<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
 
 <!-- END_AUTOGEN: stats -->
 
@@ -50,7 +50,7 @@ bun add @aihu-plugin/agent-readiness
 |---|---|---|
 | `.` | `./dist/index.js` | `—` |
 
-<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
 
 <!-- END_AUTOGEN: exports -->
 
@@ -64,7 +64,7 @@ bun add @aihu-plugin/agent-readiness
 - `@aihu/server` — `workspace:*`
 - `@aihu/agent` — `workspace:*`
 
-<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
 
 <!-- END_AUTOGEN: deps -->
 
@@ -77,7 +77,7 @@ bun add @aihu-plugin/agent-readiness
 - [@aihu/server](../server)
 - [Aihu framework root](../../README.md)
 
-<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
 
 <!-- END_AUTOGEN: see-also -->
 
@@ -88,6 +88,6 @@ bun add @aihu-plugin/agent-readiness
 
 MIT — see [LICENSE](../../LICENSE).
 
-<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
 
 <!-- END_AUTOGEN: license -->

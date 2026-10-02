@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/adapter-vercel',
   slug: 'adapter-vercel',
   tier: 'App & routing',
-  version: '15.0.2',
+  version: '15.0.3',
   tagline: 'Vercel deployment adapter for @aihu/app.',
   note: '',
 }

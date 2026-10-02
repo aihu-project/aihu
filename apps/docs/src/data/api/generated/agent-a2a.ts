@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/agent-a2a',
   slug: 'agent-a2a',
   tier: 'Agents & governance',
-  version: '1.0.1',
+  version: '1.0.2',
   tagline: 'A2A (Agent2Agent) protocol bindings (spec v1.0.1, JSON-RPC) for @aihu/agent-service.',
   note: '',
 }

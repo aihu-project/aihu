@@ -1,6 +1,6 @@
 {
   "name": "@aihu/adapter-vercel",
-  "version": "15.0.2",
+  "version": "15.0.3",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

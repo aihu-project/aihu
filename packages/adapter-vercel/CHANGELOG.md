@@ -1,5 +1,12 @@
 # @aihu/adapter-vercel
 
+## 15.0.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @aihu/app@10.2.3
+
 ## 15.0.2
 
 ### Patch Changes

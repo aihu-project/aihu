@@ -1,5 +1,32 @@
 # @aihu/agent-server
 
+## 0.5.0
+
+### Minor Changes
+
+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Require host authorization before serving agent state reads, resolve tenant actors from live host lookups, recursively project JSON-safe results, and bind browser bridge sessions to one-use connection nonces with per-invocation reauthorization. Migration: bridge clients must speak protocol v2 and send `nonce`, `sessionToken`, `sessionIdentity`, and the verified `grantVersion` in `hello`; hosts must return `{ identity, grantVersion? }` from both `verifyBridgeSession` and `reauthorizeBridgeInvoke`, and supply `actorResolver` and `authorizeDataRead` for protected state reads. `securityHookTimeoutMs` and `bridgeCallTimeoutMs` configure bounded hook/call waits (5000ms defaults). Hosts revoke all grants for an identity with `server.revokeBridgeSession(identity)` and revoke only one exact grant with `server.revokeBridgeSession(identity, { grantVersion })`; literal grant versions such as `"*"` remain exact values. Revocation records live for 24 hours by default (configurable with `bridgeRevocationTtlMs`) and are capped at 10,000 entries by default (`bridgeRevocationMaxEntries`); when full, new bridge handshakes fail with `BRIDGE_REVOCATION_STORE_FULL` until retained entries expire, and existing verified unrevoked sessions continue to work. Revocation synchronously cancels matching pending calls; the bounded store guards new hellos and invokes, while the host's session store remains authoritative for long-lived revocation. A revoked state read returns a denial without its result. Once an action invoke has been sent, disconnect, timeout, bridge error, protocol error, or revocation returns `BRIDGE_RESULT_WITHHELD`; callers must treat the action outcome as unknown and must not assume it did not run. Projected leaves must be JSON-safe primitives, arrays, and plain records; functions, symbols, bigints, non-finite numbers, non-plain objects such as `Date`, objects with callable `toJSON` hooks, accessors on selected paths, cycles, and results beyond the default depth 32 or 10,000 total nodes fail closed as `CAPABILITY_UNAVAILABLE`. Set `projectionLimits: { maxDepth, maxNodes }` on the service/server to tune those limits. Bridge diagnostics run asynchronously after state changes and receive frozen, bounded, credential-free peer details.
+
+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add configurable per-attachment (`maxPendingBridgeCalls`, default 64) and per-server (`maxPendingBridgeCallsTotal`, default 1024) bridge concurrency limits. Calls above either limit return 503 `BRIDGE_OVERLOADED` before a bridge timer or invoke frame is created. Hosts that need higher concurrency can raise both limits; invalid limits are rejected at server creation.
+
+  Reject oversized whole-record projections before any descriptor lookup, and document that hosts must normalize untrusted Proxy or exotic values into plain data before registering them.
+
+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add admission limits for the entire bridge call path: `maxInFlightBridgeCalls` defaults to 1,024 server-wide, and `maxInFlightBridgeCallsPerTenant` defaults to 64 per verified actor organization. Excess calls return 503 `BRIDGE_OVERLOADED`; the server-wide limit rejects before any authorization hook, handshake waiter, or timer is created. Calls without a verified actor share one tenant bucket. Pending-call caps remain in force, with one slot reserved for another tenant when capacity permits.
+
+  Migration: hosts expecting more concurrency should raise these new limits, along with `maxPendingBridgeCalls` and `maxPendingBridgeCallsTotal` where needed. Configure a pending cap above one to allow simultaneous cross-tenant forwarding. An upstream rate limit is still recommended.
+
+### Patch Changes
+
+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bound capability projection work and bridge revocation storage, avoid diagnostic reentrancy, and report unknown outcomes whenever a forwarded action can no longer be confirmed.
+
+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fail closed on untrusted proxy prototype chains, preserve revocation bindings when the bounded store is full, and close duplicate-hello peers with bounded diagnostics. Migration note: deployments that reach `bridgeRevocationMaxEntries` now refuse new bridge handshakes with `BRIDGE_REVOCATION_STORE_FULL` until revocations expire; size the cap and TTL for expected revocation volume. Existing verified, unrevoked bridge sessions remain available.
+
+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bound projection work for Proxy records by reading only requested own properties and rejecting oversized whole-record key sets before describing their entries.
+
+  Keep malformed bridge hello objects out of host diagnostics, and pin the per-attachment diagnostic callback cap with a regression.
+
+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
+  - @aihu/agent-service@0.5.0
+
 ## 0.4.4
 
 ### Patch Changes

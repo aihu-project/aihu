@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
   name: '@aihu/agent-server',
   slug: 'agent-server',
   tier: 'Agents & governance',
-  version: '0.4.4',
+  version: '0.5.0',
   tagline:
     'Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge.',
   note: '',
