@@ -80,6 +80,24 @@ export interface ViteAgentReadinessSources extends AgentReadinessSources {
   readonly agentManifestDir?: string
 }
 
+function validateAgentMap(agentMap: string | undefined): void {
+  if (agentMap === undefined) return
+  if (/[\r\n]/.test(agentMap)) {
+    throw new TypeError('agent.agentMap must not contain CR or LF characters')
+  }
+
+  let url: URL
+  try {
+    if (!/^https?:\/\//i.test(agentMap)) throw new TypeError()
+    url = new URL(agentMap)
+  } catch {
+    throw new TypeError('agent.agentMap must be an absolute HTTP(S) URL')
+  }
+  if ((url.protocol !== 'http:' && url.protocol !== 'https:') || !url.hostname) {
+    throw new TypeError('agent.agentMap must be an absolute HTTP(S) URL')
+  }
+}
+
 export function createAgentReadinessRoutes(
   config: AgentReadinessConfig,
   sources: AgentReadinessSources = {},
@@ -92,6 +110,8 @@ export function createAgentReadinessRoutes(
   readonly mcpDiscovery: RouteHandler
   readonly sitemapXml: RouteHandler
 } {
+  validateAgentMap(config.agentMap)
+
   // GX Phase 3 (#437-GX): the compiled route table + site URL, threaded into
   // the llms.txt generators so route listings and component sections derive
   // from the declared `extract` policy (spec §8) — no hand-maintained lists.
