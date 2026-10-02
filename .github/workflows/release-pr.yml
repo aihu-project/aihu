@@ -48,7 +48,15 @@ jobs:
               @aihu/css-engine-linux-x64-gnu \
               @aihu/css-engine-win32-x64-msvc; do npm view "$package" version; done)
             published_version=$(printf '%s\n' "$published_versions" | sort -V | tail -n 1)
-            stamp_output=$(bun scripts/stamp-platform-versions.ts --host css-engine --bump-css-engine --published-version "$published_version")
+            native_source=$(git rev-parse HEAD:packages/css-engine/crates/aihu-css-core)
+            published_native_source=$(npm view "@aihu/css-engine-linux-x64-gnu@$published_version" aihuNativeSource 2>/dev/null || true)
+            reuse_output=$(bun scripts/css-engine-platform-reuse.ts "$native_source" "$published_native_source")
+            printf '%s\n' "$reuse_output"
+            if printf '%s\n' "$reuse_output" | grep 'CSS_ENGINE_PLATFORM_REUSE=true' > /dev/null; then
+              stamp_output=$(bun scripts/stamp-platform-versions.ts --host css-engine --set-css-engine-version "$published_version")
+            else
+              stamp_output=$(bun scripts/stamp-platform-versions.ts --host css-engine --bump-css-engine --published-version "$published_version")
+            fi
             printf '%s\n' "$stamp_output"
             if printf '%s\n' "$stamp_output" | grep 'CSS_ENGINE_PLATFORM_VERSION_MOVED=true' > /dev/null; then
               moved=true
@@ -96,7 +104,7 @@ jobs:
     # the publish job is skipped on ordinary Version PRs with no native change.
     if: always() && needs.prepare-version.result == 'success' && needs.prepare-version.outputs.version_changed == 'true' && (needs.publish-css-engine-platforms.result == 'success' || needs.publish-css-engine-platforms.result == 'skipped')
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    timeout-minutes: 45
     permissions:
       actions: read
       contents: read
@@ -124,6 +132,20 @@ jobs:
         run: |
           set -euo pipefail
           git apply version-pr.patch
+          # npm can take 10-20 minutes to serve a just-published version. Bun
+          # silently drops an optionalDependency it can't resolve, so installing
+          # before the registry lists the stamped platform packages writes a
+          # lockfile without them. Wait (up to 30 minutes) for every css-engine
+          # platform pin in the host manifest to resolve first.
+          for attempt in $(seq 1 60); do
+            missing=0
+            for pin in $(node -e 'const m=require("./packages/css-engine/package.json");for(const [n,v] of Object.entries(m.optionalDependencies||{}))console.log(n+"@"+v)'); do
+              if [ "$(npm view "$pin" version 2>/dev/null)" = "" ]; then missing=1; echo "waiting for $pin"; fi
+            done
+            [ "$missing" = 0 ] && break
+            if [ "$attempt" = 60 ]; then echo "platform pins never appeared on npm"; exit 1; fi
+            sleep 30
+          done
           bun install
           bun scripts/check-lockfile-platform-pins.ts
           for attempt in $(seq 1 12); do

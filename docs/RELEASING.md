@@ -191,6 +191,12 @@ Version PR gets committed. The workflow then runs `bun install`, verifies that
 all platform pins remain in `bun.lock`, and runs
 `check-pins-published.ts --strict` before updating the PR.
 
+Each newly stamped platform manifest records the native crate tree hash in
+`aihuNativeSource`. If the highest published platform version has the same
+hash, preparation reuses that exact version and skips publishing; a missing
+hash is treated as a mismatch, so the first run after this metadata is added
+bumps once and later runs can reuse it.
+
 The `server` platform versioning path is unchanged. Tag releases still call
 `release-platforms.yml`; its npm version check skips packages already published
 by the Version PR. The reusable workflow runs in the caller's Actions run, so
@@ -200,8 +206,8 @@ GitHub Release assets.
 Publishing before the Version PR lands can leave orphan platform versions on
 npm if that PR is abandoned. Those versions are inert because consumers resolve
 platform packages only through the host's exact optional dependency pins. The
-next Version PR reads the published platform version and advances past it, so
-it never tries to reuse an orphan version.
+next Version PR reuses the highest published version only when its recorded
+native source hash matches; otherwise it advances past the published version.
 
 ## One-time admin setup (run once per repo lifetime)
 
