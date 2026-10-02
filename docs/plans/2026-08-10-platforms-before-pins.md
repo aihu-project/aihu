@@ -1,6 +1,6 @@
 # Publish platform packages before the pins that name them
 
-**Status:** scoped, not started. Founder-approved approach 2026-08-10.
+**Status:** implemented for css-engine (2026-10-02); server phase deferred. Founder-approved approach 2026-08-10.
 **Fixes, with one change:** the recurring `bun.lock` refresh chore **and** the
 consumer-facing yarn install break. Same root cause.
 

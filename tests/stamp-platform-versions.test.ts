@@ -53,6 +53,27 @@ function fixture(hostVersion: string, pinVersion: string, platVersion: string): 
   }
 }
 
+function cssFixture(): void {
+  const platforms = ['darwin-arm64', 'darwin-x64', 'linux-x64-gnu', 'win32-x64-msvc']
+  const optionalDependencies = Object.fromEntries(
+    platforms.map((p) => [`@aihu/css-engine-${p}`, '0.1.19']),
+  )
+  const hostDir = join(root, 'packages', 'css-engine')
+  mkdirSync(hostDir, { recursive: true })
+  writeFileSync(
+    join(hostDir, 'package.json'),
+    `${JSON.stringify({ name: '@aihu/css-engine', version: '0.7.2', optionalDependencies }, null, 2)}\n`,
+  )
+  for (const p of platforms) {
+    const d = join(hostDir, 'npm', p)
+    mkdirSync(d, { recursive: true })
+    writeFileSync(
+      join(d, 'package.json'),
+      `${JSON.stringify({ name: `@aihu/css-engine-${p}`, version: '0.1.19' }, null, 2)}\n`,
+    )
+  }
+}
+
 function run(...args: string[]): { code: number; out: string } {
   const r = spawnSync('bun', [SCRIPT, '--host', 'server', ...args], {
     encoding: 'utf8',
@@ -171,5 +192,50 @@ describe('stamp-platform-versions · --host', () => {
     })
     expect(r.status).toBe(1)
     expect(`${r.stdout}${r.stderr}`).toContain('unknown --host')
+  })
+})
+
+describe('stamp-platform-versions · css-engine publish-before-pins', () => {
+  it('patch-bumps all css-engine platform manifests and host pins together', () => {
+    cssFixture()
+    const r = spawnSync('bun', [SCRIPT, '--host', 'css-engine', '--bump-css-engine'], {
+      encoding: 'utf8',
+      env: { ...process.env, PLATFORM_SYNC_ROOT: root },
+    })
+    expect(r.status, `${r.stdout}${r.stderr}`).toBe(0)
+    expect(`${r.stdout}${r.stderr}`).toContain('CSS_ENGINE_PLATFORM_VERSION_MOVED=true')
+    for (const p of ['darwin-arm64', 'darwin-x64', 'linux-x64-gnu', 'win32-x64-msvc']) {
+      expect(
+        JSON.parse(readFileSync(join(root, 'packages/css-engine/npm', p, 'package.json'), 'utf8'))
+          .version,
+      ).toBe('0.1.20')
+      expect(
+        JSON.parse(readFileSync(join(root, 'packages/css-engine/package.json'), 'utf8'))
+          .optionalDependencies[`@aihu/css-engine-${p}`],
+      ).toBe('0.1.20')
+    }
+    const check = spawnSync('bun', [SCRIPT, '--host', 'css-engine', '--check'], {
+      encoding: 'utf8',
+      env: { ...process.env, PLATFORM_SYNC_ROOT: root },
+    })
+    expect(check.status, `${check.stdout}${check.stderr}`).toBe(0)
+  })
+
+  it('does not reuse a platform version orphaned by an abandoned Version PR', () => {
+    cssFixture()
+    const r = spawnSync(
+      'bun',
+      [SCRIPT, '--host', 'css-engine', '--bump-css-engine', '--published-version', '0.1.20'],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, PLATFORM_SYNC_ROOT: root },
+      },
+    )
+    expect(r.status, `${r.stdout}${r.stderr}`).toBe(0)
+    expect(
+      JSON.parse(
+        readFileSync(join(root, 'packages/css-engine/npm/darwin-arm64/package.json'), 'utf8'),
+      ).version,
+    ).toBe('0.1.21')
   })
 })

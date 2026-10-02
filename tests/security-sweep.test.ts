@@ -40,7 +40,6 @@ const expectedPins: Record<string, string> = {
   'Swatinem/rust-cache': '6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2',
   'cloudflare/wrangler-action': '953926a2e2182532811c01a25e53647d93bf07c0 # v4',
   'actions/create-github-app-token': 'bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3',
-  'changesets/action': 'a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1',
   'actions/labeler': 'bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7',
   'actions/github-script': '3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9',
   'chromaui/action': 'c93e0bc3a63aa176e14a75b61a31847cbfdd341c # v1',

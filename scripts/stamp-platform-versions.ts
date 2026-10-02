@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /**
- * stamp-platform-versions.ts — make every native platform package carry its
- * host's version, and every host pin point at exactly that.
+ * stamp-platform-versions.ts — keep native platform package versions and host
+ * pins synchronized. Server follows its host version; css-engine has an
+ * independent patch version advanced only for native source changes.
  *
  * Was `stamp-platform-snapshot.ts`, which did this for canary snapshots only.
  * The mechanism is identical for a stable release; only the guard differed. See
@@ -13,14 +14,20 @@
  * The platform packages under `packages/<host>/{npm,npm-native}/<platform>/`
  * are NOT workspace members — the root `workspaces` glob is `packages/*`, which
  * does not match nested dirs — so changesets never versions them. This script
- * keeps the remaining server and CSS-engine platform manifests synchronized
- * with their host versions and optional dependency pins during releases.
+ * keeps the remaining server platform manifests synchronized with the host
+ * version and css-engine platform manifests synchronized with their own
+ * release version and host pins.
  *
  * ── MODES ────────────────────────────────────────────────────────────────────
  *
  *   (default)            write: stamp platform versions + repoint host pins
  *   --check              verify only, never write; exit 1 on any mismatch
  *   --host <a[,b]>       limit to these hosts (staged rollout; default: all)
+ *   --bump-css-engine    increment the css-engine platform family's patch
+ *                        version and repoint its host pins (Version PR only)
+ *   --published-version  latest css-engine platform version observed on npm;
+ *                        prevents an abandoned Version PR's orphan version
+ *                        from being reused
  *   --require-snapshot   hard-fail unless the host version is `0.0.0-*`
  *
  * ── --require-snapshot IS NOT VESTIGIAL ──────────────────────────────────────
@@ -67,6 +74,8 @@ function flagValue(name: string): string | undefined {
 
 const CHECK = process.argv.includes('--check')
 const REQUIRE_SNAPSHOT = process.argv.includes('--require-snapshot')
+const BUMP_CSS_ENGINE = process.argv.includes('--bump-css-engine')
+const publishedVersion = flagValue('--published-version')
 const hostFilter = flagValue('--host')
   ?.split(',')
   .map((s) => s.trim())
@@ -95,7 +104,7 @@ for (const { host, npmDirs } of selected) {
     continue
   }
   const hostPkg = readPkg(hostPkgPath)
-  const version = hostPkg.version
+  let version = hostPkg.version
 
   if (REQUIRE_SNAPSHOT && !version.startsWith('0.0.0-')) {
     problems.push(
@@ -128,6 +137,33 @@ for (const { host, npmDirs } of selected) {
   }
 
   const optDeps: Record<string, string> = hostPkg.optionalDependencies ?? {}
+  if (host === 'css-engine' && !BUMP_CSS_ENGINE) {
+    // css-engine's native binaries have an independent patch stream. Ordinary
+    // host package bumps must not publish duplicate binaries; preserve the
+    // platform version and verify/stamp the exact pins against it.
+    version = readPkg(platformPkgPaths[0]).version
+  }
+  if (BUMP_CSS_ENGINE && host === 'css-engine') {
+    const firstPlatform = readPkg(platformPkgPaths[0])
+    const versions = [firstPlatform.version, ...(publishedVersion ? [publishedVersion] : [])]
+    const parsed = versions.map((v) => /^(\d+)\.(\d+)\.(\d+)$/.exec(v))
+    if (parsed.some((m) => !m)) {
+      problems.push(
+        `cannot patch-bump non-stable css-engine platform version(s): ${versions.join(', ')}`,
+      )
+      continue
+    }
+    const highest = parsed
+      .map((m) => m!.slice(1).map(Number))
+      .sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2])
+      .at(-1)!
+    const match = highest
+    version = `${match[0]}.${match[1]}.${match[2] + 1}`
+    const moved =
+      platformPkgPaths.some((path) => readPkg(path).version !== version) ||
+      Object.values(optDeps).some((pin) => pin !== version)
+    console.log(`CSS_ENGINE_PLATFORM_VERSION_MOVED=${moved}`)
+  }
   const onDisk = new Set<string>()
 
   for (const platPkgPath of platformPkgPaths) {

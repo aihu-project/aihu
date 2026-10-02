@@ -178,6 +178,31 @@ git push origin hotfix/v0.1.x
 
 The `release.yml` is keyed on `v*` tags regardless of source branch, so a `v0.1.1` tag from `hotfix/v0.1.x` publishes correctly.
 
+## Platform binaries and Version PRs
+
+Feature PRs that change `packages/css-engine/crates/aihu-css-core/` add a
+`@aihu/css-engine` patch changeset. They must not edit the four
+`packages/css-engine/npm/*/package.json` manifests or the host pins. During
+Version PR preparation, `stamp-platform-versions.ts` checks native source
+changes since the latest release tag, advances the css-engine platform family
+by one patch, and updates all four manifests and exact host pins. The reusable
+`release-platforms.yml` workflow builds and publishes that version before the
+Version PR gets committed. The workflow then runs `bun install`, verifies that
+all platform pins remain in `bun.lock`, and runs
+`check-pins-published.ts --strict` before updating the PR.
+
+The `server` platform versioning path is unchanged. Tag releases still call
+`release-platforms.yml`; its npm version check skips packages already published
+by the Version PR. The reusable workflow runs in the caller's Actions run, so
+the release workflow can still download its binary artifacts when assembling
+GitHub Release assets.
+
+Publishing before the Version PR lands can leave orphan platform versions on
+npm if that PR is abandoned. Those versions are inert because consumers resolve
+platform packages only through the host's exact optional dependency pins. The
+next Version PR reads the published platform version and advances past it, so
+it never tries to reuse an orphan version.
+
 ## One-time admin setup (run once per repo lifetime)
 
 ### Install Changeset Bot
@@ -207,6 +232,16 @@ release. Use `release-platforms.yml` for a native package under
 `packages/{server,css-engine,compiler}/npm*`; use `release.yml` for every other
 package. Allow both direct and staged publishing so stable and canary workflows
 remain available.
+
+### css-engine publish-before-pins publisher
+
+For each of `@aihu/css-engine-darwin-arm64`, `@aihu/css-engine-darwin-x64`,
+`@aihu/css-engine-linux-x64-gnu`, and `@aihu/css-engine-win32-x64-msvc`, add a
+second npm trusted publisher with organization `aihu-project`, repository
+`aihu`, workflow filename `release-pr.yml`, and environment left blank. Keep
+the existing `release-platforms.yml` trusted publisher for tag releases. npm
+checks the calling workflow filename for this reusable workflow invocation;
+the Version PR publish uses up to the package's allowed ten trusted publishers.
 
 ## Conventional commits
 
