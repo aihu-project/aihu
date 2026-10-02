@@ -57,6 +57,36 @@ describe('parseManifest', () => {
       }),
     ).toThrow(/kind/)
   })
+
+  it.each([
+    'a}; process.exit(1); //',
+    'seo\nprocess.exit(1)',
+  ])('rejects executable factoryName %s', (factoryName) => {
+    expect(() =>
+      parseManifest({
+        pluginName: '@aihu/x',
+        pluginVersion: '1.0.0',
+        aihuVersion: '*',
+        installSteps: [{ kind: 'add-plugin-to-config', factoryName }],
+      }),
+    ).toThrow(/factoryName.*valid JavaScript identifier/)
+  })
+
+  it('rejects unknown step kinds and fields', () => {
+    const manifest = {
+      pluginName: '@aihu/x',
+      pluginVersion: '1.0.0',
+      aihuVersion: '*',
+      installSteps: [{ kind: 'register-plugin', factoryName: 'x' }],
+    }
+    expect(() => parseManifest(manifest)).toThrow(/unknown kind/)
+    expect(() =>
+      parseManifest({
+        ...manifest,
+        installSteps: [{ kind: 'add-plugin-to-config', factoryName: 'x', injected: true }],
+      }),
+    ).toThrow(/unknown field/)
+  })
 })
 
 describe('isKnownStep', () => {
@@ -87,6 +117,17 @@ describe('renderOptionsLiteral', () => {
     expect(renderOptionsLiteral({ n: 3, on: true, nested: { a: 'process.env.A' } })).toBe(
       '{ n: 3, on: true, nested: { a: process.env.A } }',
     )
+  })
+
+  it('safely serializes hostile and prototype-sensitive property keys', () => {
+    expect(
+      renderOptionsLiteral({
+        'a}; process.exit(1); //': 'safe',
+        __proto__: { polluted: true },
+      }),
+    ).toBe('{ ["a}; process.exit(1); //"]: "safe" }')
+    const withProto = JSON.parse('{"__proto__":{"polluted":true}}') as Record<string, unknown>
+    expect(renderOptionsLiteral(withProto)).toBe('{ ["__proto__"]: { polluted: true } }')
   })
 })
 
@@ -177,8 +218,8 @@ describe('computeRouteInsertion', () => {
     expect(edit.applied).toBe(true)
     expect(edit.updated).toContain('const seoRoutes = createSeoRoutes()')
     expect(edit.updated).toContain("import { createSeoRoutes } from '@aihu/seo'")
-    expect(edit.updated).toContain("defineRoute('/sitemap.xml', seoRoutes.sitemapXml)")
-    expect(edit.updated).toContain("defineRoute('/robots.txt', seoRoutes.robotsTxt)")
+    expect(edit.updated).toContain('defineRoute("/sitemap.xml", seoRoutes.sitemapXml)')
+    expect(edit.updated).toContain('defineRoute("/robots.txt", seoRoutes.robotsTxt)')
   })
 
   it('is idempotent by path', () => {

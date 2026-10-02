@@ -42,6 +42,7 @@ import {
   type PluginInstallManifest,
   parseManifest,
 } from '../plugin-install-manifest.ts'
+import { promptYesNo } from '../prompts.ts'
 import { satisfiesRange } from '../semver-range.ts'
 
 // ─── Injectable I/O (real impl + test fakes, mirrors commands/add.ts) ────────
@@ -53,9 +54,9 @@ export interface PluginInstallIo {
   stdout(s: string): void
   stderr(s: string): void
   /** `bun add <pkg>` (or whichever pm) for `additionalPackages`. */
-  spawnAdd(pkg: string, cwd: string): { ok: boolean; message?: string }
+  spawnAdd(pkg: string, cwd: string, allowScripts: boolean): { ok: boolean; message?: string }
   /** Confirmation prompt for the plugin `summary`. `true` = proceed. */
-  confirm(message: string): boolean
+  confirm(message: string): boolean | Promise<boolean>
 }
 
 const realIo: PluginInstallIo = {
@@ -64,19 +65,21 @@ const realIo: PluginInstallIo = {
   write: (p, c) => writeFileSync(p, c, 'utf8'),
   stdout: (s) => process.stdout.write(s),
   stderr: (s) => process.stderr.write(s),
-  spawnAdd: (pkg, cwd) => {
-    const result = spawnSync('bun', ['add', pkg], { cwd, stdio: 'pipe', encoding: 'utf8' })
+  spawnAdd: (pkg, cwd, allowScripts) => {
+    const args = allowScripts ? ['add', pkg] : ['add', '--ignore-scripts', pkg]
+    const result = spawnSync('bun', args, { cwd, stdio: 'pipe', encoding: 'utf8' })
     if (result.status === 0) return { ok: true }
     const message = result.stderr || result.error?.message
     return message !== undefined ? { ok: false, message } : { ok: false }
   },
-  confirm: () => true,
+  confirm: (message) => promptYesNo({ message, default: false }),
 }
 
 export interface PluginInstallDeps {
   cwd?: string
   io?: PluginInstallIo
   yes?: boolean
+  isTTY?: boolean
   /** Injectable so tests don't need a real `node_modules/@aihu/plugin`. */
   resolveHostAihuVersion?: (cwd: string) => Promise<string | undefined>
   /**
@@ -146,6 +149,7 @@ export default async function pluginInstall(
   const loadConfig = deps.loadProjectConfigFn ?? loadProjectConfig
 
   const yes = deps.yes ?? rest.includes('--yes')
+  const allowScripts = rest.includes('--allow-scripts')
   const pluginName = rest.find((a) => !a.startsWith('--'))
   if (pluginName === undefined) {
     io.stderr('Usage:\n  aihu plugin install <pluginName> [--yes]\n')
@@ -230,16 +234,16 @@ export default async function pluginInstall(
     }
   }
 
-  if (manifest.summary && !yes) {
-    io.stdout(`${manifest.summary}\n`)
-    if (!io.confirm('Apply these install steps? [y/N] ')) {
-      io.stdout('Aborted — no changes made.\n')
-      return
-    }
-  }
-
   const applied: string[] = []
   const skipped: string[] = []
+  const writes = new Map<string, string>()
+  const packagesToInstall: string[] = []
+  const planned: string[] = []
+  if (manifest.summary) planned.push(`Summary: ${manifest.summary}`)
+  const scheduleWrite = (path: string, content: string, description: string) => {
+    writes.set(path, content)
+    planned.push(`${description}: ${path}`)
+  }
 
   for (const step of manifest.installSteps) {
     if (!isKnownStep(step)) {
@@ -259,7 +263,7 @@ export default async function pluginInstall(
       const source = io.read(loaded.source)
       const edit = computeConfigInsertion(source, step, pluginName)
       if (edit.applied) {
-        io.write(loaded.source, edit.updated)
+        scheduleWrite(loaded.source, edit.updated, `Register ${step.factoryName}`)
         applied.push(`registered ${step.factoryName} in ${loaded.source}`)
       } else {
         skipped.push(
@@ -279,17 +283,17 @@ export default async function pluginInstall(
       const source = io.read(routesFile)
       const edit = computeRouteInsertion(source, step, pluginName)
       if (edit.applied) {
-        io.write(routesFile, edit.updated)
+        scheduleWrite(routesFile, edit.updated, `Add ${step.routes.length} route(s)`)
         applied.push(`added ${step.routes.length} route(s) to ${routesFile}`)
       } else {
         skipped.push(`add-route (routes already present in ${routesFile})`)
       }
     } else if (step.kind === 'add-env-var') {
       const envPath = join(cwd, '.env.example')
-      const existing = io.exists(envPath) ? io.read(envPath) : undefined
+      const existing = writes.get(envPath) ?? (io.exists(envPath) ? io.read(envPath) : undefined)
       const edit = computeEnvExampleInsertion(existing, step)
       if (edit.applied) {
-        io.write(envPath, edit.updated)
+        scheduleWrite(envPath, edit.updated, `Add ${step.name} to .env.example`)
         applied.push(`added ${step.name} to .env.example`)
       } else {
         skipped.push(`add-env-var (${step.name} already present)`)
@@ -305,16 +309,47 @@ export default async function pluginInstall(
 
   for (const entry of manifest.requiredEnv ?? []) {
     const envPath = join(cwd, '.env.example')
-    const existing = io.exists(envPath) ? io.read(envPath) : undefined
+    const existing = writes.get(envPath) ?? (io.exists(envPath) ? io.read(envPath) : undefined)
     const edit = computeEnvExampleInsertion(existing, entry)
     if (edit.applied) {
-      io.write(envPath, edit.updated)
+      scheduleWrite(envPath, edit.updated, `Add ${entry.name} to .env.example`)
       applied.push(`added ${entry.name} to .env.example`)
     }
   }
 
   for (const pkg of manifest.additionalPackages ?? []) {
-    const result = io.spawnAdd(pkg, cwd)
+    packagesToInstall.push(pkg)
+    planned.push(`Install ${pkg}`)
+  }
+
+  io.stdout(
+    `Planned changes for ${pluginName}:\n${planned.map((item) => `  - ${item}\n`).join('') || '  - No file or package changes.\n'}`,
+  )
+  if (packagesToInstall.length > 0) {
+    io.stdout(
+      allowScripts
+        ? 'Package lifecycle scripts are enabled by --allow-scripts.\n'
+        : 'Package lifecycle scripts are disabled with --ignore-scripts.\n',
+    )
+  }
+
+  if (!yes) {
+    if (!(deps.isTTY ?? process.stdin.isTTY === true)) {
+      io.stderr(
+        'ERROR: refusing to apply plugin install changes without a TTY; rerun with --yes.\n',
+      )
+      return exit(1)
+    }
+    if (!(await io.confirm('Apply these install steps? [y/N] '))) {
+      io.stdout('Aborted — no changes made.\n')
+      return
+    }
+  }
+
+  for (const [path, content] of writes) io.write(path, content)
+
+  for (const pkg of packagesToInstall) {
+    const result = io.spawnAdd(pkg, cwd, allowScripts)
     if (result.ok) {
       applied.push(`installed ${pkg}`)
     } else {

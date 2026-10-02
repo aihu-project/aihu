@@ -39,7 +39,7 @@ export interface RunMigrationStep {
   readonly backend: 'magna-sdl' | 'sql'
 }
 
-/** A step kind this reader does not recognise — warn-skip per spec, not fail. */
+/** A step kind this reader does not recognize; retained for type narrowing after validation. */
 export interface UnknownStep {
   readonly kind: string
   readonly [key: string]: unknown
@@ -72,6 +72,94 @@ export interface PluginInstallManifest {
 
 export class ManifestValidationError extends Error {}
 
+const JS_IDENTIFIER = /^[$A-Z_a-z][$\w]*$/
+
+function assertKnownFields(
+  value: Record<string, unknown>,
+  allowed: ReadonlyArray<string>,
+  at: string,
+) {
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key)) {
+      throw new ManifestValidationError(`${at} has unknown field "${key}"`)
+    }
+  }
+}
+
+function requireString(value: unknown, field: string, at: string): asserts value is string {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new ManifestValidationError(`${at} "${field}" must be a non-empty string`)
+  }
+}
+
+function requireRecord(value: unknown, at: string): asserts value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new ManifestValidationError(`${at} must be an object`)
+  }
+}
+
+function validateStep(step: unknown, index: number): void {
+  const at = `install-manifest.json installSteps[${index}]`
+  requireRecord(step, at)
+  requireString(step.kind, 'kind', at)
+  switch (step.kind) {
+    case 'add-plugin-to-config':
+      assertKnownFields(step, ['kind', 'factoryName', 'defaultOptions'], at)
+      requireString(step.factoryName, 'factoryName', at)
+      if (!JS_IDENTIFIER.test(step.factoryName)) {
+        throw new ManifestValidationError(
+          `${at} "factoryName" must be a valid JavaScript identifier`,
+        )
+      }
+      if (step.defaultOptions !== undefined)
+        requireRecord(step.defaultOptions, `${at} "defaultOptions"`)
+      break
+    case 'add-route':
+      assertKnownFields(step, ['kind', 'factoryName', 'routes'], at)
+      requireString(step.factoryName, 'factoryName', at)
+      if (!JS_IDENTIFIER.test(step.factoryName)) {
+        throw new ManifestValidationError(
+          `${at} "factoryName" must be a valid JavaScript identifier`,
+        )
+      }
+      if (!Array.isArray(step.routes))
+        throw new ManifestValidationError(`${at} "routes" must be an array`)
+      for (const [routeIndex, route] of step.routes.entries()) {
+        const routeAt = `${at} "routes"[${routeIndex}]`
+        requireRecord(route, routeAt)
+        assertKnownFields(route, ['path', 'handlerKey'], routeAt)
+        requireString(route.path, 'path', routeAt)
+        requireString(route.handlerKey, 'handlerKey', routeAt)
+        if (!JS_IDENTIFIER.test(route.handlerKey)) {
+          throw new ManifestValidationError(
+            `${routeAt} "handlerKey" must be a valid JavaScript identifier`,
+          )
+        }
+      }
+      break
+    case 'add-env-var':
+      assertKnownFields(step, ['kind', 'name', 'description', 'default'], at)
+      requireString(step.name, 'name', at)
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(step.name)) {
+        throw new ManifestValidationError(`${at} "name" must be a valid environment variable name`)
+      }
+      requireString(step.description, 'description', at)
+      if (step.default !== undefined && typeof step.default !== 'string') {
+        throw new ManifestValidationError(`${at} "default" must be a string`)
+      }
+      break
+    case 'run-migration':
+      assertKnownFields(step, ['kind', 'path', 'backend'], at)
+      requireString(step.path, 'path', at)
+      if (step.backend !== 'magna-sdl' && step.backend !== 'sql') {
+        throw new ManifestValidationError(`${at} "backend" must be "magna-sdl" or "sql"`)
+      }
+      break
+    default:
+      throw new ManifestValidationError(`${at} has unknown kind "${step.kind}"`)
+  }
+}
+
 /**
  * Parse + structurally validate a manifest read off disk. Throws
  * `ManifestValidationError` on anything the CLI cannot safely act on — a
@@ -83,6 +171,19 @@ export function parseManifest(raw: unknown): PluginInstallManifest {
     throw new ManifestValidationError('install-manifest.json is not a JSON object')
   }
   const m = raw as Record<string, unknown>
+  assertKnownFields(
+    m,
+    [
+      'pluginName',
+      'pluginVersion',
+      'aihuVersion',
+      'installSteps',
+      'requiredEnv',
+      'additionalPackages',
+      'summary',
+    ],
+    'install-manifest.json',
+  )
   for (const field of ['pluginName', 'pluginVersion', 'aihuVersion'] as const) {
     if (typeof m[field] !== 'string' || m[field] === '') {
       throw new ManifestValidationError(`install-manifest.json is missing "${field}"`)
@@ -91,22 +192,35 @@ export function parseManifest(raw: unknown): PluginInstallManifest {
   if (!Array.isArray(m.installSteps)) {
     throw new ManifestValidationError('install-manifest.json "installSteps" must be an array')
   }
-  for (const step of m.installSteps) {
-    if (
-      typeof step !== 'object' ||
-      step === null ||
-      typeof (step as { kind?: unknown }).kind !== 'string'
-    ) {
-      throw new ManifestValidationError(
-        'install-manifest.json has an installSteps entry with no "kind"',
-      )
-    }
-  }
+  m.installSteps.forEach(validateStep)
   if (m.requiredEnv !== undefined && !Array.isArray(m.requiredEnv)) {
     throw new ManifestValidationError('install-manifest.json "requiredEnv" must be an array')
   }
   if (m.additionalPackages !== undefined && !Array.isArray(m.additionalPackages)) {
     throw new ManifestValidationError('install-manifest.json "additionalPackages" must be an array')
+  }
+  if (m.summary !== undefined && typeof m.summary !== 'string') {
+    throw new ManifestValidationError('install-manifest.json "summary" must be a string')
+  }
+  if (m.requiredEnv !== undefined) {
+    m.requiredEnv.forEach((entry, index) => {
+      const at = `install-manifest.json requiredEnv[${index}]`
+      requireRecord(entry, at)
+      assertKnownFields(entry, ['name', 'description', 'default'], at)
+      requireString(entry.name, 'name', at)
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.name)) {
+        throw new ManifestValidationError(`${at} "name" must be a valid environment variable name`)
+      }
+      requireString(entry.description, 'description', at)
+      if (entry.default !== undefined && typeof entry.default !== 'string') {
+        throw new ManifestValidationError(`${at} "default" must be a string`)
+      }
+    })
+  }
+  if (m.additionalPackages !== undefined) {
+    m.additionalPackages.forEach((pkg, index) =>
+      requireString(pkg, `additionalPackages[${index}]`, 'install-manifest.json'),
+    )
   }
   return m as unknown as PluginInstallManifest
 }
@@ -126,8 +240,15 @@ export function isKnownStep(step: { readonly kind: string }): step is InstallSte
 export function renderOptionsLiteral(options: Readonly<Record<string, unknown>>): string {
   const entries = Object.entries(options)
   if (entries.length === 0) return '{}'
-  const body = entries.map(([key, value]) => `${key}: ${renderValue(value)}`).join(', ')
+  const body = entries
+    .map(([key, value]) => `${renderPropertyKey(key)}: ${renderValue(value)}`)
+    .join(', ')
   return `{ ${body} }`
+}
+
+function renderPropertyKey(key: string): string {
+  if (JS_IDENTIFIER.test(key) && key !== '__proto__') return key
+  return `[${JSON.stringify(key)}]`
 }
 
 function renderValue(value: unknown): string {
@@ -279,7 +400,7 @@ export function computeRouteInsertion(
   }
 
   const entries = pending
-    .map((r) => `defineRoute('${r.path}', ${varName}.${r.handlerKey})`)
+    .map((r) => `defineRoute(${JSON.stringify(r.path)}, ${varName}.${r.handlerKey})`)
     .join(',\n    ')
 
   const inner = source.slice(arrayStart, closeIndex)

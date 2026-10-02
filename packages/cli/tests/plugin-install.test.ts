@@ -119,6 +119,113 @@ describe('aihu plugin install', () => {
     expect(env).toContain('SITE_URL=')
   })
 
+  it('shows planned edits and packages and waits for confirmation when summary is absent', async () => {
+    const root = makeProject()
+    installFixturePlugin(root, {
+      pluginName: '@aihu/seo',
+      manifest: {
+        pluginName: '@aihu/seo',
+        pluginVersion: '1.0.0',
+        aihuVersion: '*',
+        installSteps: [{ kind: 'add-env-var', name: 'SITE_URL', description: 'Canonical URL' }],
+        additionalPackages: ['@aihu/plugin'],
+      },
+    })
+    const io = fakeIo()
+    let spawned = false
+    io.spawnAdd = () => {
+      spawned = true
+      return { ok: true }
+    }
+    io.confirm = () => false
+
+    await pluginInstall(['@aihu/seo'], {
+      cwd: root,
+      io,
+      isTTY: true,
+      resolveHostAihuVersion: async () => undefined,
+    })
+
+    expect(io.out.join('')).toContain('Add SITE_URL to .env.example')
+    expect(io.out.join('')).toContain('Install @aihu/plugin')
+    expect(io.out.join('')).toContain('disabled with --ignore-scripts')
+    expect(io.out.join('')).toContain('Aborted')
+    expect(readFileSync(join(root, 'aihu.config.ts'), 'utf8')).toBe(
+      'export default { plugins: [] }\n',
+    )
+    expect(() => readFileSync(join(root, '.env.example'), 'utf8')).toThrow()
+    expect(spawned).toBe(false)
+  })
+
+  it('refuses non-TTY install without --yes before writing files or adding packages', async () => {
+    const root = makeProject()
+    installFixturePlugin(root, {
+      pluginName: '@aihu/seo',
+      manifest: {
+        pluginName: '@aihu/seo',
+        pluginVersion: '1.0.0',
+        aihuVersion: '*',
+        installSteps: [{ kind: 'add-env-var', name: 'SITE_URL', description: 'Canonical URL' }],
+        additionalPackages: ['@aihu/plugin'],
+      },
+    })
+    const io = fakeIo()
+    let spawned = false
+    io.spawnAdd = () => {
+      spawned = true
+      return { ok: true }
+    }
+    let exited: number | undefined
+
+    await expect(
+      pluginInstall(['@aihu/seo'], {
+        cwd: root,
+        io,
+        isTTY: false,
+        resolveHostAihuVersion: async () => undefined,
+        exit: (code): never => {
+          exited = code
+          throw new Error(`exit ${code}`)
+        },
+      }),
+    ).rejects.toThrow('exit 1')
+
+    expect(exited).toBe(1)
+    expect(io.err.join('')).toContain('refusing to apply')
+    expect(() => readFileSync(join(root, '.env.example'), 'utf8')).toThrow()
+    expect(spawned).toBe(false)
+  })
+
+  it('passes lifecycle-script opt-in through to package installation', async () => {
+    const root = makeProject()
+    installFixturePlugin(root, {
+      pluginName: '@aihu/seo',
+      manifest: {
+        pluginName: '@aihu/seo',
+        pluginVersion: '1.0.0',
+        aihuVersion: '*',
+        installSteps: [],
+        additionalPackages: ['@aihu/plugin'],
+      },
+    })
+    const io = fakeIo()
+    let allowScripts: boolean | undefined
+    io.spawnAdd = (_pkg, _cwd, allowed) => {
+      allowScripts = allowed
+      return { ok: true }
+    }
+
+    await pluginInstall(['@aihu/seo', '--yes', '--allow-scripts'], {
+      cwd: root,
+      io,
+      yes: true,
+      resolveHostAihuVersion: async () => undefined,
+    })
+
+    expect(allowScripts).toBe(true)
+    expect(io.out.join('')).toContain('lifecycle scripts are enabled by --allow-scripts')
+  })
+
   it('is idempotent end to end — running twice does not duplicate', async () => {
     const root = makeProject()
     installFixturePlugin(root, {
@@ -229,7 +336,7 @@ describe('aihu plugin install', () => {
     expect(io.err.join('')).toContain('left-pad')
   })
 
-  it('warn-skips an unrecognized install-step kind instead of failing', async () => {
+  it('rejects an unrecognized install-step kind before applying changes', async () => {
     const root = makeProject()
     installFixturePlugin(root, {
       pluginName: '@aihu/seo',
@@ -241,14 +348,24 @@ describe('aihu plugin install', () => {
       },
     })
     const io = fakeIo()
-    await pluginInstall(['@aihu/seo', '--yes'], {
-      cwd: root,
-      io,
-      yes: true,
-      resolveHostAihuVersion: async () => undefined,
-    })
-    expect(io.err.join('')).toContain('unrecognized install step "register-plugin"')
-    expect(io.out.join('')).toContain('Done.')
+    let exited: number | undefined
+    await expect(
+      pluginInstall(['@aihu/seo', '--yes'], {
+        cwd: root,
+        io,
+        yes: true,
+        resolveHostAihuVersion: async () => undefined,
+        exit: (code): never => {
+          exited = code
+          throw new Error(`exit ${code}`)
+        },
+      }),
+    ).rejects.toThrow('exit 1')
+    expect(exited).toBe(1)
+    expect(io.err.join('')).toContain('unknown kind "register-plugin"')
+    expect(readFileSync(join(root, 'aihu.config.ts'), 'utf8')).toBe(
+      'export default { plugins: [] }\n',
+    )
   })
 
   it('rejects install when the host aihuVersion does not satisfy the manifest range', async () => {
