@@ -9,7 +9,6 @@ import {
   computeConfigInsertion,
   computeEnvExampleInsertion,
   computeRouteInsertion,
-  isKnownStep,
   ManifestValidationError,
   parseManifest,
   renderOptionsLiteral,
@@ -86,19 +85,6 @@ describe('parseManifest', () => {
         installSteps: [{ kind: 'add-plugin-to-config', factoryName: 'x', injected: true }],
       }),
     ).toThrow(/unknown field/)
-  })
-})
-
-describe('isKnownStep', () => {
-  it('recognizes the four spec kinds', () => {
-    for (const kind of ['add-plugin-to-config', 'add-route', 'add-env-var', 'run-migration']) {
-      expect(isKnownStep({ kind })).toBe(true)
-    }
-  })
-
-  it('warn-skips an unrecognized kind (spec: skip, do not fail)', () => {
-    expect(isKnownStep({ kind: 'register-plugin' })).toBe(false)
-    expect(isKnownStep({ kind: 'scaffold-env' })).toBe(false)
   })
 })
 

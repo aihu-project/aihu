@@ -19,10 +19,8 @@
  *   2. Validate `pluginName`/`pluginVersion` against the resolved package.json,
  *      and `aihuVersion` against the host project's `@aihu/plugin` version.
  *   3. Print `summary`, confirm unless `--yes`.
- *   4. Run `installSteps` in order, dispatching on `kind`. Unknown kinds
- *      warn-skip (spec: "CLI versions that don't understand a kind MUST skip
- *      it with a warning, not fail" — the same rule the v1.0 `run-migration`
- *      case documents explicitly). Every step is idempotent: re-running
+ *   4. Run validated `installSteps` in order, dispatching on `kind`. Every
+ *      step is idempotent: re-running
  *      `aihu plugin install <name>` converges rather than duplicating.
  *   5. Apply `requiredEnv` (append-only, same as an `add-env-var` step).
  *   6. `additionalPackages`: enforce the `@aihu/*` prefix (dep-free thesis —
@@ -37,7 +35,6 @@ import {
   computeConfigInsertion,
   computeEnvExampleInsertion,
   computeRouteInsertion,
-  isKnownStep,
   ManifestValidationError,
   type PluginInstallManifest,
   parseManifest,
@@ -246,13 +243,6 @@ export default async function pluginInstall(
   }
 
   for (const step of manifest.installSteps) {
-    if (!isKnownStep(step)) {
-      skipped.push(step.kind)
-      io.stderr(
-        `  ! unrecognized install step "${step.kind}" — skipping (manual setup required).\n`,
-      )
-      continue
-    }
     if (step.kind === 'add-plugin-to-config') {
       const loaded = await loadConfig(cwd)
       if (loaded === null) {

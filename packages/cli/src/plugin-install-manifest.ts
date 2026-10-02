@@ -39,20 +39,7 @@ export interface RunMigrationStep {
   readonly backend: 'magna-sdl' | 'sql'
 }
 
-/** A step kind this reader does not recognize; retained for type narrowing after validation. */
-export interface UnknownStep {
-  readonly kind: string
-  readonly [key: string]: unknown
-}
-
 export type InstallStep = AddPluginToConfigStep | AddRouteStep | AddEnvVarStep | RunMigrationStep
-
-const KNOWN_KINDS: ReadonlySet<string> = new Set([
-  'add-plugin-to-config',
-  'add-route',
-  'add-env-var',
-  'run-migration',
-])
 
 export interface RequiredEnvEntry {
   readonly name: string
@@ -64,7 +51,7 @@ export interface PluginInstallManifest {
   readonly pluginName: string
   readonly pluginVersion: string
   readonly aihuVersion: string
-  readonly installSteps: ReadonlyArray<InstallStep | UnknownStep>
+  readonly installSteps: ReadonlyArray<InstallStep>
   readonly requiredEnv?: ReadonlyArray<RequiredEnvEntry>
   readonly additionalPackages?: ReadonlyArray<string>
   readonly summary?: string
@@ -223,10 +210,6 @@ export function parseManifest(raw: unknown): PluginInstallManifest {
     )
   }
   return m as unknown as PluginInstallManifest
-}
-
-export function isKnownStep(step: { readonly kind: string }): step is InstallStep {
-  return KNOWN_KINDS.has(step.kind)
 }
 
 // ─── `add-plugin-to-config` — edit `plugins: [...]` in vite.config.ts / aihu.config.ts ──
