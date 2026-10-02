@@ -81,6 +81,13 @@ import { createApp } from '../src/client.ts'
 
 const flushPromises = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
 
+let popCount = 0
+/** Back/forward as a browser does it: a popstate lands on a different URL. */
+function popToNewLocation(): void {
+  history.pushState({}, '', `/__history-${++popCount}`)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
 function makeOutlet(id = 'outlet'): HTMLElement {
   const el = document.createElement('div')
   el.id = id
@@ -444,7 +451,7 @@ describe('createApp — SPA navigation', () => {
     expect(outlet.querySelector('p')?.textContent).toContain('404')
 
     mockMatch.mockReturnValue({ route, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('my-page')
   })
@@ -586,6 +593,21 @@ describe('createApp — SPA navigation', () => {
     scrollSpy.mockRestore()
   })
 
+  it('does not re-render on a popstate that only changes the hash', async () => {
+    const route: RouteStub = { name: 'same-page', module: vi.fn().mockResolvedValue(undefined) }
+    mockMatch.mockReturnValue({ route, params: undefined })
+    createApp()
+    await flushPromises()
+    const rendered = outlet.firstElementChild
+
+    history.pushState({}, '', `${location.pathname}${location.search}#section`)
+    window.dispatchEvent(new PopStateEvent('popstate')) // hash-only: deliberately no path change
+    await flushPromises()
+
+    expect(outlet.firstElementChild).toBe(rendered)
+    history.replaceState({}, '', location.pathname + location.search)
+  })
+
   it('does not intercept mailto: links', async () => {
     createApp()
     await flushPromises()
@@ -689,7 +711,7 @@ describe('createApp — per-route <head> on navigation', () => {
 
     // Navigate to about (no description / twitter / jsonld in its head).
     mockMatch.mockReturnValue({ route: about, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
 
     expect(document.title).toBe('About — Acme')
@@ -708,11 +730,11 @@ describe('createApp — per-route <head> on navigation', () => {
     await flushPromises()
 
     mockMatch.mockReturnValue({ route: about, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
 
     mockMatch.mockReturnValue({ route: home, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
 
     // Exactly one canonical, one og:title, one JSON-LD — no duplicates.
@@ -746,7 +768,7 @@ describe('createApp — per-route <head> on navigation', () => {
     // Navigate to a route with NO head — global defaults must remain.
     const bare: RouteStub = { name: 'bare-page', module: vi.fn().mockResolvedValue(undefined) }
     mockMatch.mockReturnValue({ route: bare, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
 
     expect(document.title).toBe('Acme (default)')
@@ -765,7 +787,7 @@ describe('createApp — per-route <head> on navigation', () => {
 
     const bare: RouteStub = { name: 'bare-page', module: vi.fn().mockResolvedValue(undefined) }
     mockMatch.mockReturnValue({ route: bare, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
 
     // No route head + no global defaults → all managed per-page tags removed.
@@ -955,7 +977,7 @@ describe('createApp — layout rendering', () => {
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('aihu-layout-app')
 
     mockMatch.mockReturnValue({ route: dash, params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
 
     const layoutEl = outlet.firstElementChild as HTMLElement
@@ -1156,7 +1178,7 @@ describe('createApp — dynamic layout switching (setLayout)', () => {
 
     // A real navigation clears the override; the declared `app` layout returns.
     mockMatch.mockReturnValue({ route: home(), params: undefined })
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    popToNewLocation()
     await flushPromises()
     expect(outlet.firstElementChild?.tagName.toLowerCase()).toBe('aihu-layout-app')
     warnSpy.mockRestore()

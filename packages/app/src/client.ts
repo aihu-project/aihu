@@ -504,8 +504,14 @@ export function createApp(config?: AppConfig): AppHandle {
   }
 
   /** Navigate-and-render: a real navigation clears any transient layout override. */
+  // The path+search the outlet currently shows. A popstate that changes only
+  // the hash (a native same-page #fragment link, or back/forward between two
+  // fragments of one page) must not re-render: the async render would replace
+  // the outlet's DOM and drop the focus the browser or the page just moved.
+  let renderedLocation = location.pathname + location.search
   function renderNav(match: MatchResult | null): void {
     layoutOverride = undefined
+    renderedLocation = location.pathname + location.search
     void render(match)
   }
 
@@ -558,6 +564,7 @@ export function createApp(config?: AppConfig): AppHandle {
   window.addEventListener(
     'popstate',
     () => {
+      if (location.pathname + location.search === renderedLocation) return
       renderNav(router.match(location.pathname))
     },
     { signal: listeners.signal },
