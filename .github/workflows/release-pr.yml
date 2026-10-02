@@ -31,13 +31,17 @@ jobs:
       - name: Version, stamp css-engine binaries, and export the tree patch
         id: prepare
         shell: bash
+        env:
+          # @changesets/changelog-github looks up each changeset's commit and
+          # PR author; the old changesets/action step supplied this token.
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           bun run release:version
 
           moved=false
           latest_tag=$(git describe --tags --match 'v*' --abbrev=0)
-          if git diff --name-only "$latest_tag"...HEAD | rg -q '^packages/css-engine/crates/aihu-css-core/(src/.*\.rs|Cargo\.toml|build\.rs|recipes/.*\.css)$'; then
+          if git diff --name-only "$latest_tag"...HEAD | grep -E '^packages/css-engine/crates/aihu-css-core/(src/.*\.rs|Cargo\.toml|build\.rs|recipes/.*\.css)$' > /dev/null; then
             published_versions=$(for package in \
               @aihu/css-engine-darwin-arm64 \
               @aihu/css-engine-darwin-x64 \
@@ -46,7 +50,7 @@ jobs:
             published_version=$(printf '%s\n' "$published_versions" | sort -V | tail -n 1)
             stamp_output=$(bun scripts/stamp-platform-versions.ts --host css-engine --bump-css-engine --published-version "$published_version")
             printf '%s\n' "$stamp_output"
-            if printf '%s\n' "$stamp_output" | rg -q 'CSS_ENGINE_PLATFORM_VERSION_MOVED=true'; then
+            if printf '%s\n' "$stamp_output" | grep 'CSS_ENGINE_PLATFORM_VERSION_MOVED=true' > /dev/null; then
               moved=true
             fi
           fi
