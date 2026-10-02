@@ -18,7 +18,7 @@
  *
  * Exit 0 = ok (or nothing to check), 1 = a required platform bump is missing.
  */
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createBumpChecker } from './lib/native-binary-bump.ts'
@@ -63,11 +63,11 @@ function changedFilesVsBase(): string[] {
   const ref = `origin/${base}`
   let mergeBase: string
   try {
-    mergeBase = execSync(`git merge-base ${ref} HEAD`, { encoding: 'utf8' }).trim()
+    mergeBase = execFileSync('git', ['merge-base', ref, 'HEAD'], { encoding: 'utf8' }).trim()
   } catch {
     return []
   }
-  return execSync(`git diff --name-only ${mergeBase} HEAD`, { encoding: 'utf8' })
+  return execFileSync('git', ['diff', '--name-only', mergeBase, 'HEAD'], { encoding: 'utf8' })
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean)
