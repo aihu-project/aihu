@@ -288,7 +288,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     name: '@aihu/plugin',
     slug: 'plugin',
     tier: 'Plugins',
-    version: '0.1.0',
+    version: '0.1.1',
     tagline:
       'Plugin substrate shared by @aihu/server and the meta-framework — runtime hook surface.',
     note: '',

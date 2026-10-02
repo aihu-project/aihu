@@ -103,7 +103,8 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'defineAihuConfig',
     kind: 'function',
     signature: 'function defineAihuConfig(config: AihuConfig): AihuConfig',
-    summary: 'Define the aihu application configuration.',
+    summary: '',
+    deprecated: true,
   },
   {
     name: 'defineApiRoute',
@@ -333,6 +334,7 @@ export const EXPORTS: readonly ApiExport[] = [
     signature:
       "interface AihuConfig {\n  readonly server?: ServerConfig\n  readonly agent?: import('./agent-readiness-config.ts').AgentReadinessConfig\n  readonly routes?: RouteConfig\n  /**\n   * Plugins registered in this aihu project.\n   *\n   * Per Plugin Contract Spec §7.1-§7.2: plugins MUST be explicitly imported\n   * and registered here. Auto-discovery is forbidden.\n   *\n   * v0.2.1: type contract + registration plumbing only. The compiler\n   * dispatcher is a no-op until v0.3+ wires block parsers, macro lowerings,\n   * and hook execution. Admitting the field now lets plugin authors begin\n   * shaping `definePlugin({...})` calls against a stable type surface.\n   */\n  readonly plugins?: ReadonlyArray<Plugin>\n  /**\n   * v0.6.5: Build target configuration.\n   * Controls whether aihu emits a client bundle, server bundle, or both.\n   * This field is read by the compiler/build tooling; it has no runtime effect.\n   */\n  readonly build?: BuildConfig\n  /**\n   * Runtime rendering strategy. Defaults to SSR with hydration enabled —\n   * the agent-ready posture that gives LLMs, crawlers, and the aihu MCP\n   * server access to content without JavaScript execution.\n   */\n  readonly rendering?: RenderingConfig\n  /**\n   * v1: `@aihu/ui` styled-recipe registry configuration.\n   * BUILD-TIME ONLY — consumed by the `aihu add` CLI and the css-engine\n   * scanner; it has no runtime/edge effect (matching the `build`/`plugins`\n   * field posture). Defaults are resolved by the CLI at read-time, so omitting\n   * `ui` entirely is valid.\n   */\n  readonly ui?: UiConfig\n}",
     summary: '',
+    deprecated: true,
   },
   {
     name: 'BuildConfig',
