@@ -99,7 +99,15 @@ afterEach(() => {
 })
 
 function spawn(...args: Parameters<typeof createAgentServer>): AgentServer {
-  const s = createAgentServer(...args)
+  const [input] = args
+  const s = createAgentServer({
+    ...input,
+    verifyBridgeSession:
+      input.verifyBridgeSession ??
+      ((token) => (token === 'test-session' ? { identity: token } : { identity: '' })),
+    reauthorizeBridgeInvoke:
+      input.reauthorizeBridgeInvoke ?? (() => ({ identity: 'test-session' })),
+  })
   servers.push(s)
   return s
 }
@@ -149,7 +157,7 @@ describe('scripted MCP client drives a server-mounted component', () => {
     await mcp.close()
   })
 
-  it('a read tool returns the live signal value', async () => {
+  it('a read tool denies an anonymous caller before returning the live signal value', async () => {
     const counter = makeCounter()
     const server = spawn({
       target: { node: counter.node, agentBinding: counter.agentBinding },
@@ -167,8 +175,10 @@ describe('scripted MCP client drives a server-mounted component', () => {
       content: Array<{ text: string }>
       isError?: boolean
     }
-    expect(res.isError).toBeFalsy()
-    expect(res.content[0]!.text).toContain('3')
+    expect(res.isError).toBe(true)
+    expect(res.content[0]!.text).toContain(
+      '[401] AUTH_MISSING: @aihu/auth middleware is not registered',
+    )
 
     await client.close()
     await mcp.close()
@@ -429,7 +439,7 @@ describe('MCP boundary forwards the credential, never caller identity (#420)', (
  */
 function makeFakeBridge(onSend: (data: string) => void): BridgeChannel & {
   reply(data: string): void
-  handshake(): void
+  handshake(nonce: string): void
   fireClose(): void
 } {
   let msgHandler: ((d: string) => void) | null = null
@@ -457,8 +467,16 @@ function makeFakeBridge(onSend: (data: string) => void): BridgeChannel & {
     reply(data: string) {
       msgHandler?.(data)
     },
-    handshake() {
-      msgHandler?.(JSON.stringify({ type: 'hello', protocol: BRIDGE_PROTOCOL_VERSION }))
+    handshake(nonce: string) {
+      msgHandler?.(
+        JSON.stringify({
+          type: 'hello',
+          protocol: BRIDGE_PROTOCOL_VERSION,
+          nonce,
+          sessionToken: 'test-session',
+          sessionIdentity: 'test-session',
+        }),
+      )
     },
     fireClose() {
       open = false
@@ -569,7 +587,7 @@ describe('WS capability bridge', () => {
     server.attachBridge(bridge)
     // The browser client completes the protocol handshake on connect; without
     // it the server would refuse to delegate (GO2).
-    bridge.handshake()
+    bridge.handshake(server.issueBridgeNonce().nonce)
 
     // callTool takes the positional args array directly (the MCP layer unwraps
     // `.args` before calling it; here we call callTool directly).
@@ -608,16 +626,16 @@ describe('WS capability bridge', () => {
       bridge.fireClose()
     })
     server.attachBridge(bridge)
-    // A verified channel — so the 503 below is provably the DISCONNECT, not the
-    // handshake refusal (which also returns 503, with a different message).
-    bridge.handshake()
+    // A verified channel — so the withheld result is provably a post-send
+    // disconnect, not a handshake refusal.
+    bridge.handshake(server.issueBridgeNonce().nonce)
 
     const res = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       code: number
       error: string
     }
-    expect(res.code).toBe(503)
-    expect(res.error).toContain('BRIDGE_ERROR')
+    expect(res.code).toBe(403)
+    expect(res.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
   })
 })
 
@@ -662,7 +680,10 @@ describe('GO2 under-enforcement — an unverified channel must never be delegate
       bridge.reply(JSON.stringify({ type: 'result', callId: frame.callId, result: 1 }))
     })
     server.attachBridge(bridge)
-    if (hello !== undefined) bridge.reply(JSON.stringify(hello))
+    if (hello !== undefined) {
+      const issued = server.issueBridgeNonce().nonce
+      bridge.reply(JSON.stringify({ nonce: issued, sessionToken: 'test-session', ...hello }))
+    }
 
     const res = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       code?: number
@@ -685,7 +706,7 @@ describe('GO2 under-enforcement — an unverified channel must never be delegate
     })
     expect(res.code).toBe(503)
     expect(res.error).toContain('BRIDGE_UNVERIFIED')
-    expect(res.error).toContain('mismatch')
+    expect(res.error).toBe('BRIDGE_UNVERIFIED: BRIDGE_HELLO_INVALID: hello verification failed')
     expect(invokes).toHaveLength(0)
   })
 
@@ -729,7 +750,7 @@ describe('GO2 under-enforcement — an unverified channel must never be delegate
 
     const good = makeFakeBridge(() => {})
     server.attachBridge(good)
-    good.handshake()
+    good.handshake(server.issueBridgeNonce().nonce)
 
     // A second peer takes over the bridge without handshaking. If verification
     // were global rather than per-channel, it would inherit `good`'s status.
@@ -759,7 +780,7 @@ describe('GO2 over-enforcement — verification must not break the working paths
       bridge.reply(JSON.stringify({ type: 'result', callId: frame.callId, result: { ok: 1 } }))
     })
     server.attachBridge(bridge)
-    bridge.handshake()
+    bridge.handshake(server.issueBridgeNonce().nonce)
 
     const res = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
       result: unknown
@@ -790,7 +811,7 @@ describe('GO2 over-enforcement — verification must not break the working paths
     const call = server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })
     // Handshake lands a tick later, while the call is already in flight.
     await Promise.resolve()
-    bridge.handshake()
+    bridge.handshake(server.issueBridgeNonce().nonce)
 
     const res = (await call) as { result: unknown; code?: number }
     expect(res.code).toBeUndefined()

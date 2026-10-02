@@ -17,6 +17,8 @@ export type { BridgeUpgradeVerdict, VerifyBridgeUpgradeOptions } from './bridge-
 export { verifyBridgeUpgrade } from './bridge-auth.ts'
 export type { AgentDispatcher, BridgeClient, BridgeClientOptions } from './bridge-client.ts'
 export { createBridgeClient } from './bridge-client.ts'
+export type { BridgeNonce, BridgeNonceStore } from './bridge-nonce.ts'
+export { createBridgeNonceStore } from './bridge-nonce.ts'
 export { createComponentMcpServer, serveComponentMcp } from './mcp-server.ts'
 export { opaqueActionId, opaqueActionIdForTool, parseToolName } from './opaque-id.ts'
 export type {
@@ -31,4 +33,5 @@ export type {
   BridgeResultMessage,
   BridgeServerMessage,
   BridgeSnapshotMessage,
+  BridgeVerifiedSession,
 } from './types.ts'

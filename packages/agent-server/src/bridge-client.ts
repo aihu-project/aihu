@@ -37,12 +37,22 @@ export interface BridgeClientOptions {
   dispatcher: AgentDispatcher
   /** Duplex channel to the server (a `ws` WebSocket in production). */
   channel: BridgeChannel
+  /** Server-issued single-use handshake nonce. */
+  nonce?: string
+  /** Verified session credential, bound to this bridge peer. */
+  sessionToken?: string
+  /** Identity returned by the server's session verifier. */
+  sessionIdentity?: string
+  /** Current actor/grant version, rechecked by the server on every invoke. */
+  grantVersion?: string
   /**
    * Optional snapshot source (e.g. the mount's `serialize`). When provided, a
    * `snapshot` frame is pushed after each successful invocation so the server
    * and any read-only viewer reflect the visible instance's new state.
    */
   serialize?: () => unknown
+  /** Optional host-only diagnostic callback. Its raw error text is never sent over the bridge. */
+  onDiagnostic?: (diagnostic: { code: string; message: string }) => void
 }
 
 /** A running bridge client. */
@@ -64,7 +74,14 @@ export function createBridgeClient(options: BridgeClientOptions): BridgeClient {
   }
 
   // Handshake — lets the server reject an incompatible protocol version.
-  send({ type: 'hello', protocol: BRIDGE_PROTOCOL_VERSION })
+  send({
+    type: 'hello',
+    protocol: BRIDGE_PROTOCOL_VERSION,
+    ...(options.sessionToken ? { sessionToken: options.sessionToken } : {}),
+    ...(options.sessionIdentity ? { sessionIdentity: options.sessionIdentity } : {}),
+    ...(options.nonce ? { nonce: options.nonce } : {}),
+    ...(options.grantVersion ? { grantVersion: options.grantVersion } : {}),
+  })
 
   async function handleInvoke(
     callId: string,
@@ -88,7 +105,11 @@ export function createBridgeClient(options: BridgeClientOptions): BridgeClient {
         send({ type: 'snapshot', callId, snapshot: options.serialize() })
       }
     } catch (err) {
-      send({ type: 'error', callId, message: err instanceof Error ? err.message : String(err) })
+      options.onDiagnostic?.({
+        code: 'BRIDGE_ACTION_FAILED',
+        message: err instanceof Error ? err.message : String(err),
+      })
+      send({ type: 'error', callId, code: 'BRIDGE_ACTION_FAILED', message: 'Bridge action failed' })
     }
   }
 

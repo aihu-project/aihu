@@ -9,13 +9,18 @@
  */
 
 import type {
+  Actor,
+  ActorResolver,
   AgentService,
   AgentServiceOptions,
   AuthPlugin,
+  CapabilityGrantResolver,
+  CapabilityProjectionLimits,
   RateLimitPlugin,
   RequestContext,
 } from '@aihu/agent-service'
 import type { AgentBindingSpec, MountScope, Node, Snapshot } from '@aihu/arbor'
+import type { BridgeNonce } from './bridge-nonce.ts'
 
 // ─── createAgentServer options ───────────────────────────────────────────────
 
@@ -63,6 +68,10 @@ export interface AgentServerOptions {
    * Lets scoped/rate-limited tools be reachable over the bundled HTTP path.
    */
   resolveAuth?: AgentServiceOptions['resolveAuth']
+  actorResolver?: ActorResolver
+  authorizeDataRead?: CapabilityGrantResolver
+  /** Maximum duration for each injected security hook and pending bridge call. Defaults to 5000ms. */
+  securityHookTimeoutMs?: number
   /**
    * Auth-discovery URL forwarded to `createAgentService` — included in every
    * 401 envelope so a refused agent knows where to obtain a credential (e.g.
@@ -70,6 +79,8 @@ export interface AgentServerOptions {
    * only; never a policy input.
    */
   authDiscoveryUrl?: AgentServiceOptions['authDiscoveryUrl']
+  /** Verify a bridge token and return its stable identity/grant binding. Missing verifier denies attachment. */
+  verifyBridgeSession?: (token: string) => BridgeVerifiedSession | Promise<BridgeVerifiedSession>
   /**
    * How long (ms) `callTool` waits for an attached bridge channel to complete
    * its `hello` handshake before refusing to delegate to it (503
@@ -80,6 +91,40 @@ export interface AgentServerOptions {
    * protocol version is rejected immediately, without waiting out this timeout.
    */
   bridgeHandshakeTimeoutMs?: number
+  /** Maximum duration for a bridge invocation reply. Defaults to 5000ms. */
+  bridgeCallTimeoutMs?: number
+  /** Maximum in-flight bridge calls for one attachment. Defaults to 64. */
+  maxPendingBridgeCalls?: number
+  /** Maximum in-flight bridge calls across the server. Defaults to 1024. */
+  maxPendingBridgeCallsTotal?: number
+  /** Maximum bridge calls from admission through final result authorization. Defaults to 1024. */
+  maxInFlightBridgeCalls?: number
+  /** Maximum admitted calls for one verified actor organization. Defaults to 64. Calls without an actor share one bucket. */
+  maxInFlightBridgeCallsPerTenant?: number
+  /** Bounds projected bridge read results. Defaults to depth 32 and 10,000 total nodes. */
+  projectionLimits?: CapabilityProjectionLimits
+  /** Revocation memory lifetime. Defaults to 24 hours; host session storage remains authoritative. */
+  bridgeRevocationTtlMs?: number
+  /** Maximum retained revocation bindings. New handshakes fail with BRIDGE_REVOCATION_STORE_FULL while full. Defaults to 10,000. */
+  bridgeRevocationMaxEntries?: number
+  /** Re-check the bound session/grant before every invocation. */
+  reauthorizeBridgeInvoke?: (binding: {
+    readonly sessionToken?: string
+    readonly identity: string
+    readonly grantVersion?: string
+    /** Actor resolved by the service gate for this invocation, if verified. */
+    readonly actor?: Actor
+  }) => BridgeVerifiedSession | false | Promise<BridgeVerifiedSession | false>
+  /** Optional host-side diagnostics for rejected bridge frames. Disabled when omitted. */
+  onBridgeDiagnostic?: (diagnostic: {
+    readonly event: string
+    readonly detail?: unknown
+  }) => void | Promise<void>
+}
+
+export interface BridgeVerifiedSession {
+  readonly identity: string
+  readonly grantVersion?: string
 }
 
 // ─── WS capability-bridge contract (T2 → T3) ─────────────────────────────────
@@ -95,7 +140,7 @@ export interface AgentServerOptions {
  * the server never relies on it to — per thesis §3, the client is never the
  * policy authority.
  */
-export const BRIDGE_PROTOCOL_VERSION = 1 as const
+export const BRIDGE_PROTOCOL_VERSION = 2 as const
 
 /**
  * Server → client. Sent ONLY after `handleToolCall` authorizes an invocation
@@ -138,6 +183,7 @@ export interface BridgeResultMessage {
 export interface BridgeErrorMessage {
   type: 'error'
   callId: string
+  code?: string
   message: string
 }
 
@@ -161,6 +207,10 @@ export interface BridgeSnapshotMessage {
 export interface BridgeHelloMessage {
   type: 'hello'
   protocol: number
+  sessionToken?: string
+  sessionIdentity?: string
+  nonce?: string
+  grantVersion?: string
 }
 
 /** Any message a client may send to the server over the bridge. */
@@ -185,6 +235,8 @@ export interface BridgeChannel {
   onMessage(handler: (data: string) => void): () => void
   /** Register a close handler. Returns an unsubscribe function. */
   onClose(handler: () => void): () => void
+  /** Close the underlying peer after a protocol violation, when supported by the transport. */
+  close?(): void
   /** True while the channel can still deliver frames. */
   readonly connected: boolean
 }
@@ -227,6 +279,12 @@ export interface AgentServer {
    * inherited from a previous peer.
    */
   attachBridge(channel: BridgeChannel): () => void
+
+  /** Issue a single-use nonce for a forthcoming bridge handshake. */
+  issueBridgeNonce(ttlMs?: number): BridgeNonce
+
+  /** Revoke a verified bridge identity (or its exact grant) and cancel its pending calls. */
+  revokeBridgeSession(identity: string, scope?: { readonly grantVersion: string }): void
 
   /**
    * Build the MCP `Server` (stdio-ready) exposing each component action as an

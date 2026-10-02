@@ -12,6 +12,14 @@ export const PKG: ApiPackage = {
 
 export const EXPORTS: readonly ApiExport[] = [
   {
+    name: 'authorizeCapability',
+    kind: 'function',
+    signature:
+      'async function authorizeCapability( principal: Principal, request: CapabilityAuthorizationRequest, deps: { readonly resolve?: CapabilityGrantResolver | undefined; readonly timeoutMs?: number }, ): Promise<CapabilityAuthorizationVerdict>',
+    summary: '',
+    agent: true,
+  },
+  {
     name: 'createAgentService',
     kind: 'function',
     signature: 'function createAgentService(options?: AgentServiceOptions): AgentService',
@@ -34,6 +42,14 @@ export const EXPORTS: readonly ApiExport[] = [
     agent: true,
   },
   {
+    name: 'projectCapabilityResult',
+    kind: 'function',
+    signature:
+      'function projectCapabilityResult( value: unknown, projection: CapabilityProjection | undefined, limits: CapabilityProjectionLimits = {}, ): unknown',
+    summary: '',
+    agent: true,
+  },
+  {
     name: 'resolvePrincipal',
     kind: 'function',
     signature:
@@ -47,6 +63,32 @@ export const EXPORTS: readonly ApiExport[] = [
     signature: 'function surfaceCallPolicy(meta: AgentMetadata | undefined): ExtractCallValue',
     summary:
       'Read the `extract.call` policy off a compiled `AgentMetadata` entry (the agent-meta artifact of the Phase 1 fan-out; rides the spec-mandated open index signature).',
+    agent: true,
+  },
+  {
+    name: 'withSecurityTimeout',
+    kind: 'function',
+    signature:
+      'async function withSecurityTimeout<T>(value: T | Promise<T>, timeoutMs: number): Promise<T>',
+    summary:
+      'Resolve a host hook within a finite bound; the original promise cannot win after timeout.',
+    agent: true,
+  },
+  {
+    name: 'Actor',
+    kind: 'interface',
+    signature:
+      "interface Actor {\n  /** Coarse actor category — see {@link ActorKind}. */\n  readonly kind: ActorKind\n  /** The authoritative subject or key ID for this actor (may differ from the raw JWT `sub`, e.g. after a key rotation the resolver reconciles). */\n  readonly subject: string\n  /** The organization this actor currently belongs to, per the resolver's live lookup — never trusted from a bare claim. */\n  readonly organizationId: string\n  /** The scopes the resolver confirms are currently live for this actor (may narrow, but never widen, the verified principal's own `scopes`). */\n  readonly scopes: readonly string[]\n  /** Token issuer, when the resolver considers it meaningful for this actor; `null` when not applicable. */\n  readonly issuer: string | null\n  /** Token audience, when the resolver considers it meaningful for this actor; `null` when not applicable. */\n  readonly audience: string | null\n  /** Stable identifier for the grant behind this actor's access, when the deployment models grants; `null` when not applicable. */\n  readonly grantId: string | null\n  /** Version/generation of that grant, so a revoked-and-reissued grant is distinguishable from the one a caller last saw; `null` when not applicable. */\n  readonly grantVersion: string | null\n}",
+    summary: '',
+    agent: true,
+  },
+  {
+    name: 'ActorResolver',
+    kind: 'interface',
+    signature:
+      'interface ActorResolver {\n  /**\n   * Resolve the current, authoritative actor for a principal that has\n   * ALREADY passed signature verification and the static scope/rate-limit\n   * meet (`EntitledPrincipal` — never anonymous). Return `null` when the\n   * host has no current actor record for this principal (e.g. an org\n   * membership was revoked after the token was issued) — the caller MUST\n   * treat that as a denial, not as "unrestricted".\n   *\n   * Never called with, and must never itself trust, anything from the raw\n   * inbound request other than what `principal` already carries.\n   */\n  resolveActor(principal: EntitledPrincipal): Actor | null | Promise<Actor | null>\n}',
+    summary:
+      'Injected, host-owned actor resolution (the same posture as `EntitlementsHandle.check` / `AgentServiceOptions.resolveAuth`).',
     agent: true,
   },
   {
@@ -68,7 +110,7 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'AgentServiceOptions',
     kind: 'interface',
     signature:
-      'interface AgentServiceOptions {\n  /**\n   * Explicit list of agent metadata entries.\n   * When omitted, reads the global registry via `getAgentMetadata`.\n   */\n  manifests?: AgentMetadata[]\n  /**\n   * Optional auth plugin. When absent and a component uses `$scope`,\n   * `handleToolCall` returns 401 AUTH_MISSING (fail-closed, Amendment 2).\n   */\n  authPlugin?: AuthPlugin\n  /**\n   * Optional rate-limit plugin. Fail-closed, matching `authPlugin`: when a\n   * component declares `$rate-limit` and this is ABSENT, the gate returns 429\n   * `RATE_LIMIT_MISSING` rather than dispatching. A component that declares no\n   * `$rate-limit` is unaffected and dispatches normally.\n   *\n   * "Optional" therefore means "un-rate-limited components need no plugin" — it\n   * is NOT optional for a component that asks to be rate-limited.\n   */\n  rateLimitPlugin?: RateLimitPlugin\n  /**\n   * Getter for the `componentInstanceRegistry` from `@aihu/arbor/mount`.\n   * Injected at construction time to avoid a circular import.\n   * When absent, all `handleToolCall` calls return 404 (no live instance).\n   *\n   * The registry is consumed READ-ONLY here (only `.get(tag)` is called),\n   * so the getter is typed as `ReadonlyMap` — a zero-cost type-level lock that\n   * prevents external mutation of the live registry without snapshotting it.\n   */\n  getRegistry?: () => ReadonlyMap<string, LiveBinding[]>\n  /**\n   * Optional per-request auth resolver. When provided, `asMiddleware()` calls\n   * it to build the `RequestContext` (userId + raw jwt) passed to\n   * `handleToolCall`, enabling scoped tools over the bundled HTTP path. When\n   * absent, `asMiddleware()` passes no context (fail-closed: scoped tools 401).\n   * Injected to keep agent-service auth-library-agnostic and avoid a circular\n   * `@aihu/auth` dep. The host wires `getAuthState` (`@aihu/auth/server`).\n   */\n  resolveAuth?: (req: Request) => RequestContext | Promise<RequestContext>\n  /**\n   * Optional auth-discovery URL (e.g. the deployment\'s\n   * `/.well-known/oauth-protected-resource`) included as `authDiscoveryUrl`\n   * in every 401 envelope the gate returns, so an agent that is refused\n   * knows WHERE to obtain a credential. Purely informational — never a\n   * policy input. When unset, 401 envelopes carry no discovery field.\n   */\n  authDiscoveryUrl?: string\n  /**\n   * GX Phase 4 (#466, spec §4.6): the live-entitlement registry handle —\n   * pass the SAME `createGovernedRegistry()` instance (`@aihu/server`) the\n   * server router was constructed with, so one scope has one live meaning on\n   * both axes. When present, `runGate` gains one stage between the scope meet\n   * and the rate limit: every scope in the met set is consulted through the\n   * shared `check` (deny → 403 `ENTITLEMENT_DENIED`; resolver failure → 503\n   * `ENTITLEMENT_UNAVAILABLE` + Retry-After — the §4.3 ladder in the tool\n   * envelope). ABSENT ⇒ byte-identical behavior to today (the same injected\n   * posture as `resolveAuth`: no ambient state, trivially testable).\n   */\n  entitlements?: EntitlementsHandle\n}',
+      'interface AgentServiceOptions {\n  /** Bounds projected read results. Defaults to depth 32 and 10,000 total nodes. */\n  projectionLimits?: CapabilityProjectionLimits\n  /** Maximum duration for each injected async security hook. Defaults to 5000ms. */\n  securityHookTimeoutMs?: number\n  /**\n   * Explicit list of agent metadata entries.\n   * When omitted, reads the global registry via `getAgentMetadata`.\n   */\n  manifests?: AgentMetadata[]\n  /**\n   * Optional auth plugin. When absent and a component uses `$scope`,\n   * `handleToolCall` returns 401 AUTH_MISSING (fail-closed, Amendment 2).\n   */\n  authPlugin?: AuthPlugin\n  /**\n   * Optional rate-limit plugin. Fail-closed, matching `authPlugin`: when a\n   * component declares `$rate-limit` and this is ABSENT, the gate returns 429\n   * `RATE_LIMIT_MISSING` rather than dispatching. A component that declares no\n   * `$rate-limit` is unaffected and dispatches normally.\n   *\n   * "Optional" therefore means "un-rate-limited components need no plugin" — it\n   * is NOT optional for a component that asks to be rate-limited.\n   */\n  rateLimitPlugin?: RateLimitPlugin\n  /**\n   * Getter for the `componentInstanceRegistry` from `@aihu/arbor/mount`.\n   * Injected at construction time to avoid a circular import.\n   * When absent, all `handleToolCall` calls return 404 (no live instance).\n   *\n   * The registry is consumed READ-ONLY here (only `.get(tag)` is called),\n   * so the getter is typed as `ReadonlyMap` — a zero-cost type-level lock that\n   * prevents external mutation of the live registry without snapshotting it.\n   */\n  getRegistry?: () => ReadonlyMap<string, LiveBinding[]>\n  /**\n   * Optional per-request auth resolver. When provided, `asMiddleware()` calls\n   * it to build the `RequestContext` (userId + raw jwt) passed to\n   * `handleToolCall`, enabling scoped tools over the bundled HTTP path. When\n   * absent, `asMiddleware()` passes no context (fail-closed: scoped tools 401).\n   * Injected to keep agent-service auth-library-agnostic and avoid a circular\n   * `@aihu/auth` dep. The host wires `getAuthState` (`@aihu/auth/server`).\n   */\n  resolveAuth?: (req: Request) => RequestContext | Promise<RequestContext>\n  /**\n   * Optional auth-discovery URL (e.g. the deployment\'s\n   * `/.well-known/oauth-protected-resource`) included as `authDiscoveryUrl`\n   * in every 401 envelope the gate returns, so an agent that is refused\n   * knows WHERE to obtain a credential. Purely informational — never a\n   * policy input. When unset, 401 envelopes carry no discovery field.\n   */\n  authDiscoveryUrl?: string\n  /**\n   * GX Phase 4 (#466, spec §4.6): the live-entitlement registry handle —\n   * pass the SAME `createGovernedRegistry()` instance (`@aihu/server`) the\n   * server router was constructed with, so one scope has one live meaning on\n   * both axes. When present, `runGate` gains one stage between the scope meet\n   * and the rate limit: every scope in the met set is consulted through the\n   * shared `check` (deny → 403 `ENTITLEMENT_DENIED`; resolver failure → 503\n   * `ENTITLEMENT_UNAVAILABLE` + Retry-After — the §4.3 ladder in the tool\n   * envelope). ABSENT ⇒ byte-identical behavior to today (the same injected\n   * posture as `resolveAuth`: no ambient state, trivially testable).\n   */\n  entitlements?: EntitlementsHandle\n  /**\n   * Tenant-aware actor resolution (#870): the same injected posture as\n   * `entitlements`/`resolveAuth`. When present, `runGate` resolves the\n   * calling {@link Actor} for every non-anonymous principal that reaches\n   * dispatch, and `authorize()` surfaces it to callers (e.g. the\n   * capability-bridge in `@aihu/agent-server`) alongside the `authorized`\n   * verdict. ABSENT (or a resolver returning `null` for a given principal)\n   * ⇒ no `actor` is produced — byte-identical to today\'s behavior for every\n   * existing caller, since nothing before #870 reads this field.\n   */\n  actorResolver?: ActorResolver\n  /**\n   * Host-owned per-resource authorization for state reads. Missing hooks,\n   * resolver errors, and explicit denials fail closed whenever a state value\n   * is read through `handleToolCall`.\n   */\n  authorizeDataRead?: CapabilityGrantResolver\n}',
     summary: 'Options for `createAgentService`.',
     agent: true,
   },
@@ -94,6 +136,22 @@ export const EXPORTS: readonly ApiExport[] = [
     signature:
       "interface AuthPlugin {\n  /**\n   * Verify that the JWT carries the required scope claim.\n   * Returns true if the claim is present, false otherwise.\n   *\n   * SECURITY (#420): the gate calls this only AFTER `verify` has confirmed\n   * the token's signature, so implementations may decode without their own\n   * signature check — the claims they read are already authenticated. This\n   * method alone is NOT sufficient for a scoped tool: a plugin without\n   * `verify` is treated as unable to verify and the gate fails closed (401).\n   */\n  checkScope(jwt: string, scope: string): boolean\n  /**\n   * Signature-verify `jwt` and return its claims, or `null` when the token\n   * is malformed, forged, or otherwise unverifiable. Never throws.\n   *\n   * This is THE single verified-claims source for the gate (#420): the\n   * rate-limit key derives from the returned `sub`, and the scope check runs\n   * only against a token this method has authenticated. Async because\n   * verification uses `crypto.subtle` (e.g. `@aihu/auth/server`'s HMAC path).\n   *\n   * OPTIONAL so existing third-party `AuthPlugin` implementations still\n   * typecheck — but a plugin without it cannot serve scoped or rate-limited\n   * tools: the gate FAILS CLOSED (401 `AUTH_UNVERIFIABLE`) rather than fall\n   * back to caller-supplied identity.\n   */\n  verify?(jwt: string): Promise<VerifiedClaims | null>\n}",
     summary: 'Optional auth plugin injected into `createAgentService`.',
+    agent: true,
+  },
+  {
+    name: 'CapabilityAuthorizationRequest',
+    kind: 'interface',
+    signature:
+      'interface CapabilityAuthorizationRequest {\n  /** Stable capability identifier, e.g. `"<tag>.<member>"`. */\n  readonly capability: string\n  /**\n   * The resource being read — host-defined (a row, a record id, a tenant\n   * scope, …). Opaque to this package; only `resolve` interprets it. Absent\n   * when the capability itself (not a specific resource) is what\'s gated.\n   */\n  readonly resource?: unknown\n  /** Current host-resolved actor; never copied from the inbound request. */\n  readonly actor?: Actor\n}',
+    summary: 'One data-read authorization request: which capability, over which resource.',
+    agent: true,
+  },
+  {
+    name: 'CapabilityProjectionLimits',
+    kind: 'interface',
+    signature:
+      'interface CapabilityProjectionLimits {\n  readonly maxDepth?: number\n  readonly maxNodes?: number\n}',
+    summary: '',
     agent: true,
   },
   {
@@ -172,7 +230,7 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'RequestContext',
     kind: 'interface',
     signature:
-      'interface RequestContext {\n  /**\n   * Caller-supplied identity hint. Retained for interface compatibility and\n   * telemetry only — the gate ignores it for every policy decision. The\n   * authoritative identity is the `sub` claim of the signature-verified `jwt`.\n   */\n  readonly userId: string | null | undefined\n  /**\n   * The raw JWT string. This is the sole credential: scoped and rate-limited\n   * tools require it, and all claims (identity + scopes) are read from it\n   * only after `AuthPlugin.verify` has checked its signature.\n   */\n  readonly jwt?: string | null\n  /**\n   * GX Phase 4 (#466, spec §4.4/§4.6): an OPTIONAL shared per-request\n   * entitlement memo. A host serving one page request that both renders a\n   * governed route and executes governed tool calls passes the same memo to\n   * both transports so a scope is live-resolved at most once per request.\n   * When absent, `runGate` creates a fresh memo per call. Never a policy\n   * input — only a deduplication scope.\n   */\n  readonly entitlementMemo?: EntitlementMemo\n}',
+      'interface RequestContext {\n  /**\n   * Caller-supplied identity hint. Retained for interface compatibility and\n   * telemetry only — the gate ignores it for every policy decision. The\n   * authoritative identity is the `sub` claim of the signature-verified `jwt`.\n   */\n  readonly userId: string | null | undefined\n  /**\n   * The raw JWT string. This is the sole credential: scoped and rate-limited\n   * tools require it, and all claims (identity + scopes) are read from it\n   * only after `AuthPlugin.verify` has checked its signature.\n   */\n  readonly jwt?: string | null\n  /**\n   * GX Phase 4 (#466, spec §4.4/§4.6): an OPTIONAL shared per-request\n   * entitlement memo. A host serving one page request that both renders a\n   * governed route and executes governed tool calls passes the same memo to\n   * both transports so a scope is live-resolved at most once per request.\n   * When absent, `runGate` creates a fresh memo per call. Never a policy\n   * input — only a deduplication scope.\n   */\n  readonly entitlementMemo?: EntitlementMemo\n  /** Opaque host-defined resource passed to the per-read authorization hook. */\n  readonly resource?: unknown\n}',
     summary: 'Request context passed to `handleToolCall` for authorization and rate-limit checks.',
     agent: true,
   },
@@ -208,10 +266,57 @@ export const EXPORTS: readonly ApiExport[] = [
     agent: true,
   },
   {
+    name: 'ActorKind',
+    kind: 'type',
+    signature: "type ActorKind = 'human' | 'delegated-agent' | 'machine'",
+    summary: '',
+    agent: true,
+  },
+  {
     name: 'AnonymousUaTier',
     kind: 'type',
     signature: "type AnonymousUaTier = 'searcher' | 'user-fetcher' | 'training-crawler'",
     summary: '',
+    agent: true,
+  },
+  {
+    name: 'CapabilityAuthorizationVerdict',
+    kind: 'type',
+    signature:
+      'type CapabilityAuthorizationVerdict =\n  | { readonly allow: true; readonly projection?: CapabilityProjection }\n  | {\n      readonly allow: false\n      /** 503 is reserved for an unreachable/unconfigured resolver — never a real grant. */\n      readonly code: 401 | 403 | 503\n      readonly reason: CapabilityDenyReason\n      readonly message: string\n    }',
+    summary: 'The verdict for one principal × one capability (+ resource) request.',
+    agent: true,
+  },
+  {
+    name: 'CapabilityDenyReason',
+    kind: 'type',
+    signature:
+      "type CapabilityDenyReason =\n  | 'AUTH_MISSING'\n  | 'AUTH_UNVERIFIABLE'\n  | 'AUTH_REQUIRED'\n  | 'AUTH_INVALID'\n  | 'CAPABILITY_DENIED'\n  | 'CAPABILITY_UNAVAILABLE'",
+    summary: "Machine-readable reasons, mirroring the `call`/`read` axis's own ladder.",
+    agent: true,
+  },
+  {
+    name: 'CapabilityGrant',
+    kind: 'type',
+    signature:
+      'type CapabilityGrant =\n  | { readonly granted: true; readonly projection?: CapabilityProjection }\n  | { readonly granted: false }',
+    summary:
+      "What the host's resolver decided — BEFORE the credential-failure ladder below ever runs (that ladder only fires when `resolve` is unreachable or absent, never as a substitute for its answer).",
+    agent: true,
+  },
+  {
+    name: 'CapabilityGrantResolver',
+    kind: 'type',
+    signature:
+      'type CapabilityGrantResolver = (\n  principal: EntitledPrincipal,\n  request: CapabilityAuthorizationRequest,\n) => CapabilityGrant | Promise<CapabilityGrant>',
+    summary: 'Host-injected per-resource check.',
+    agent: true,
+  },
+  {
+    name: 'CapabilityProjection',
+    kind: 'type',
+    signature: 'type CapabilityProjection = readonly string[]',
+    summary: 'Field names the result is restricted to.',
     agent: true,
   },
   {

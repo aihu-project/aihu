@@ -209,7 +209,7 @@ describe('AC4 — live dispatch returns real result', () => {
     expect(res.result.weather).toBe('sunny')
   })
 
-  it('getSignal returns signal value for read-only signals', async () => {
+  it('getSignal refuses a read-only signal without an authorization hook', async () => {
     const binding = makeLiveBinding('weather-card')
     const registry = makeRegistry('weather-card', binding)
     const svc = createAgentService({ getRegistry: () => registry })
@@ -220,9 +220,10 @@ describe('AC4 — live dispatch returns real result', () => {
       {
         userId: 'user-1',
       },
-    )) as { result: unknown }
-    // Should return the signal value (NYC) since callAction will throw 'no action: location'
-    expect(res.result).toBe('NYC')
+    )) as { result?: unknown; error?: string; code?: number }
+    expect(res.code).toBe(401)
+    expect(res.error).toBe('AUTH_MISSING: @aihu/auth middleware is not registered')
+    expect(res.result).toBeUndefined()
   })
 
   it('result is NOT the stub { stub: true }', async () => {

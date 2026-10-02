@@ -131,9 +131,9 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     tagline:
       'Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge.',
     note: '',
-    exportCount: 25,
-    valueCount: 9,
-    typeCount: 16,
+    exportCount: 29,
+    valueCount: 10,
+    typeCount: 19,
     agent: true,
   },
   {
@@ -143,9 +143,9 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     version: '0.4.0',
     tagline: 'Service-side agent runtime (server-hosted agent endpoints).',
     note: '',
-    exportCount: 38,
-    valueCount: 5,
-    typeCount: 33,
+    exportCount: 51,
+    valueCount: 8,
+    typeCount: 43,
     agent: true,
   },
   {

@@ -25,7 +25,8 @@ import type { LiveBinding, RequestContext } from '@aihu/agent-service'
  *   receives `invoke` frames IS the execution authority, so the server must
  *   refuse to delegate to one. Three channels must be REJECTED (no `hello`;
  *   mismatched protocol; non-numeric protocol) and one — a channel that sent a
- *   valid `hello` — must be DELEGATED to.
+ *   valid v2 `hello` with an attachment-bound nonce and verified session —
+ *   must be DELEGATED to.
  *
  * G3 — rate-limit KEY PROVENANCE (#420 / GO1a). The bucket key must derive
  *   from the signature-VERIFIED JWT `sub` (via `AuthPlugin.verify`), never
@@ -121,10 +122,9 @@ import type { LiveBinding, RequestContext } from '@aihu/agent-service'
  *       G1 regression: inject an always-permissive `rateLimitPlugin`, which
  *         reproduces exactly what the old `&& rateLimitPlugin` guard produced —
  *         a declared control that does not enforce.
- *       G2 regression: send a VALID `hello` first. The pre-fix server treated
- *         every channel as delegable; a post-fix server treats a handshaken one
- *         that way. The regression is therefore the real server's real
- *         delegation path, not a stand-in for it.
+ *       G2 regression: substitute a VALID v2 `hello` for each of the three
+ *         unverified-channel cases. This exercises the real delegation path
+ *         without sending a duplicate `hello` (which v2 revokes).
  *
  * The discrimination proof was likewise re-based rather than dropped. It used
  * to read "$scope denies, $rate-limit does not" — an assertion that only held
@@ -176,7 +176,7 @@ import {
 const { registerAgentMetadata } = await import('@aihu/agent')
 const { createAgentService } = await import('@aihu/agent-service')
 const { branch, leaf } = await import('@aihu/arbor')
-const { createAgentServer } = await import('@aihu/agent-server')
+const { BRIDGE_PROTOCOL_VERSION, createAgentServer } = await import('@aihu/agent-server')
 const { signal } = await import('@aihu/signals')
 
 const NAME = 'check:governed'
@@ -425,8 +425,8 @@ function makeComponent(): { node: ReturnType<typeof branch>; agentBinding: Agent
 
 interface G2Sub {
   readonly label: string
-  /** The `hello` frame to send before invoking, or null to send none. */
-  readonly hello: string | null
+  /** The `hello` protocol to send before invoking, or null to send none. */
+  readonly protocol: number | string | null
   /**
    * `true` when the channel is legitimate and the server MUST delegate to it.
    * This is the anti-vacuity half: without it, "refuse every channel" would
@@ -437,18 +437,18 @@ interface G2Sub {
 }
 
 const G2_SUBPROBES: readonly G2Sub[] = [
-  { label: 'invoke with NO hello sent at all', hello: null },
+  { label: 'invoke with NO hello sent at all', protocol: null },
   {
     label: 'hello with protocol = BRIDGE_PROTOCOL_VERSION + 1',
-    hello: JSON.stringify({ type: 'hello', protocol: 2 }),
+    protocol: BRIDGE_PROTOCOL_VERSION + 1,
   },
   {
     label: "hello with protocol = 'not-a-number'",
-    hello: JSON.stringify({ type: 'hello', protocol: 'not-a-number' }),
+    protocol: 'not-a-number',
   },
   {
     label: 'hello with a VALID protocol (must delegate)',
-    hello: JSON.stringify({ type: 'hello', protocol: 1 }),
+    protocol: BRIDGE_PROTOCOL_VERSION,
     mustDelegate: true,
   },
 ]
@@ -473,21 +473,37 @@ async function runG2Sub(sub: G2Sub, regressed: boolean): Promise<ProbeOutcome> {
   const server = createAgentServer({
     target: { node: comp.node, agentBinding: comp.agentBinding },
     createHost: domHost,
+    verifyBridgeSession: (token) => ({
+      identity: token === 'probe-session-token' ? 'probe-session' : '',
+      grantVersion: 'probe-grant',
+    }),
+    reauthorizeBridgeInvoke: (binding) =>
+      binding.sessionToken === 'probe-session-token'
+        ? { identity: binding.identity, grantVersion: binding.grantVersion }
+        : false,
   })
   try {
     const sent: string[] = []
     const channel = makeChannel(sent)
     server.attachBridge(channel)
 
-    // `--self-test` REGRESSION (no shim): prepend a valid handshake. The
-    // pre-GO2 server delegated to every channel unconditionally; a post-GO2
-    // server delegates to a handshaken one. So sending a good `hello` first
-    // reproduces the old delegation behaviour through the REAL code path, and
-    // the three must-reject sub-probes must flip to "delegated" — which is what
-    // proves this probe is not structurally always-green now that the tree is
-    // fixed. The must-delegate sub-probe is unaffected (it already handshakes).
-    if (regressed) channel.reply(JSON.stringify({ type: 'hello', protocol: 1 }))
-    if (sub.hello) channel.reply(sub.hello)
+    // `--self-test` REGRESSION (no shim): substitute a real valid handshake
+    // for each must-reject case. A verified channel delegates through the real
+    // bridge path; v2 treats a second hello as a revocation, so the pre-v2
+    // "prepend a good hello" technique would mask the regression instead.
+    const protocol = regressed ? BRIDGE_PROTOCOL_VERSION : sub.protocol
+    if (protocol !== null) {
+      channel.reply(
+        JSON.stringify({
+          type: 'hello',
+          protocol,
+          nonce: server.issueBridgeNonce().nonce,
+          sessionToken: 'probe-session-token',
+          sessionIdentity: 'probe-session',
+          grantVersion: 'probe-grant',
+        }),
+      )
+    }
 
     const call = server.callTool(`${TAG}/${ACTION}`, [], { userId: 'probe-user', jwt: 'j' })
     // `callTool` awaits the gate before forwarding, so the wire is still empty
@@ -1360,7 +1376,7 @@ async function runSelfTest(): Promise<void> {
   const g2Live = await runG2(false)
   const g3Live = await runG3(false)
   // Should-flag half: the same real code paths, regressed to their pre-fix
-  // behaviour (permissive rate-limit plugin / pre-sent valid handshake /
+  // behaviour (permissive rate-limit plugin / substituted valid v2 handshake /
   // caller-echoing principal). The probes must still see the violations they
   // were written for.
   const g1Regressed = await runG1(true)
@@ -1570,17 +1586,16 @@ for (const o of g3.filter((x) => !x.correct)) {
   })
 }
 
-// G2 — ONE finding if ANY sub-probe fails to reject. One defect (the absent
-// comparison), one finding; per-sub-probe findings would inflate the count.
+// G2 — ONE finding if ANY sub-probe violates the handshake boundary.
+// Per-sub-probe findings would inflate the count for one broken boundary.
 const g2Bad = g2.filter((x) => !x.correct)
 if (g2Bad.length > 0) {
   findings.push({
     where: 'packages/agent-server/src/agent-server.ts:158',
     rule: 'G2',
     message:
-      `bridge handshake is never verified — ${g2Bad.length}/${g2.length} sub-probes were ` +
-      `accepted that should have been rejected (${g2Bad.map((b) => b.label).join('; ')}). ` +
-      "`handleBridgeFrame`'s `case 'hello'` returns without inspecting `msg.protocol`.",
+      `bridge handshake boundary failed — ${g2Bad.length}/${g2.length} sub-probes ` +
+      `violated their delegation expectation (${g2Bad.map((b) => b.label).join('; ')}).`,
   })
 }
 

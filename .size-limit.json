@@ -57,7 +57,7 @@
   {
     "name": "@aihu/agent-service",
     "path": "packages/agent-service/dist/index.js",
-    "limit": "2900 B",
+    "limit": "4800 B",
     "gzip": true,
     "ignore": ["@aihu/agent"]
   },

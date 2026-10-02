@@ -20,10 +20,15 @@
  */
 
 import { getAllAgentMetadata } from '@aihu/agent'
-import type { RequestContext } from '@aihu/agent-service'
-import { createAgentService } from '@aihu/agent-service'
+import type { Actor, RequestContext } from '@aihu/agent-service'
+import {
+  createAgentService,
+  projectCapabilityResult,
+  withSecurityTimeout,
+} from '@aihu/agent-service'
 import type { MountScope, Snapshot } from '@aihu/arbor'
 import { _getComponentInstanceRegistry, mount } from '@aihu/arbor'
+import { createBridgeNonceStore } from './bridge-nonce.ts'
 import { opaqueActionIdForTool } from './opaque-id.ts'
 import type {
   AgentServer,
@@ -38,10 +43,12 @@ import { BRIDGE_PROTOCOL_VERSION } from './types.ts'
 interface PendingBridgeCall {
   resolve(value: unknown): void
   reject(err: Error): void
+  identity: string
+  grantVersion?: string
+  readOnly: boolean
+  tenantKey: string
+  timer?: ReturnType<typeof setTimeout>
 }
-
-/** Monotonic id source for bridge `callId`s. */
-let _callIdCounter = 0
 
 /**
  * How long a `callTool` waits for an attached channel's `hello` before
@@ -50,6 +57,7 @@ let _callIdCounter = 0
  * that a channel which will never handshake fails fast and loudly.
  */
 const DEFAULT_BRIDGE_HANDSHAKE_TIMEOUT_MS = 1000
+const DEFAULT_SECURITY_HOOK_TIMEOUT_MS = 5_000
 
 /**
  * Detect a gate-rejection envelope from `handleToolCall`. The agent-service
@@ -120,6 +128,22 @@ function ensureServerDom(): void {
 export function createAgentServer(options: AgentServerOptions): AgentServer {
   const { target } = options
   const handshakeTimeoutMs = options.bridgeHandshakeTimeoutMs ?? DEFAULT_BRIDGE_HANDSHAKE_TIMEOUT_MS
+  const maxPendingBridgeCalls = options.maxPendingBridgeCalls ?? 64
+  const maxPendingBridgeCallsTotal = options.maxPendingBridgeCallsTotal ?? 1024
+  const maxInFlightBridgeCalls = options.maxInFlightBridgeCalls ?? 1024
+  const maxInFlightBridgeCallsPerTenant = options.maxInFlightBridgeCallsPerTenant ?? 64
+  if (
+    !Number.isSafeInteger(maxPendingBridgeCalls) ||
+    maxPendingBridgeCalls < 1 ||
+    !Number.isSafeInteger(maxPendingBridgeCallsTotal) ||
+    maxPendingBridgeCallsTotal < 1 ||
+    !Number.isSafeInteger(maxInFlightBridgeCalls) ||
+    maxInFlightBridgeCalls < 1 ||
+    !Number.isSafeInteger(maxInFlightBridgeCallsPerTenant) ||
+    maxInFlightBridgeCallsPerTenant < 1
+  ) {
+    throw new RangeError('bridge call limits must be positive safe integers')
+  }
 
   // ── Step 1: mount server-side so the LiveBinding registers ─────────────────
   let scope: MountScope
@@ -154,6 +178,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     ...(options.authPlugin ? { authPlugin: options.authPlugin } : {}),
     ...(options.rateLimitPlugin ? { rateLimitPlugin: options.rateLimitPlugin } : {}),
     ...(options.resolveAuth ? { resolveAuth: options.resolveAuth } : {}),
+    ...(options.actorResolver ? { actorResolver: options.actorResolver } : {}),
+    ...(options.authorizeDataRead ? { authorizeDataRead: options.authorizeDataRead } : {}),
+    securityHookTimeoutMs: options.securityHookTimeoutMs ?? DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+    ...(options.projectionLimits ? { projectionLimits: options.projectionLimits } : {}),
     ...(options.authDiscoveryUrl ? { authDiscoveryUrl: options.authDiscoveryUrl } : {}),
   })
 
@@ -161,7 +189,60 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   let bridge: BridgeChannel | null = null
   let detachBridge: (() => void) | null = null
   const pending = new Map<string, PendingBridgeCall>()
+  let inFlightBridgeCalls = 0
+  const inFlightByTenant = new Map<string, number>()
   let lastBridgeSnapshot: Snapshot | null = null
+  const bridgeNonces = createBridgeNonceStore()
+  let verifiedSessionToken: string | undefined
+  let verifiedGrantVersion: string | undefined
+  let verifiedIdentity: string | undefined
+  let helloSeen = false
+  let peerRevoked = false
+  const revokedBindings = new Map<
+    string,
+    { readonly identity: string; readonly grantVersion?: string; readonly expiresAt: number }
+  >()
+  const configuredRevocationTtlMs = options.bridgeRevocationTtlMs
+  const revocationTtlMs =
+    typeof configuredRevocationTtlMs === 'number' &&
+    Number.isFinite(configuredRevocationTtlMs) &&
+    configuredRevocationTtlMs > 0
+      ? configuredRevocationTtlMs
+      : 24 * 60 * 60 * 1000
+  const configuredRevocationMaxEntries = options.bridgeRevocationMaxEntries
+  const revocationMaxEntries =
+    typeof configuredRevocationMaxEntries === 'number' &&
+    Number.isSafeInteger(configuredRevocationMaxEntries) &&
+    configuredRevocationMaxEntries > 0
+      ? configuredRevocationMaxEntries
+      : 10_000
+  const revocationKey = (identity: string, grantVersion?: string): string =>
+    JSON.stringify([identity, grantVersion === undefined ? 'identity' : 'grant', grantVersion])
+  let revocationStoreFull = false
+  let revocationStoreSaturatedUntil = 0
+  function pruneRevokedBindings(now = Date.now()): void {
+    for (const [key, binding] of revokedBindings) {
+      if (binding.expiresAt <= now) revokedBindings.delete(key)
+    }
+    if (revocationStoreSaturatedUntil <= now) revocationStoreSaturatedUntil = 0
+    const full = revokedBindings.size >= revocationMaxEntries || revocationStoreSaturatedUntil > now
+    if (full !== revocationStoreFull) {
+      revocationStoreFull = full
+      diagnose(full ? 'revocation.store.full' : 'revocation.store.available')
+    }
+  }
+  const isRevocationStoreFull = (): boolean => {
+    pruneRevokedBindings()
+    return revocationStoreFull
+  }
+  const isBindingRevoked = (identity: string, grantVersion?: string): boolean => {
+    pruneRevokedBindings()
+    return (
+      revokedBindings.has(revocationKey(identity)) ||
+      (grantVersion !== undefined && revokedBindings.has(revocationKey(identity, grantVersion)))
+    )
+  }
+  let attachmentGeneration = 0
 
   // ── Bridge handshake state (thesis §3: the client is never the authority) ──
   //
@@ -180,6 +261,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   type HandshakeState = 'pending' | 'verified' | 'rejected'
   let handshake: HandshakeState = 'pending'
   let handshakeReason = ''
+  let diagnosticCount = 0
+  let diagnosticsSuppressed = 0
+  let suppressionSummaryQueued = false
+  let suppressionSummarySent = false
   /** Woken when `handshake` leaves `'pending'`. */
   let handshakeWaiters: Array<() => void> = []
 
@@ -190,6 +275,55 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     const waiters = handshakeWaiters
     handshakeWaiters = []
     for (const w of waiters) w()
+  }
+
+  function diagnosticCopy(value: unknown, state = { nodes: 0 }, depth = 0): unknown {
+    state.nodes += 1
+    if (state.nodes > 48 || depth > 4) return '[truncated]'
+    if (typeof value === 'string') return value.slice(0, 160)
+    if (value === null || typeof value === 'number' || typeof value === 'boolean') return value
+    if (Array.isArray(value)) {
+      return Object.freeze(value.slice(0, 12).map((item) => diagnosticCopy(item, state, depth + 1)))
+    }
+    if (typeof value === 'object') {
+      const out: Record<string, unknown> = Object.create(null)
+      for (const key of Object.keys(value).slice(0, 12)) {
+        const descriptor = Object.getOwnPropertyDescriptor(value, key)
+        out[key.slice(0, 80)] =
+          descriptor && 'value' in descriptor
+            ? diagnosticCopy(descriptor.value, state, depth + 1)
+            : '[accessor]'
+      }
+      return Object.freeze(out)
+    }
+    return `[${typeof value}]`
+  }
+
+  function diagnose(event: string, detail?: unknown): void {
+    const emit = (name: string, copiedDetail?: unknown): void => {
+      const diagnostic = Object.freeze({
+        event: name,
+        ...(copiedDetail !== undefined ? { detail: copiedDetail } : {}),
+      })
+      queueMicrotask(() => {
+        Promise.resolve()
+          .then(() => options.onBridgeDiagnostic?.(diagnostic))
+          .catch(() => {})
+      })
+    }
+    if (diagnosticCount < 8) {
+      diagnosticCount += 1
+      emit(event, detail !== undefined ? diagnosticCopy(detail) : undefined)
+      return
+    }
+    diagnosticsSuppressed += 1
+    if (suppressionSummaryQueued || suppressionSummarySent) return
+    suppressionSummaryQueued = true
+    queueMicrotask(() => {
+      suppressionSummaryQueued = false
+      suppressionSummarySent = true
+      emit('diagnostics.suppressed', { count: diagnosticsSuppressed })
+    })
   }
 
   /**
@@ -203,23 +337,18 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
    */
   function checkHelloProtocol(raw: unknown): { ok: true } | { ok: false; reason: string } {
     if (typeof raw !== 'number' || !Number.isFinite(raw)) {
-      return {
-        ok: false,
-        reason:
-          `bridge client sent a non-numeric protocol value (${JSON.stringify(raw)}); ` +
-          `expected ${BRIDGE_PROTOCOL_VERSION}`,
-      }
+      diagnose('hello.protocol.invalid', { type: raw === null ? 'null' : typeof raw })
+      return { ok: false, reason: 'BRIDGE_HELLO_INVALID: hello verification failed' }
     }
     if (raw !== BRIDGE_PROTOCOL_VERSION) {
-      return {
-        ok: false,
-        reason: `bridge protocol mismatch: client speaks ${raw}, server speaks ${BRIDGE_PROTOCOL_VERSION}`,
-      }
+      diagnose('hello.protocol.mismatch', raw)
+      return { ok: false, reason: 'BRIDGE_HELLO_INVALID: hello verification failed' }
     }
     return { ok: true }
   }
 
-  function handleBridgeFrame(data: string): void {
+  function handleBridgeFrame(data: string, peer: BridgeChannel): void {
+    if (bridge !== peer) return
     let msg: BridgeClientMessage
     try {
       msg = JSON.parse(data) as BridgeClientMessage
@@ -233,11 +362,98 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     if (handshake !== 'verified' && msg.type !== 'hello') return
     switch (msg.type) {
       case 'hello': {
+        if (helloSeen) {
+          diagnosticsSuppressed += 1
+          peerRevoked = true
+          handshake = 'rejected'
+          handshakeReason = 'BRIDGE_REVOKED: bridge session binding changed'
+          rejectAllPending(handshakeReason)
+          try {
+            peer.close?.()
+          } catch {
+            // A broken close hook cannot restore this peer's authority.
+          }
+          detachBridge?.()
+          return
+        }
+        helloSeen = true
         const verdict = checkHelloProtocol((msg as { protocol?: unknown }).protocol)
-        settleHandshake(
-          verdict.ok ? 'verified' : 'rejected',
-          verdict.ok ? '' : (verdict as { reason: string }).reason,
-        )
+        if (!verdict.ok) {
+          settleHandshake('rejected', verdict.reason)
+          return
+        }
+        const hello = msg as Extract<BridgeClientMessage, { type: 'hello' }>
+        if (!bridgeNonces.consume(hello.nonce, String(attachmentGeneration))) {
+          diagnose('hello.nonce.invalid', {
+            present: typeof hello.nonce === 'string',
+            ...(typeof hello.nonce === 'string' ? { length: hello.nonce.length } : {}),
+          })
+          settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
+          return
+        }
+        if (typeof hello.sessionToken !== 'string' || !options.verifyBridgeSession) {
+          diagnose('hello.session.invalid', {
+            sessionIdentityType: typeof hello.sessionIdentity,
+            grantVersionType: typeof hello.grantVersion,
+          })
+          settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
+          return
+        }
+        const verificationGeneration = attachmentGeneration
+        Promise.resolve()
+          .then(() =>
+            withSecurityTimeout(
+              options.verifyBridgeSession!(hello.sessionToken!),
+              options.securityHookTimeoutMs ?? DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+            ),
+          )
+          .then(
+            (verified) => {
+              if (
+                bridge !== peer ||
+                attachmentGeneration !== verificationGeneration ||
+                handshake !== 'pending'
+              )
+                return
+              if (
+                !verified ||
+                typeof verified !== 'object' ||
+                typeof verified.identity !== 'string' ||
+                verified.identity.length === 0 ||
+                hello.sessionIdentity !== verified.identity ||
+                (verified.grantVersion ?? undefined) !== (hello.grantVersion ?? undefined)
+              ) {
+                diagnose('hello.session.mismatch', {
+                  sessionIdentityType: typeof hello.sessionIdentity,
+                  grantVersionType: typeof hello.grantVersion,
+                })
+                settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
+                return
+              }
+              if (isBindingRevoked(verified.identity, verified.grantVersion)) {
+                settleHandshake('rejected', 'BRIDGE_REVOKED: bridge session was revoked')
+                return
+              }
+              if (isRevocationStoreFull()) {
+                settleHandshake('rejected', 'BRIDGE_REVOCATION_STORE_FULL')
+                return
+              }
+              verifiedSessionToken = hello.sessionToken
+              verifiedIdentity = verified.identity
+              verifiedGrantVersion = verified.grantVersion
+              settleHandshake('verified', '')
+            },
+            () => {
+              if (
+                bridge === peer &&
+                attachmentGeneration === verificationGeneration &&
+                handshake === 'pending'
+              ) {
+                diagnose('hello.session.verification_failed')
+                settleHandshake('rejected', 'BRIDGE_HELLO_INVALID: hello verification failed')
+              }
+            },
+          )
         return
       }
       case 'snapshot':
@@ -253,6 +469,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         const p = pending.get(msg.callId)
         if (p) {
           pending.delete(msg.callId)
+          if (p.timer !== undefined) clearTimeout(p.timer)
           p.resolve(msg.result)
         }
         return
@@ -261,7 +478,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         const p = pending.get(msg.callId)
         if (p) {
           pending.delete(msg.callId)
-          p.reject(new Error(msg.message))
+          if (p.timer !== undefined) clearTimeout(p.timer)
+          p.reject(new Error('BRIDGE_ACTION_FAILED: Bridge action failed'))
         }
         return
       }
@@ -269,7 +487,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   }
 
   function rejectAllPending(reason: string): void {
-    for (const [, p] of pending) p.reject(new Error(reason))
+    for (const [, p] of pending) {
+      if (p.timer !== undefined) clearTimeout(p.timer)
+      p.reject(new Error(reason))
+    }
     pending.clear()
   }
 
@@ -287,7 +508,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
    *
    * A `rejected` handshake short-circuits: there is nothing left to wait for.
    */
-  function awaitHandshake(): Promise<HandshakeState> {
+  function awaitHandshake(expectedGeneration: number): Promise<HandshakeState> {
+    if (attachmentGeneration !== expectedGeneration) return Promise.resolve('rejected')
     if (handshake !== 'pending') return Promise.resolve(handshake)
     return new Promise<HandshakeState>((resolve) => {
       let done = false
@@ -295,7 +517,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         if (done) return
         done = true
         clearTimeout(timer)
-        resolve(handshake)
+        resolve(attachmentGeneration === expectedGeneration ? handshake : 'rejected')
       }
       const timer = setTimeout(() => {
         settleHandshake(
@@ -314,25 +536,84 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
 
   function attachBridge(channel: BridgeChannel): () => void {
     // Replace any prior bridge.
+    rejectAllPending('BRIDGE_REPLACED: bridge attachment was replaced')
+    for (const wake of handshakeWaiters) wake()
     detachBridge?.()
+    attachmentGeneration += 1
     bridge = channel
     // A new channel is a new peer: it must prove its protocol on its own, and
     // must never inherit the previous channel's verified status.
     handshake = 'pending'
     handshakeReason = ''
     handshakeWaiters = []
-    const offMsg = channel.onMessage(handleBridgeFrame)
+    verifiedSessionToken = undefined
+    verifiedIdentity = undefined
+    verifiedGrantVersion = undefined
+    helloSeen = false
+    peerRevoked = false
+    diagnosticCount = 0
+    diagnosticsSuppressed = 0
+    suppressionSummaryQueued = false
+    suppressionSummarySent = false
+    const offMsg = channel.onMessage((data) => handleBridgeFrame(data, channel))
     const offClose = channel.onClose(() => {
-      rejectAllPending('bridge disconnected')
-      if (bridge === channel) bridge = null
+      if (bridge === channel) {
+        attachmentGeneration += 1
+        rejectAllPending('BRIDGE_DETACHED: bridge disconnected')
+        for (const wake of handshakeWaiters) wake()
+        bridge = null
+      }
     })
     detachBridge = () => {
       offMsg()
       offClose()
-      if (bridge === channel) bridge = null
+      if (bridge === channel) {
+        attachmentGeneration += 1
+        rejectAllPending('BRIDGE_DETACHED: bridge disconnected')
+        for (const wake of handshakeWaiters) wake()
+        bridge = null
+      }
       detachBridge = null
     }
     return detachBridge
+  }
+
+  function revokeBridgeSession(identity: string, scope?: { readonly grantVersion: string }): void {
+    const grantVersion = scope?.grantVersion
+    const key = revocationKey(identity, grantVersion)
+    pruneRevokedBindings()
+    const now = Date.now()
+    if (revokedBindings.has(key) || revokedBindings.size < revocationMaxEntries) {
+      revokedBindings.delete(key)
+      revokedBindings.set(key, {
+        identity,
+        ...(grantVersion !== undefined ? { grantVersion } : {}),
+        expiresAt: now + revocationTtlMs,
+      })
+    } else {
+      revocationStoreSaturatedUntil = Math.max(revocationStoreSaturatedUntil, now + revocationTtlMs)
+    }
+    pruneRevokedBindings(now)
+    if (
+      verifiedIdentity === identity &&
+      (grantVersion === undefined || verifiedGrantVersion === grantVersion)
+    ) {
+      peerRevoked = true
+      handshake = 'rejected'
+      handshakeReason = 'BRIDGE_REVOKED: bridge session was revoked'
+      for (const wake of handshakeWaiters) wake()
+      handshakeWaiters = []
+    }
+    for (const [callId, call] of pending) {
+      if (
+        call.identity !== identity ||
+        (grantVersion !== undefined && call.grantVersion !== grantVersion)
+      )
+        continue
+      pending.delete(callId)
+      if (call.timer !== undefined) clearTimeout(call.timer)
+      call.reject(new Error('BRIDGE_REVOKED: bridge session was revoked'))
+    }
   }
 
   /**
@@ -340,28 +621,68 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
    * (the visible instance's result). If the bridge is disconnected mid-flight
    * the promise rejects (loud failure, per the plan's failure modes).
    */
-  function forwardToBridge(opaqueActionId: string, args: unknown[]): Promise<unknown> {
-    if (!bridge?.connected) {
-      return Promise.resolve(undefined)
+  function forwardToBridge(
+    channel: BridgeChannel,
+    generation: number,
+    opaqueActionId: string,
+    args: unknown[],
+    binding: { identity: string; grantVersion?: string; readOnly: boolean; tenantKey: string },
+    markSent: () => void,
+  ): Promise<unknown> {
+    if (bridge !== channel || attachmentGeneration !== generation || !channel.connected) {
+      return Promise.reject(new Error('BRIDGE_DETACHED: bridge disconnected before invocation'))
     }
-    const callId = `c${_callIdCounter++}`
+    // One attachment is active at a time. Replacement clears pending, so this
+    // server-owned map bounds both the current attachment and the server total.
+    if (pending.size >= maxPendingBridgeCalls || pending.size >= maxPendingBridgeCallsTotal) {
+      return Promise.reject(new Error('BRIDGE_OVERLOADED: pending call limit reached'))
+    }
+    // Preserve one attachment/server pending slot for another tenant when
+    // there is room to do so. Otherwise the default 64-slot attachment cap
+    // could be filled by one tenant despite its separate 64-call ceiling.
+    let tenantPending = 0
+    for (const call of pending.values()) {
+      if (call.tenantKey === binding.tenantKey) tenantPending += 1
+    }
+    if (
+      tenantPending >= Math.max(1, maxPendingBridgeCalls - 1) ||
+      tenantPending >= Math.max(1, maxPendingBridgeCallsTotal - 1)
+    ) {
+      return Promise.reject(new Error('BRIDGE_OVERLOADED: pending call limit reached'))
+    }
+    const callId = crypto.randomUUID()
     const frame: BridgeInvokeMessage = { type: 'invoke', callId, opaqueActionId, args }
     return new Promise<unknown>((resolve, reject) => {
-      pending.set(callId, { resolve, reject })
+      const timer = setTimeout(
+        () => {
+          pending.delete(callId)
+          reject(new Error('BRIDGE_TIMEOUT: bridge call timed out'))
+        },
+        options.bridgeCallTimeoutMs ??
+          options.securityHookTimeoutMs ??
+          DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+      )
+      pending.set(callId, { resolve, reject, timer, ...binding })
       try {
-        bridge!.send(JSON.stringify(frame))
+        // A synchronous send error can still mean a partial transport write;
+        // after this point an action's execution status is unknown.
+        markSent()
+        channel.send(JSON.stringify(frame))
       } catch (err) {
         pending.delete(callId)
+        clearTimeout(timer)
         reject(err instanceof Error ? err : new Error(String(err)))
       }
     })
   }
 
   // ── callTool: bridge attached → gate-only + delegate; else server dispatch ─
-  async function callTool(
+  async function callToolAdmitted(
     toolName: string,
     params: unknown,
     ctx?: RequestContext,
+    onTenantAdmitted?: (key: string) => void,
+    admittedChannel?: BridgeChannel,
   ): Promise<unknown> {
     const args = Array.isArray(params)
       ? params
@@ -369,7 +690,16 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         ? [params]
         : []
 
-    if (bridge?.connected) {
+    if (peerRevoked && !bridge?.connected) {
+      return { error: 'BRIDGE_REVOKED: bridge peer was revoked', code: 403 }
+    }
+    if (admittedChannel) {
+      const channel = admittedChannel
+      const generation = attachmentGeneration
+      const handshakeAtStart = handshake
+      const sessionAtStart = verifiedSessionToken
+      const identityAtStart = verifiedIdentity
+      const grantVersionAtStart = verifiedGrantVersion
       // Capability-bridge topology: the VISIBLE browser instance is
       // authoritative. Gate on the server (policy authority) but do NOT
       // dispatch on the server-mounted twin — that would double-execute side
@@ -377,27 +707,283 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
       // avoid. Execution is delegated to the browser via the opaque-ID
       // dispatcher; the gate carries no policy info onto the wire.
       const verdict = await service.authorize(toolName, params, ctx)
+      if (bridge !== channel || attachmentGeneration !== generation) {
+        return {
+          error: 'BRIDGE_REPLACED: bridge attachment changed during authorization',
+          code: 503,
+        }
+      }
+      if (
+        peerRevoked ||
+        (handshakeAtStart === 'verified' &&
+          (sessionAtStart !== verifiedSessionToken ||
+            identityAtStart !== verifiedIdentity ||
+            grantVersionAtStart !== verifiedGrantVersion))
+      ) {
+        const reason =
+          identityAtStart && isBindingRevoked(identityAtStart, grantVersionAtStart)
+            ? 'BRIDGE_REVOKED: bridge session was revoked'
+            : 'BRIDGE_REVOKED: bridge session binding changed'
+        rejectAllPending(reason)
+        return { error: reason, code: 403 }
+      }
       if (isGateRejection(verdict)) return verdict
+      const projection =
+        typeof verdict === 'object' &&
+        verdict !== null &&
+        Array.isArray((verdict as { projection?: unknown }).projection)
+          ? (verdict as { projection: readonly string[] }).projection
+          : undefined
+      const readOnly =
+        typeof verdict === 'object' &&
+        verdict !== null &&
+        (verdict as { readOnly?: unknown }).readOnly === true
+      const actor =
+        typeof verdict === 'object' &&
+        verdict !== null &&
+        typeof (verdict as { actor?: unknown }).actor === 'object'
+          ? (verdict as { actor: Actor }).actor
+          : undefined
+
+      // Only the service's verified actor can select a tenant bucket. Calls
+      // without one share a single bucket and cannot claim caller-supplied IDs.
+      const actorOrganization = actor?.organizationId
+      const tenantKey =
+        typeof actorOrganization === 'string' && actorOrganization !== ''
+          ? `organization:${actorOrganization}`
+          : 'unresolved-actor'
+      const tenantCalls = inFlightByTenant.get(tenantKey) ?? 0
+      if (tenantCalls >= maxInFlightBridgeCallsPerTenant) {
+        return { error: 'BRIDGE_OVERLOADED: tenant bridge call limit reached', code: 503 }
+      }
+      inFlightByTenant.set(tenantKey, tenantCalls + 1)
+      onTenantAdmitted?.(tenantKey)
 
       // The agent-service gate has approved the CALL; this verifies the
       // CHANNEL. Deliberately ordered after `authorize` so the security
       // ordering invariant (404 → 401 → 403 → 429) still wins: an unauthorized
       // call is refused for its own reason, not masked by a transport error,
       // and is still never forwarded.
-      if ((await awaitHandshake()) !== 'verified') {
+      const handshakeState = await awaitHandshake(generation)
+      if (bridge !== channel || attachmentGeneration !== generation) {
+        return { error: 'BRIDGE_REPLACED: bridge attachment changed during handshake', code: 503 }
+      }
+      if (
+        peerRevoked ||
+        (handshakeAtStart === 'verified' &&
+          (sessionAtStart !== verifiedSessionToken ||
+            identityAtStart !== verifiedIdentity ||
+            grantVersionAtStart !== verifiedGrantVersion))
+      ) {
+        const reason =
+          identityAtStart && isBindingRevoked(identityAtStart, grantVersionAtStart)
+            ? 'BRIDGE_REVOKED: bridge session was revoked'
+            : 'BRIDGE_REVOKED: bridge session binding changed'
+        rejectAllPending(reason)
+        return { error: reason, code: 403 }
+      }
+      if (handshakeState !== 'verified' || peerRevoked) {
         return { error: `BRIDGE_UNVERIFIED: ${handshakeReason}`, code: 503 }
       }
+
+      if (!options.reauthorizeBridgeInvoke) {
+        return {
+          error: 'BRIDGE_AUTH_UNAVAILABLE: per-invoke authorization is not configured',
+          code: 503,
+        }
+      }
+      let reauthorized: import('./types.ts').BridgeVerifiedSession | false = false
+      const sessionToken = verifiedSessionToken
+      const identity = verifiedIdentity
+      const grantVersion = verifiedGrantVersion
+      if (sessionToken === undefined || identity === undefined) {
+        return { error: 'BRIDGE_UNVERIFIED: verified session missing', code: 503 }
+      }
+      try {
+        reauthorized = await withSecurityTimeout(
+          options.reauthorizeBridgeInvoke({
+            sessionToken,
+            identity,
+            ...(grantVersion !== undefined ? { grantVersion } : {}),
+            ...(actor !== undefined ? { actor } : {}),
+          }),
+          options.securityHookTimeoutMs ?? DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+        )
+      } catch {
+        return { error: 'BRIDGE_AUTH_UNAVAILABLE: per-invoke authorization failed', code: 503 }
+      }
+      if (peerRevoked) {
+        rejectAllPending('BRIDGE_REVOKED: bridge peer was revoked')
+        return { error: 'BRIDGE_REVOKED: bridge peer was revoked', code: 403 }
+      }
+      if (!reauthorized) {
+        rejectAllPending('BRIDGE_REVOKED: session or grant is no longer current')
+        return { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
+      }
+      if (
+        typeof reauthorized !== 'object' ||
+        reauthorized.identity !== identity ||
+        (reauthorized.grantVersion ?? undefined) !== (grantVersion ?? undefined)
+      ) {
+        rejectAllPending('BRIDGE_REVOKED: session or grant binding changed')
+        return { error: 'BRIDGE_REVOKED: session or grant binding changed', code: 403 }
+      }
+      if (
+        bridge !== channel ||
+        attachmentGeneration !== generation ||
+        peerRevoked ||
+        sessionToken !== verifiedSessionToken ||
+        identity !== verifiedIdentity ||
+        grantVersion !== verifiedGrantVersion
+      )
+        return {
+          error: 'BRIDGE_REPLACED: bridge attachment changed during authorization',
+          code: 503,
+        }
 
       const opaqueActionId = opaqueActionIdForTool(toolName)
       if (!opaqueActionId) return { error: `bad tool: ${toolName}`, code: 400 }
 
+      let invokeSent = false
       try {
-        const bridgeResult = await forwardToBridge(opaqueActionId, args)
-        return { result: bridgeResult ?? null }
+        const bridgeResult = await forwardToBridge(
+          channel,
+          generation,
+          opaqueActionId,
+          args,
+          {
+            identity,
+            ...(grantVersion !== undefined ? { grantVersion } : {}),
+            readOnly,
+            tenantKey,
+          },
+          () => {
+            invokeSent = true
+          },
+        )
+        if (bridge !== channel || attachmentGeneration !== generation) {
+          if (!readOnly) {
+            return {
+              error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+              code: 403,
+            }
+          }
+          if (bridge === null) {
+            return { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
+          }
+          return {
+            error: 'BRIDGE_REPLACED: bridge attachment changed during invocation',
+            code: 503,
+          }
+        }
+        if (peerRevoked || isBindingRevoked(identity, grantVersion)) {
+          return readOnly
+            ? { error: 'BRIDGE_REVOKED: bridge session was revoked', code: 403 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
+        let finalAuthorization: import('./types.ts').BridgeVerifiedSession | false
+        try {
+          finalAuthorization = await withSecurityTimeout(
+            options.reauthorizeBridgeInvoke({
+              sessionToken,
+              identity,
+              ...(grantVersion !== undefined ? { grantVersion } : {}),
+              ...(actor !== undefined ? { actor } : {}),
+            }),
+            options.securityHookTimeoutMs ?? DEFAULT_SECURITY_HOOK_TIMEOUT_MS,
+          )
+        } catch {
+          return readOnly
+            ? { error: 'BRIDGE_AUTH_UNAVAILABLE: post-invoke authorization failed', code: 503 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
+        if (bridge !== channel || attachmentGeneration !== generation) {
+          if (readOnly) {
+            return bridge === null
+              ? { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
+              : {
+                  error: 'BRIDGE_REPLACED: bridge attachment changed during invocation',
+                  code: 503,
+                }
+          }
+          return {
+            error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+            code: 403,
+          }
+        }
+        if (
+          peerRevoked ||
+          isBindingRevoked(identity, grantVersion) ||
+          !finalAuthorization ||
+          typeof finalAuthorization !== 'object' ||
+          finalAuthorization.identity !== identity ||
+          (finalAuthorization.grantVersion ?? undefined) !== (grantVersion ?? undefined)
+        ) {
+          return readOnly
+            ? { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
+        try {
+          return {
+            result: projectCapabilityResult(
+              bridgeResult ?? null,
+              projection,
+              options.projectionLimits,
+            ),
+          }
+        } catch {
+          return readOnly
+            ? { error: 'CAPABILITY_UNAVAILABLE: result shape cannot be projected', code: 503 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
       } catch (err) {
+        if (invokeSent && !readOnly) {
+          return {
+            error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+            code: 403,
+          }
+        }
+        if (bridge !== channel || attachmentGeneration !== generation) {
+          if (bridge === null) {
+            return { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
+          }
+          return {
+            error: 'BRIDGE_REPLACED: bridge attachment changed during invocation',
+            code: 503,
+          }
+        }
+        if (err instanceof Error && err.message.startsWith('BRIDGE_REVOKED:')) {
+          return readOnly
+            ? { error: 'BRIDGE_REVOKED: session or grant is no longer current', code: 403 }
+            : {
+                error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
+                code: 403,
+              }
+        }
+        if (err instanceof Error && err.message.startsWith('BRIDGE_TIMEOUT:')) {
+          return { error: 'BRIDGE_TIMEOUT: bridge call timed out', code: 503 }
+        }
+        if (err instanceof Error && err.message.startsWith('BRIDGE_OVERLOADED:')) {
+          return { error: 'BRIDGE_OVERLOADED: pending call limit reached', code: 503 }
+        }
+        if (err instanceof Error && err.message.startsWith('BRIDGE_DETACHED:')) {
+          return { error: 'BRIDGE_DETACHED: bridge disconnected before invocation', code: 503 }
+        }
         // WS-disconnect mid-drive must be surfaced, not silently dropped.
         return {
-          error: `BRIDGE_ERROR: ${err instanceof Error ? err.message : String(err)}`,
+          error: 'BRIDGE_ERROR: bridge call failed',
           code: 503,
         }
       }
@@ -405,6 +991,39 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
 
     // No bridge (headless / CI): gate + dispatch on the server-mounted instance.
     return service.handleToolCall(toolName, params, ctx)
+  }
+
+  async function callTool(
+    toolName: string,
+    params: unknown,
+    ctx?: RequestContext,
+  ): Promise<unknown> {
+    const channel = bridge
+    if (!channel?.connected) return callToolAdmitted(toolName, params, ctx)
+    // Admission precedes all service hooks and their timers.
+    if (inFlightBridgeCalls >= maxInFlightBridgeCalls) {
+      return { error: 'BRIDGE_OVERLOADED: in-flight bridge call limit reached', code: 503 }
+    }
+    inFlightBridgeCalls += 1
+    let tenantKey: string | undefined
+    try {
+      return await callToolAdmitted(
+        toolName,
+        params,
+        ctx,
+        (key) => {
+          tenantKey = key
+        },
+        channel,
+      )
+    } finally {
+      inFlightBridgeCalls -= 1
+      if (tenantKey !== undefined) {
+        const remaining = (inFlightByTenant.get(tenantKey) ?? 1) - 1
+        if (remaining === 0) inFlightByTenant.delete(tenantKey)
+        else inFlightByTenant.set(tenantKey, remaining)
+      }
+    }
   }
 
   function serialize(): Snapshot {
@@ -423,6 +1042,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     callTool,
     serialize,
     attachBridge,
+    revokeBridgeSession,
+    issueBridgeNonce: (ttlMs?: number) => bridgeNonces.issue(ttlMs, String(attachmentGeneration)),
     dispose,
   }
 }

@@ -10,7 +10,26 @@
  *               `RateLimitPlugin`, `VerifiedClaims`, and the principal-gate
  *               types (`Principal`, `EmissionDecision`, …)
  */
+
+// #870 — tenant-aware actor context. Host-injected resolution from a
+// verified principal to an authoritative, org-scoped `Actor`; see
+// `actor.ts`'s header for why this cannot be derived from claims alone.
+export type { Actor, ActorKind, ActorResolver } from './actor.ts'
 export { createAgentService } from './agent-service.ts'
+export type {
+  CapabilityAuthorizationRequest,
+  CapabilityAuthorizationVerdict,
+  CapabilityDenyReason,
+  CapabilityGrant,
+  CapabilityGrantResolver,
+  CapabilityProjection,
+  CapabilityProjectionLimits,
+} from './capability-gate.ts'
+export {
+  authorizeCapability,
+  projectCapabilityResult,
+  withSecurityTimeout,
+} from './capability-gate.ts'
 // GX Phase 4 (#466) — the live-entitlement contract the call axis consults.
 // The engine lives in `@aihu/server` (`createGovernedRegistry`); these types
 // are the structural seam that keeps this package server-agnostic.

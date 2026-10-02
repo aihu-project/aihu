@@ -18,6 +18,7 @@ import { opaqueActionId } from '../src/opaque-id.ts'
 import type { AgentServer, BridgeChannel } from '../src/types.ts'
 
 const TAG = 'bridge-counter'
+const RECORD = { order: { id: 'o1', customerSsn: 'secret' }, items: [{ sku: 's1', cost: 55 }] }
 
 /** A pair of linked in-memory channels: `[serverSide, clientSide]`. */
 function makeLinkedChannels(): [BridgeChannel, BridgeChannel] {
@@ -69,7 +70,10 @@ function makeBrowserCounter(): {
           return count()
         },
       },
-      reads: { [opaqueActionId(TAG, 'count')]: () => count() },
+      reads: {
+        [opaqueActionId(TAG, 'count')]: () => count(),
+        [opaqueActionId(TAG, 'record')]: () => RECORD,
+      },
       writes: { [opaqueActionId(TAG, 'count')]: (v: unknown) => setCount(Number(v)) },
     },
   }
@@ -95,7 +99,7 @@ function makeServerTwin(): {
           return count()
         },
       },
-      reads: { count: () => count() },
+      reads: { count: () => count(), record: () => RECORD },
       writes: { count: (v: unknown) => setCount(Number(v)) },
     },
   }
@@ -106,7 +110,7 @@ beforeEach(() => {
     tag: TAG,
     describes: 'A counter driven over the capability bridge.',
     actions: { increment: { returns: {} } },
-    state: { count: 'The current value.' },
+    state: { count: 'The current value.', record: 'The current record.' },
   })
 })
 
@@ -136,7 +140,7 @@ describe('bridge client executes opaque invocations on the visible component', (
     )
 
     // hello handshake fired on connect.
-    expect(frames.find((f) => f.type === 'hello')).toMatchObject({ type: 'hello', protocol: 1 })
+    expect(frames.find((f) => f.type === 'hello')).toMatchObject({ type: 'hello', protocol: 2 })
 
     // Server sends an approved invoke; the client drives the REAL component.
     serverSide.send(
@@ -185,13 +189,23 @@ describe('full loop: server gates, the BROWSER instance is driven (not the twin)
     const server = createAgentServer({
       target: { node: twin.node, agentBinding: twin.agentBinding },
       createHost: () => new JSDOM('<!DOCTYPE html><body></body>').window.document.body,
+      verifyBridgeSession: (token) =>
+        token === 'test-session' ? { identity: token } : { identity: '' },
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
     })
     servers.push(server)
     server.attachBridge(serverSide)
+    const nonce = server.issueBridgeNonce().nonce
     clients.push(
       createBridgeClient({
         dispatcher: browser.dispatcher,
         channel: clientSide,
+        sessionToken: 'test-session',
+        sessionIdentity: 'test-session',
+        nonce,
         serialize: browser.serialize,
       }),
     )
@@ -208,5 +222,101 @@ describe('full loop: server gates, the BROWSER instance is driven (not the twin)
     expect(twin.read()).toBe(0)
     // serialize() reflects the visible instance's streamed snapshot.
     expect(server.serialize()).toMatchObject({ count: 5 })
+  })
+
+  it('keeps raw component exception text host-side and returns a generic bridge error', async () => {
+    const twin = makeServerTwin()
+    const browser = makeBrowserCounter()
+    const [serverSide, clientSide] = makeLinkedChannels()
+    const diagnostics: Array<{ code: string; message: string }> = []
+    const server = createAgentServer({
+      target: { node: twin.node, agentBinding: twin.agentBinding },
+      createHost: () => new JSDOM('<!DOCTYPE html><body></body>').window.document.body,
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
+    })
+    servers.push(server)
+    server.attachBridge(serverSide)
+    clients.push(
+      createBridgeClient({
+        dispatcher: {
+          ...browser.dispatcher,
+          actions: {
+            ...browser.dispatcher.actions,
+            [opaqueActionId(TAG, 'increment')]: () => {
+              throw new Error(JSON.stringify({ customerSsn: 'secret-marker' }))
+            },
+          },
+        },
+        channel: clientSide,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+        nonce: server.issueBridgeNonce().nonce,
+        onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+      }),
+    )
+    const result = (await server.callTool(`${TAG}/increment`, [1], { userId: 'u1' })) as {
+      code?: number
+      error?: string
+    }
+    expect(result.code).toBe(403)
+    expect(result.error).toBe('BRIDGE_RESULT_WITHHELD: action may have executed; result withheld')
+    expect(result.error).not.toContain('secret-marker')
+    expect(diagnostics).toEqual([
+      { code: 'BRIDGE_ACTION_FAILED', message: '{"customerSsn":"secret-marker"}' },
+    ])
+  })
+
+  it('recursively projects array and nested bridge reads before returning to MCP', async () => {
+    const twin = makeServerTwin()
+    const browser = makeBrowserCounter()
+    const [serverSide, clientSide] = makeLinkedChannels()
+    const server = createAgentServer({
+      target: { node: twin.node, agentBinding: twin.agentBinding },
+      createHost: () => new JSDOM('<!DOCTYPE html><body></body>').window.document.body,
+      authPlugin: { checkScope: () => true, verify: async () => ({ sub: 'reader' }) },
+      actorResolver: {
+        resolveActor: (principal) => ({
+          kind: 'human',
+          subject: principal.sub,
+          organizationId: 'org-1',
+          scopes: principal.scopes,
+          issuer: null,
+          audience: null,
+          grantId: null,
+          grantVersion: null,
+        }),
+      },
+      authorizeDataRead: () => ({ granted: true, projection: ['order.id', 'items.sku'] }),
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({
+        identity: binding.identity,
+        ...(binding.grantVersion ? { grantVersion: binding.grantVersion } : {}),
+      }),
+    })
+    servers.push(server)
+    server.attachBridge(serverSide)
+    clients.push(
+      createBridgeClient({
+        dispatcher: browser.dispatcher,
+        channel: clientSide,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+        nonce: server.issueBridgeNonce().nonce,
+      }),
+    )
+    const result = (await server.callTool(`${TAG}/record`, null, {
+      userId: 'reader',
+      jwt: 'verified',
+    })) as {
+      result?: unknown
+      code?: number
+      error?: string
+    }
+    expect(result.code).toBeUndefined()
+    expect(result.result).toEqual({ order: { id: 'o1' }, items: [{ sku: 's1' }] })
   })
 })
