@@ -96,7 +96,7 @@ jobs:
             cdylib: aihu_server_native.dll
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable @ 2024-10-25
@@ -105,7 +105,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '20'
 
@@ -124,7 +124,7 @@ jobs:
           Copy-Item -Path "packages/server/src-native/target/${{ matrix.target }}/release/${{ matrix.cdylib }}" -Destination "${{ matrix.node-file }}"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: native-${{ matrix.platform }}
           path: ${{ matrix.node-file }}
@@ -147,17 +147,17 @@ jobs:
     if: inputs.is_release && !inputs.canary
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
       - name: Download all native artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: native-artifacts
 
@@ -244,7 +244,7 @@ jobs:
             ext: '.exe'
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable @ 2024-10-25
@@ -270,7 +270,7 @@ jobs:
           Copy-Item -Path "target/${{ matrix.target }}/release/${{ matrix.bin-file }}" -Destination "${{ matrix.bin-file }}"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: css-native-${{ matrix.platform }}
           path: ${{ matrix.bin-file }}
@@ -291,17 +291,17 @@ jobs:
     if: inputs.is_release && !inputs.canary
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
       - name: Download all css-native artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: css-native-artifacts
 

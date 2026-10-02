@@ -39,8 +39,8 @@ jobs:
     outputs:
       storybook: ${{ steps.filter.outputs.storybook }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         with:
           filters: |
@@ -65,11 +65,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # Chromatic requires full git history for baseline resolution.
           fetch-depth: 0
-      - uses: moonrepo/setup-toolchain@v0
+      - uses: moonrepo/setup-toolchain@261c62cb5b0f580c7be7c8cd0f023a2e96756095 # v0
         with:
           auto-install: true
       # Chromatic is a framework consumer. Its .aihu transforms use the
@@ -80,7 +80,7 @@ jobs:
       - name: Build Storybook
         run: bun run --cwd apps/storybook build-storybook
       - name: Chromatic
-        uses: chromaui/action@latest
+        uses: chromaui/action@c93e0bc3a63aa176e14a75b61a31847cbfdd341c # v1
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           storybookBuildDir: apps/storybook/storybook-static
