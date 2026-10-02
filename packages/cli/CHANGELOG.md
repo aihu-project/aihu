@@ -1,5 +1,11 @@
 # @aihu/cli
 
+## 1.4.1
+
+### Patch Changes
+
+- [#919](https://github.com/aihu-project/aihu/pull/919) [`f4fc5f6`](https://github.com/aihu-project/aihu/commit/f4fc5f602f976fd064bd24b24c717d1b1f05d0cf) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Release the agent and full scaffolds with `@aihu/agent-server` 0.5.x, whose Arbor peer resolves to the same copy as the app, fixing fresh-install typechecks.
+
 ## 1.4.0
 
 ### Minor Changes

@@ -1,2063 +1,288 @@
-diff --git a/.changeset/agent-read-auth.md b/.changeset/agent-read-auth.md
+diff --git a/.changeset/scaffold-arbor-identity.md b/.changeset/scaffold-arbor-identity.md
 deleted file mode 100644
-index 7349a5d9..00000000
---- a/.changeset/agent-read-auth.md
+index e2483efa..00000000
+--- a/.changeset/scaffold-arbor-identity.md
 +++ /dev/null
-@@ -1,6 +0,0 @@
+@@ -1,5 +0,0 @@
 ----
--'@aihu/agent-service': minor
--'@aihu/agent-server': minor
-----
--
--Require host authorization before serving agent state reads, resolve tenant actors from live host lookups, recursively project JSON-safe results, and bind browser bridge sessions to one-use connection nonces with per-invocation reauthorization. Migration: bridge clients must speak protocol v2 and send `nonce`, `sessionToken`, `sessionIdentity`, and the verified `grantVersion` in `hello`; hosts must return `{ identity, grantVersion? }` from both `verifyBridgeSession` and `reauthorizeBridgeInvoke`, and supply `actorResolver` and `authorizeDataRead` for protected state reads. `securityHookTimeoutMs` and `bridgeCallTimeoutMs` configure bounded hook/call waits (5000ms defaults). Hosts revoke all grants for an identity with `server.revokeBridgeSession(identity)` and revoke only one exact grant with `server.revokeBridgeSession(identity, { grantVersion })`; literal grant versions such as `"*"` remain exact values. Revocation records live for 24 hours by default (configurable with `bridgeRevocationTtlMs`) and are capped at 10,000 entries by default (`bridgeRevocationMaxEntries`); when full, new bridge handshakes fail with `BRIDGE_REVOCATION_STORE_FULL` until retained entries expire, and existing verified unrevoked sessions continue to work. Revocation synchronously cancels matching pending calls; the bounded store guards new hellos and invokes, while the host's session store remains authoritative for long-lived revocation. A revoked state read returns a denial without its result. Once an action invoke has been sent, disconnect, timeout, bridge error, protocol error, or revocation returns `BRIDGE_RESULT_WITHHELD`; callers must treat the action outcome as unknown and must not assume it did not run. Projected leaves must be JSON-safe primitives, arrays, and plain records; functions, symbols, bigints, non-finite numbers, non-plain objects such as `Date`, objects with callable `toJSON` hooks, accessors on selected paths, cycles, and results beyond the default depth 32 or 10,000 total nodes fail closed as `CAPABILITY_UNAVAILABLE`. Set `projectionLimits: { maxDepth, maxNodes }` on the service/server to tune those limits. Bridge diagnostics run asynchronously after state changes and receive frozen, bounded, credential-free peer details.
-diff --git a/.changeset/agent-security-4.md b/.changeset/agent-security-4.md
-deleted file mode 100644
-index a2c75a6c..00000000
---- a/.changeset/agent-security-4.md
-+++ /dev/null
-@@ -1,6 +0,0 @@
-----
--'@aihu/agent-service': patch
--'@aihu/agent-server': patch
+-'@aihu/cli': patch
 ----
 -
--Bound capability projection work and bridge revocation storage, avoid diagnostic reentrancy, and report unknown outcomes whenever a forwarded action can no longer be confirmed.
-diff --git a/.changeset/agent-security-5.md b/.changeset/agent-security-5.md
-deleted file mode 100644
-index 431f3e36..00000000
---- a/.changeset/agent-security-5.md
-+++ /dev/null
-@@ -1,6 +0,0 @@
-----
--'@aihu/agent-service': patch
--'@aihu/agent-server': patch
-----
--
--Fail closed on untrusted proxy prototype chains, preserve revocation bindings when the bounded store is full, and close duplicate-hello peers with bounded diagnostics. Migration note: deployments that reach `bridgeRevocationMaxEntries` now refuse new bridge handshakes with `BRIDGE_REVOCATION_STORE_FULL` until revocations expire; size the cap and TTL for expected revocation volume. Existing verified, unrevoked bridge sessions remain available.
-diff --git a/.changeset/agent-security-6.md b/.changeset/agent-security-6.md
-deleted file mode 100644
-index 9c863836..00000000
---- a/.changeset/agent-security-6.md
-+++ /dev/null
-@@ -1,8 +0,0 @@
-----
--'@aihu/agent-service': patch
--'@aihu/agent-server': patch
-----
--
--Bound projection work for Proxy records by reading only requested own properties and rejecting oversized whole-record key sets before describing their entries.
--
--Keep malformed bridge hello objects out of host diagnostics, and pin the per-attachment diagnostic callback cap with a regression.
-diff --git a/.changeset/agent-security-7.md b/.changeset/agent-security-7.md
-deleted file mode 100644
-index 96d37fe5..00000000
---- a/.changeset/agent-security-7.md
-+++ /dev/null
-@@ -1,8 +0,0 @@
-----
--'@aihu/agent-server': minor
--'@aihu/agent-service': patch
-----
--
--Add configurable per-attachment (`maxPendingBridgeCalls`, default 64) and per-server (`maxPendingBridgeCallsTotal`, default 1024) bridge concurrency limits. Calls above either limit return 503 `BRIDGE_OVERLOADED` before a bridge timer or invoke frame is created. Hosts that need higher concurrency can raise both limits; invalid limits are rejected at server creation.
--
--Reject oversized whole-record projections before any descriptor lookup, and document that hosts must normalize untrusted Proxy or exotic values into plain data before registering them.
-diff --git a/.changeset/agent-security-8.md b/.changeset/agent-security-8.md
-deleted file mode 100644
-index c88eb145..00000000
---- a/.changeset/agent-security-8.md
-+++ /dev/null
-@@ -1,7 +0,0 @@
-----
--'@aihu/agent-server': minor
-----
--
--Add admission limits for the entire bridge call path: `maxInFlightBridgeCalls` defaults to 1,024 server-wide, and `maxInFlightBridgeCallsPerTenant` defaults to 64 per verified actor organization. Excess calls return 503 `BRIDGE_OVERLOADED`; the server-wide limit rejects before any authorization hook, handshake waiter, or timer is created. Calls without a verified actor share one tenant bucket. Pending-call caps remain in force, with one slot reserved for another tenant when capacity permits.
--
--Migration: hosts expecting more concurrency should raise these new limits, along with `maxPendingBridgeCalls` and `maxPendingBridgeCallsTotal` where needed. Configure a pending cap above one to allow simultaneous cross-tenant forwarding. An upstream rate limit is still recommended.
-diff --git a/apps/docs/src/data/api/generated/adapter-cloudflare.ts b/apps/docs/src/data/api/generated/adapter-cloudflare.ts
-index 17030fa3..b050c079 100644
---- a/apps/docs/src/data/api/generated/adapter-cloudflare.ts
-+++ b/apps/docs/src/data/api/generated/adapter-cloudflare.ts
+-Release the agent and full scaffolds with `@aihu/agent-server` 0.5.x, whose Arbor peer resolves to the same copy as the app, fixing fresh-install typechecks.
+diff --git a/apps/docs/src/data/api/generated/cli.ts b/apps/docs/src/data/api/generated/cli.ts
+index dce3b463..aec07942 100644
+--- a/apps/docs/src/data/api/generated/cli.ts
++++ b/apps/docs/src/data/api/generated/cli.ts
 @@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/adapter-cloudflare',
-   slug: 'adapter-cloudflare',
-   tier: 'App & routing',
--  version: '15.0.2',
-+  version: '15.0.3',
-   tagline: 'Cloudflare Workers/Pages deployment adapter for @aihu/app.',
+   name: '@aihu/cli',
+   slug: 'cli',
+   tier: 'Compiler & tooling',
+-  version: '1.4.0',
++  version: '1.4.1',
+   tagline: 'Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.',
    note: '',
  }
-diff --git a/apps/docs/src/data/api/generated/adapter-vercel.ts b/apps/docs/src/data/api/generated/adapter-vercel.ts
-index f22778e3..9339205c 100644
---- a/apps/docs/src/data/api/generated/adapter-vercel.ts
-+++ b/apps/docs/src/data/api/generated/adapter-vercel.ts
+diff --git a/apps/docs/src/data/api/generated/create-aihu.ts b/apps/docs/src/data/api/generated/create-aihu.ts
+index e6dfa334..1ebb5fe4 100644
+--- a/apps/docs/src/data/api/generated/create-aihu.ts
++++ b/apps/docs/src/data/api/generated/create-aihu.ts
 @@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/adapter-vercel',
-   slug: 'adapter-vercel',
-   tier: 'App & routing',
--  version: '15.0.2',
-+  version: '15.0.3',
-   tagline: 'Vercel deployment adapter for @aihu/app.',
-   note: '',
- }
-diff --git a/apps/docs/src/data/api/generated/agent-a2a.ts b/apps/docs/src/data/api/generated/agent-a2a.ts
-index 4317232b..93f240be 100644
---- a/apps/docs/src/data/api/generated/agent-a2a.ts
-+++ b/apps/docs/src/data/api/generated/agent-a2a.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/agent-a2a',
-   slug: 'agent-a2a',
-   tier: 'Agents & governance',
--  version: '1.0.1',
-+  version: '1.0.2',
-   tagline: 'A2A (Agent2Agent) protocol bindings (spec v1.0.1, JSON-RPC) for @aihu/agent-service.',
-   note: '',
- }
-diff --git a/apps/docs/src/data/api/generated/agent-acp.ts b/apps/docs/src/data/api/generated/agent-acp.ts
-index d70a4124..b4ebc6e5 100644
---- a/apps/docs/src/data/api/generated/agent-acp.ts
-+++ b/apps/docs/src/data/api/generated/agent-acp.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/agent-acp',
-   slug: 'agent-acp',
-   tier: 'Agents & governance',
--  version: '0.2.1',
-+  version: '0.2.2',
+   name: 'create-aihu',
+   slug: 'create-aihu',
+   tier: 'Compiler & tooling',
+-  version: '0.1.13',
++  version: '0.1.14',
    tagline:
-     "DEPRECATED — use @aihu/agent-a2a. BeeAI ACP merged into A2A under the Linux Foundation (Aug 2025); this adapter's invented ACP shape has no spec to conform to.",
-   note: '',
-diff --git a/apps/docs/src/data/api/generated/agent-server.ts b/apps/docs/src/data/api/generated/agent-server.ts
-index e92ca44b..cf43ac08 100644
---- a/apps/docs/src/data/api/generated/agent-server.ts
-+++ b/apps/docs/src/data/api/generated/agent-server.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/agent-server',
-   slug: 'agent-server',
-   tier: 'Agents & governance',
--  version: '0.4.4',
-+  version: '0.5.0',
-   tagline:
-     'Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge.',
-   note: '',
-diff --git a/apps/docs/src/data/api/generated/agent-service.ts b/apps/docs/src/data/api/generated/agent-service.ts
-index 7d88f754..28b3f951 100644
---- a/apps/docs/src/data/api/generated/agent-service.ts
-+++ b/apps/docs/src/data/api/generated/agent-service.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/agent-service',
-   slug: 'agent-service',
-   tier: 'Agents & governance',
--  version: '0.4.0',
-+  version: '0.5.0',
-   tagline: 'Service-side agent runtime (server-hosted agent endpoints).',
-   note: '',
- }
-diff --git a/apps/docs/src/data/api/generated/app.ts b/apps/docs/src/data/api/generated/app.ts
-index 94473a68..c62b44de 100644
---- a/apps/docs/src/data/api/generated/app.ts
-+++ b/apps/docs/src/data/api/generated/app.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/app',
-   slug: 'app',
-   tier: 'App & routing',
--  version: '10.2.2',
-+  version: '10.2.3',
-   tagline: 'Top-level app integration — wires runtime, router, and adapters into a Vite app.',
-   note: '',
- }
+     'Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli.',
+   note: 'create-aihu exposes no importable API — it is a CLI / editor-tooling package. See its README.',
 diff --git a/apps/docs/src/data/api/generated/index.ts b/apps/docs/src/data/api/generated/index.ts
-index ac83cd51..fb0edd52 100644
+index fb0edd52..a289bd7d 100644
 --- a/apps/docs/src/data/api/generated/index.ts
 +++ b/apps/docs/src/data/api/generated/index.ts
-@@ -16,7 +16,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu-plugin/agent-readiness',
-     slug: 'plugin-agent-readiness',
-     tier: 'Plugins',
--    version: '2.4.0',
-+    version: '2.4.1',
-     tagline: 'Discovery + readiness manifest emitter so agents can introspect aihu apps.',
+@@ -189,7 +189,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
+     name: '@aihu/cli',
+     slug: 'cli',
+     tier: 'Compiler & tooling',
+-    version: '1.4.0',
++    version: '1.4.1',
+     tagline: 'Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.',
      note: '',
-     exportCount: 58,
-@@ -40,7 +40,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu-plugin/drizzle',
-     slug: 'plugin-drizzle',
-     tier: 'Plugins',
--    version: '0.1.7',
-+    version: '0.1.8',
+     exportCount: 36,
+@@ -429,7 +429,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
+     name: 'create-aihu',
+     slug: 'create-aihu',
+     tier: 'Compiler & tooling',
+-    version: '0.1.13',
++    version: '0.1.14',
      tagline:
-       'Drizzle ORM data adapter for aihu — typed createResource fetchers and defineLoader helpers (Postgres / SQLite / libSQL).',
-     note: '',
-@@ -66,7 +66,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/adapter-cloudflare',
-     slug: 'adapter-cloudflare',
-     tier: 'App & routing',
--    version: '15.0.2',
-+    version: '15.0.3',
-     tagline: 'Cloudflare Workers/Pages deployment adapter for @aihu/app.',
-     note: '',
-     exportCount: 2,
-@@ -78,7 +78,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/adapter-vercel',
-     slug: 'adapter-vercel',
-     tier: 'App & routing',
--    version: '15.0.2',
-+    version: '15.0.3',
-     tagline: 'Vercel deployment adapter for @aihu/app.',
-     note: '',
-     exportCount: 2,
-@@ -102,7 +102,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/agent-a2a',
-     slug: 'agent-a2a',
-     tier: 'Agents & governance',
--    version: '1.0.1',
-+    version: '1.0.2',
-     tagline: 'A2A (Agent2Agent) protocol bindings (spec v1.0.1, JSON-RPC) for @aihu/agent-service.',
-     note: '',
-     exportCount: 22,
-@@ -114,7 +114,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/agent-acp',
-     slug: 'agent-acp',
-     tier: 'Agents & governance',
--    version: '0.2.1',
-+    version: '0.2.2',
-     tagline:
-       "DEPRECATED — use @aihu/agent-a2a. BeeAI ACP merged into A2A under the Linux Foundation (Aug 2025); this adapter's invented ACP shape has no spec to conform to.",
-     note: '',
-@@ -127,7 +127,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/agent-server',
-     slug: 'agent-server',
-     tier: 'Agents & governance',
--    version: '0.4.4',
-+    version: '0.5.0',
-     tagline:
-       'Server-side glue: mount an aihu component server-side and let an MCP client drive it through the agent-service live-dispatch gate, forwarding approved invocations to a browser bridge.',
-     note: '',
-@@ -140,7 +140,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/agent-service',
-     slug: 'agent-service',
-     tier: 'Agents & governance',
--    version: '0.4.0',
-+    version: '0.5.0',
-     tagline: 'Service-side agent runtime (server-hosted agent endpoints).',
-     note: '',
-     exportCount: 51,
-@@ -165,7 +165,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/app',
-     slug: 'app',
-     tier: 'App & routing',
--    version: '10.2.2',
-+    version: '10.2.3',
-     tagline: 'Top-level app integration — wires runtime, router, and adapters into a Vite app.',
-     note: '',
-     exportCount: 42,
-@@ -327,7 +327,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/router',
-     slug: 'router',
-     tier: 'App & routing',
--    version: '0.5.3',
-+    version: '0.5.4',
-     tagline: 'File-based router for the aihu meta-framework.',
-     note: '',
-     exportCount: 52,
-@@ -352,7 +352,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/seo',
-     slug: 'seo',
-     tier: 'App & routing',
--    version: '1.0.6',
-+    version: '1.0.7',
-     tagline:
-       'DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD).',
-     note: '',
-@@ -365,7 +365,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
-     name: '@aihu/server',
-     slug: 'server',
-     tier: 'App & routing',
--    version: '0.6.1',
-+    version: '0.6.2',
-     tagline: 'Server runtime + native renderer (napi-rs) for aihu SSR.',
-     note: '',
-     exportCount: 117,
-diff --git a/apps/docs/src/data/api/generated/plugin-agent-readiness.ts b/apps/docs/src/data/api/generated/plugin-agent-readiness.ts
-index c81807d7..9844b8c1 100644
---- a/apps/docs/src/data/api/generated/plugin-agent-readiness.ts
-+++ b/apps/docs/src/data/api/generated/plugin-agent-readiness.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu-plugin/agent-readiness',
-   slug: 'plugin-agent-readiness',
-   tier: 'Plugins',
--  version: '2.4.0',
-+  version: '2.4.1',
-   tagline: 'Discovery + readiness manifest emitter so agents can introspect aihu apps.',
-   note: '',
- }
-diff --git a/apps/docs/src/data/api/generated/plugin-drizzle.ts b/apps/docs/src/data/api/generated/plugin-drizzle.ts
-index 1614abde..86ea1d69 100644
---- a/apps/docs/src/data/api/generated/plugin-drizzle.ts
-+++ b/apps/docs/src/data/api/generated/plugin-drizzle.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu-plugin/drizzle',
-   slug: 'plugin-drizzle',
-   tier: 'Plugins',
--  version: '0.1.7',
-+  version: '0.1.8',
-   tagline:
-     'Drizzle ORM data adapter for aihu — typed createResource fetchers and defineLoader helpers (Postgres / SQLite / libSQL).',
-   note: '',
-diff --git a/apps/docs/src/data/api/generated/router.ts b/apps/docs/src/data/api/generated/router.ts
-index a0715a4b..3e88a04b 100644
---- a/apps/docs/src/data/api/generated/router.ts
-+++ b/apps/docs/src/data/api/generated/router.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/router',
-   slug: 'router',
-   tier: 'App & routing',
--  version: '0.5.3',
-+  version: '0.5.4',
-   tagline: 'File-based router for the aihu meta-framework.',
-   note: '',
- }
-diff --git a/apps/docs/src/data/api/generated/seo.ts b/apps/docs/src/data/api/generated/seo.ts
-index a1e0e9b8..99cd7c15 100644
---- a/apps/docs/src/data/api/generated/seo.ts
-+++ b/apps/docs/src/data/api/generated/seo.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/seo',
-   slug: 'seo',
-   tier: 'App & routing',
--  version: '1.0.6',
-+  version: '1.0.7',
-   tagline:
-     'DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD).',
-   note: '',
-diff --git a/apps/docs/src/data/api/generated/server.ts b/apps/docs/src/data/api/generated/server.ts
-index 42156087..6526c2c4 100644
---- a/apps/docs/src/data/api/generated/server.ts
-+++ b/apps/docs/src/data/api/generated/server.ts
-@@ -5,7 +5,7 @@ export const PKG: ApiPackage = {
-   name: '@aihu/server',
-   slug: 'server',
-   tier: 'App & routing',
--  version: '0.6.1',
-+  version: '0.6.2',
-   tagline: 'Server runtime + native renderer (napi-rs) for aihu SSR.',
-   note: '',
- }
+       'Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli.',
+     note: 'create-aihu exposes no importable API — it is a CLI / editor-tooling package. See its README.',
 diff --git a/bun.lock b/bun.lock
-index cb9efc9d61b9dc01ede410976039386038d65500..fac6c92ac7663ce6568808b415f7bdac7bb389b8 100644
+index fac6c92ac7663ce6568808b415f7bdac7bb389b8..dca4e4611ad3d885a7cc52a41a4af661704cb5e7 100644
 GIT binary patch
-delta 463
-zcmZWmJ4ixN80H-HULTQKrrD*kmV8iMGfA_D)ld<nW<lx|tT`}fX%vE5&97QD8d`-j
-zv^lgzLoGElgwYm6Ev?bHw+5l%ga7>hIp5<y4~>Dx#z6hVimiA6vNVK}!^A$UZ#o#{
-z0OBKF-Z0>rY@!&GP}Z4Hr*_1{ok(W8P;;5_>3CNkGo$lHPse2(3jy}sv)@jGYVAis
-z5!j`#s3&25JVn)=gePx++`Wx^zo5}IJx*30T{q%2o8f#SY%}(YjR>KkL6Gzizb9gc
-z_M$i$#CJr*Q*`P7=vIqhqh{`Ozom|1V`_nmZ@Jd+JC&GiS|M6%`A@Ec-OW@832Bb&
-zRKn__8D&df#i2jGpTKj*jkw8NNqaRfayHDPceZ4SVb)?|)AJ8)c*&*EpBH$*ZjHQ|
-za<lV9m68aXTRRlUxTc|QFPR9UH0D>+vc1eMArpM$Q}t>-5i7Z~mQNWzC@4n-g>X;~
-S9fzL7z#(vmR|UoRMSlQa<egyv
+delta 65
+zcmcb%Px0D5#SN)0jE0i~6680xx->CPuHogLJj++GS=p^!*^Lp1nShuXh*^M`6^Pk@
+Mn0>pl8;7wZ00C4K6#xJL
 
-delta 529
-zcmZ9JKS*0q6vnwP$$d#|OayC;!Dy`Vl00Lgtt2-7c{N~6X=6g9MC>gp9gEG-!Oha)
-zZPFJ%hoVD-f`29h7aSEj6$;kHE(&7DF4fV+_T`}w-45qF=i@uS^J~w4wCAs^I7u%`
-zG>4CkHvZT7$Apb;8Cs_Vmq7826i`ffu^v4`VbO_|hiPM6=C-EqX5sOGzAE#pmW6s!
-zEknq>pnNO%-i(X9jHvfH6qg@mPZmnD6_sQd%H$(N`+aaw$8wvUmm_0Ve2MqrM3Hdb
-zC_)=+z*0;Ei(d+T9f&;Z!8@T9#izaa7Z-6nFn+iF!^jhXmTa%>X9p>^6C?QivJPvs
-z>z<Y-PjH^^*3(J)(E)feGFOJeL~qZ!(>Esk=P(F<Ps^wXUQDFydh(9aVGO5J9w;`u
-zK4-_l&>;35He}xfYDa1&2|FnZA09n=fH`*#?TjMY+*~tWo!Ase%%F8ENtj7kN{3cB
-zNtX`McWv+E!F<_*IVB8NR=S25szTx)riug_4OKJEybkJGrvdNl^hoWaVPtaiSQpz2
-eyPmh!PfTS*WrE5~Dl@ChqB5#7ahF+N3I74zZn_)*
+delta 63
+zcmcb%Px0D5#SN)0j0Tef6680xx->B|8c&|!E8VQ@)~@Wv2*gZ4%nZaVK+FonY(UJu
+KUD=JpSP}rmvlAfz
 
-diff --git a/examples/agent-driven-demo/CHANGELOG.md b/examples/agent-driven-demo/CHANGELOG.md
-index 45045eb2..65ad598b 100644
---- a/examples/agent-driven-demo/CHANGELOG.md
-+++ b/examples/agent-driven-demo/CHANGELOG.md
-@@ -1,5 +1,13 @@
- # @aihu/example-agent-driven-demo
+diff --git a/packages/cli/CHANGELOG.md b/packages/cli/CHANGELOG.md
+index 02afdbee..b5909709 100644
+--- a/packages/cli/CHANGELOG.md
++++ b/packages/cli/CHANGELOG.md
+@@ -1,5 +1,11 @@
+ # @aihu/cli
  
-+## 0.0.32
++## 1.4.1
 +
 +### Patch Changes
 +
-+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
-+  - @aihu/agent-service@0.5.0
-+  - @aihu/agent-server@0.5.0
++- [#919](https://github.com/aihu-project/aihu/pull/919) [`f4fc5f6`](https://github.com/aihu-project/aihu/commit/f4fc5f602f976fd064bd24b24c717d1b1f05d0cf) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Release the agent and full scaffolds with `@aihu/agent-server` 0.5.x, whose Arbor peer resolves to the same copy as the app, fixing fresh-install typechecks.
 +
- ## 0.0.31
- 
- ### Patch Changes
-diff --git a/examples/agent-driven-demo/package.json b/examples/agent-driven-demo/package.json
-index 7de38c51..8fac9bae 100644
---- a/examples/agent-driven-demo/package.json
-+++ b/examples/agent-driven-demo/package.json
-@@ -1,7 +1,7 @@
- {
-   "name": "@aihu/example-agent-driven-demo",
-   "private": true,
--  "version": "0.0.31",
-+  "version": "0.0.32",
-   "type": "module",
-   "scripts": {
-     "server": "bun --watch server.ts",
-diff --git a/examples/agent-hub/CHANGELOG.md b/examples/agent-hub/CHANGELOG.md
-index 81ea9658..6979b9da 100644
---- a/examples/agent-hub/CHANGELOG.md
-+++ b/examples/agent-hub/CHANGELOG.md
-@@ -1,5 +1,14 @@
- # @aihu/example-agent-hub
- 
-+## 0.0.30
-+
-+### Patch Changes
-+
-+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
-+  - @aihu/agent-service@0.5.0
-+  - @aihu/agent-a2a@1.0.2
-+  - @aihu/agent-acp@0.2.2
-+
- ## 0.0.29
- 
- ### Patch Changes
-diff --git a/examples/agent-hub/package.json b/examples/agent-hub/package.json
-index 5f60779d..e7b02713 100644
---- a/examples/agent-hub/package.json
-+++ b/examples/agent-hub/package.json
-@@ -1,7 +1,7 @@
- {
-   "name": "@aihu/example-agent-hub",
-   "private": true,
--  "version": "0.0.29",
-+  "version": "0.0.30",
-   "type": "module",
-   "scripts": {
-     "server": "bun --watch server.ts",
-diff --git a/examples/auth-magna-seo/CHANGELOG.md b/examples/auth-magna-seo/CHANGELOG.md
-index 98a3219e..0ed9eb3f 100644
---- a/examples/auth-magna-seo/CHANGELOG.md
-+++ b/examples/auth-magna-seo/CHANGELOG.md
-@@ -1,5 +1,14 @@
- # @aihu/example-auth-magna-seo
- 
-+## 0.0.12
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+  - @aihu/auth@6.0.1
-+  - @aihu/seo@1.0.7
-+
- ## 0.0.11
- 
- ### Patch Changes
-diff --git a/examples/auth-magna-seo/package.json b/examples/auth-magna-seo/package.json
-index ec766187..d4b9f999 100644
---- a/examples/auth-magna-seo/package.json
-+++ b/examples/auth-magna-seo/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/example-auth-magna-seo",
--  "version": "0.0.11",
-+  "version": "0.0.12",
-   "private": true,
-   "type": "module",
-   "scripts": {
-diff --git a/examples/cf-adapter/CHANGELOG.md b/examples/cf-adapter/CHANGELOG.md
-index 362d6267..7b271793 100644
---- a/examples/cf-adapter/CHANGELOG.md
-+++ b/examples/cf-adapter/CHANGELOG.md
-@@ -1,5 +1,13 @@
- # @aihu/example-cf-adapter
- 
-+## 0.0.40
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/app@10.2.3
-+  - @aihu/adapter-cloudflare@15.0.3
-+
- ## 0.0.39
- 
- ### Patch Changes
-diff --git a/examples/cf-adapter/package.json b/examples/cf-adapter/package.json
-index da45e5f3..99933c10 100644
---- a/examples/cf-adapter/package.json
-+++ b/examples/cf-adapter/package.json
-@@ -1,7 +1,7 @@
- {
-   "name": "@aihu/example-cf-adapter",
-   "private": true,
--  "version": "0.0.39",
-+  "version": "0.0.40",
-   "type": "module",
-   "scripts": {
-     "dev": "vite --port 5110",
-diff --git a/examples/plugin-demo/CHANGELOG.md b/examples/plugin-demo/CHANGELOG.md
-index fd850f7c..0fac45cc 100644
---- a/examples/plugin-demo/CHANGELOG.md
-+++ b/examples/plugin-demo/CHANGELOG.md
-@@ -1,5 +1,13 @@
- # @aihu/example-plugin-demo
- 
-+## 0.0.10
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+  - @aihu/plugin-demo@0.1.5
-+
- ## 0.0.9
- 
- ### Patch Changes
-diff --git a/examples/plugin-demo/package.json b/examples/plugin-demo/package.json
-index dbafe51b..c33e319f 100644
---- a/examples/plugin-demo/package.json
-+++ b/examples/plugin-demo/package.json
-@@ -1,7 +1,7 @@
- {
-   "name": "@aihu/example-plugin-demo",
-   "private": true,
--  "version": "0.0.9",
-+  "version": "0.0.10",
-   "type": "module",
-   "scripts": {
-     "dev": "vite --port 5111",
-diff --git a/examples/ssg-site/CHANGELOG.md b/examples/ssg-site/CHANGELOG.md
-index 8af5517b..494e02c8 100644
---- a/examples/ssg-site/CHANGELOG.md
-+++ b/examples/ssg-site/CHANGELOG.md
-@@ -1,5 +1,14 @@
- # @aihu/example-ssg-site
- 
-+## 0.0.15
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+  - @aihu/app@10.2.3
-+  - @aihu/router@0.5.4
-+
- ## 0.0.14
- 
- ### Patch Changes
-diff --git a/examples/ssg-site/package.json b/examples/ssg-site/package.json
-index 1082b495..61ba187a 100644
---- a/examples/ssg-site/package.json
-+++ b/examples/ssg-site/package.json
-@@ -1,7 +1,7 @@
- {
-   "name": "@aihu/example-ssg-site",
-   "private": true,
--  "version": "0.0.14",
-+  "version": "0.0.15",
-   "type": "module",
-   "scripts": {
-     "dev": "vite --port 5120",
-diff --git a/packages/_moved/agent-readiness/CHANGELOG.md b/packages/_moved/agent-readiness/CHANGELOG.md
-index 3fbdd05a..1c939960 100644
---- a/packages/_moved/agent-readiness/CHANGELOG.md
-+++ b/packages/_moved/agent-readiness/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/agent-readiness
- 
-+## 2.0.6
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu-plugin/agent-readiness@2.4.1
-+
- ## 2.0.5
- 
- ### Patch Changes
-diff --git a/packages/_moved/agent-readiness/README.md b/packages/_moved/agent-readiness/README.md
-index cae9fbb1..7e55317c 100644
---- a/packages/_moved/agent-readiness/README.md
-+++ b/packages/_moved/agent-readiness/README.md
-@@ -57,7 +57,7 @@ npm install @aihu/agent-readiness
- bun add @aihu/agent-readiness
- ```
- 
--<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.5`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.6`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -68,12 +68,12 @@ bun add @aihu/agent-readiness
- 
- | | |
- |---|---|
--| **Version** | `2.0.5` |
-+| **Version** | `2.0.6` |
- | **Tier** | E — Held private (unmapped tier) |
- | **Published files** | 4 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.5`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.6`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -86,7 +86,7 @@ bun add @aihu/agent-readiness
- |---|---|---|
- | `.` | `./index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.5`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.6`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -99,7 +99,7 @@ bun add @aihu/agent-readiness
- 
- - `@aihu-plugin/agent-readiness` — `workspace:*`
- 
--<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.5`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.6`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -111,7 +111,7 @@ bun add @aihu/agent-readiness
- - [Aihu framework root](../../../README.md)
- - [v1.1 roadmap](../../../docs/roadmap/SUMMARY.md)
- 
--<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.5`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.6`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -122,6 +122,6 @@ bun add @aihu/agent-readiness
- 
- MIT — see [LICENSE](../../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.5`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-readiness@2.0.6`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/_moved/agent-readiness/package.json b/packages/_moved/agent-readiness/package.json
-index 787e1a86..932d5178 100644
---- a/packages/_moved/agent-readiness/package.json
-+++ b/packages/_moved/agent-readiness/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/agent-readiness",
--  "version": "2.0.5",
-+  "version": "2.0.6",
-   "license": "MIT",
-   "type": "module",
-   "main": "./index.js",
-diff --git a/packages/adapter-cloudflare/CHANGELOG.md b/packages/adapter-cloudflare/CHANGELOG.md
-index b01a68c3..b2c9ded5 100644
---- a/packages/adapter-cloudflare/CHANGELOG.md
-+++ b/packages/adapter-cloudflare/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/adapter-cloudflare
- 
-+## 15.0.3
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/app@10.2.3
-+
- ## 15.0.2
- 
- ### Patch Changes
-diff --git a/packages/adapter-cloudflare/README.md b/packages/adapter-cloudflare/README.md
-index 96274200..4edacd44 100644
---- a/packages/adapter-cloudflare/README.md
-+++ b/packages/adapter-cloudflare/README.md
-@@ -21,7 +21,7 @@ npm install @aihu/adapter-cloudflare
- bun add @aihu/adapter-cloudflare
- ```
- 
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -32,12 +32,12 @@ bun add @aihu/adapter-cloudflare
- 
- | | |
- |---|---|
--| **Version** | `15.0.2` |
-+| **Version** | `15.0.3` |
- | **Tier** | B — Meta-framework — Cloudflare Workers/Pages deploy adapter |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -50,7 +50,7 @@ bun add @aihu/adapter-cloudflare
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -64,7 +64,7 @@ bun add @aihu/adapter-cloudflare
- - `@aihu/app` — `workspace:*`
- - `vite` — `>=5.0.0`
- 
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -77,7 +77,7 @@ bun add @aihu/adapter-cloudflare
- - [@aihu/server](../server)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -88,6 +88,6 @@ bun add @aihu/adapter-cloudflare
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-cloudflare@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/adapter-cloudflare/package.json b/packages/adapter-cloudflare/package.json
-index 30128679..200328dd 100644
---- a/packages/adapter-cloudflare/package.json
-+++ b/packages/adapter-cloudflare/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/adapter-cloudflare",
--  "version": "15.0.2",
-+  "version": "15.0.3",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/adapter-vercel/CHANGELOG.md b/packages/adapter-vercel/CHANGELOG.md
-index a7fa43a7..df854c0d 100644
---- a/packages/adapter-vercel/CHANGELOG.md
-+++ b/packages/adapter-vercel/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/adapter-vercel
- 
-+## 15.0.3
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/app@10.2.3
-+
- ## 15.0.2
- 
- ### Patch Changes
-diff --git a/packages/adapter-vercel/README.md b/packages/adapter-vercel/README.md
-index 11e4b3da..19b7e407 100644
---- a/packages/adapter-vercel/README.md
-+++ b/packages/adapter-vercel/README.md
-@@ -21,7 +21,7 @@ npm install @aihu/adapter-vercel
- bun add @aihu/adapter-vercel
- ```
- 
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -32,12 +32,12 @@ bun add @aihu/adapter-vercel
- 
- | | |
- |---|---|
--| **Version** | `15.0.2` |
-+| **Version** | `15.0.3` |
- | **Tier** | B — Meta-framework — Vercel deploy adapter |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -50,7 +50,7 @@ bun add @aihu/adapter-vercel
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -64,7 +64,7 @@ bun add @aihu/adapter-vercel
- - `@aihu/app` — `workspace:*`
- - `vite` — `>=5.0.0`
- 
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -77,7 +77,7 @@ bun add @aihu/adapter-vercel
- - [@aihu/server](../server)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -88,6 +88,6 @@ bun add @aihu/adapter-vercel
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/adapter-vercel@15.0.3`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/adapter-vercel/package.json b/packages/adapter-vercel/package.json
-index e7ebc17a..b65245ed 100644
---- a/packages/adapter-vercel/package.json
-+++ b/packages/adapter-vercel/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/adapter-vercel",
--  "version": "15.0.2",
-+  "version": "15.0.3",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/agent-a2a/CHANGELOG.md b/packages/agent-a2a/CHANGELOG.md
-index e7176800..98a0159c 100644
---- a/packages/agent-a2a/CHANGELOG.md
-+++ b/packages/agent-a2a/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/agent-a2a
- 
-+## 1.0.2
-+
-+### Patch Changes
-+
-+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
-+  - @aihu/agent-service@0.5.0
-+
- ## 1.0.1
- 
- ### Patch Changes
-diff --git a/packages/agent-a2a/README.md b/packages/agent-a2a/README.md
-index 439a09df..34f648d8 100644
---- a/packages/agent-a2a/README.md
-+++ b/packages/agent-a2a/README.md
-@@ -34,7 +34,7 @@ npm install @aihu/agent-a2a
- bun add @aihu/agent-a2a
- ```
- 
--<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.2`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -45,13 +45,13 @@ bun add @aihu/agent-a2a
- 
- | | |
- |---|---|
--| **Version** | `1.0.1` |
-+| **Version** | `1.0.2` |
- | **Tier** | C — Agent surface — A2A (Agent2Agent) protocol, spec v1.0.1 JSON-RPC binding |
- | **Bundle size** | 2.62 kB (gz) — limit 3000 B |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.2`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -64,7 +64,7 @@ bun add @aihu/agent-a2a
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.2`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -77,7 +77,7 @@ bun add @aihu/agent-a2a
- 
- - `@aihu/agent-service` — `workspace:*`
- 
--<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.2`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -90,7 +90,7 @@ bun add @aihu/agent-a2a
- - [@aihu/agent](../agent)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.2`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -101,6 +101,6 @@ bun add @aihu/agent-a2a
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-a2a@1.0.2`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/agent-a2a/package.json b/packages/agent-a2a/package.json
-index 6329a34b..6f14e60a 100644
---- a/packages/agent-a2a/package.json
-+++ b/packages/agent-a2a/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/agent-a2a",
--  "version": "1.0.1",
-+  "version": "1.0.2",
-   "type": "module",
-   "license": "MIT",
-   "main": "./dist/index.js",
-diff --git a/packages/agent-acp/CHANGELOG.md b/packages/agent-acp/CHANGELOG.md
-index 0f5c9ad1..04d3c566 100644
---- a/packages/agent-acp/CHANGELOG.md
-+++ b/packages/agent-acp/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/agent-acp
- 
-+## 0.2.2
-+
-+### Patch Changes
-+
-+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
-+  - @aihu/agent-service@0.5.0
-+
- ## 0.2.1
- 
- ### Patch Changes
-diff --git a/packages/agent-acp/README.md b/packages/agent-acp/README.md
-index af5b42a4..1dff84ac 100644
---- a/packages/agent-acp/README.md
-+++ b/packages/agent-acp/README.md
-@@ -35,7 +35,7 @@ npm install @aihu/agent-acp
- bun add @aihu/agent-acp
- ```
- 
--<sub><i>Auto-generated against `@aihu/agent-acp@0.2.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-acp@0.2.2`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -46,13 +46,13 @@ bun add @aihu/agent-acp
- 
- | | |
- |---|---|
--| **Version** | `0.2.1` |
-+| **Version** | `0.2.2` |
- | **Tier** | C — Agent surface — DEPRECATED; use @aihu/agent-a2a (ACP merged into A2A, Aug 2025) |
- | **Bundle size** | 675 B (gz) — limit 800 B |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/agent-acp@0.2.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-acp@0.2.2`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -65,7 +65,7 @@ bun add @aihu/agent-acp
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/agent-acp@0.2.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-acp@0.2.2`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -78,7 +78,7 @@ bun add @aihu/agent-acp
- 
- - `@aihu/agent-service` — `workspace:*`
- 
--<sub><i>Auto-generated against `@aihu/agent-acp@0.2.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-acp@0.2.2`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -91,7 +91,7 @@ bun add @aihu/agent-acp
- - [@aihu/agent](../agent)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/agent-acp@0.2.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-acp@0.2.2`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -102,6 +102,6 @@ bun add @aihu/agent-acp
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/agent-acp@0.2.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-acp@0.2.2`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/agent-acp/package.json b/packages/agent-acp/package.json
-index 9972e7bc..df9fbbdd 100644
---- a/packages/agent-acp/package.json
-+++ b/packages/agent-acp/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/agent-acp",
--  "version": "0.2.1",
-+  "version": "0.2.2",
-   "type": "module",
-   "license": "MIT",
-   "main": "./dist/index.js",
-diff --git a/packages/agent-server/CHANGELOG.md b/packages/agent-server/CHANGELOG.md
-index 6e371910..c729977b 100644
---- a/packages/agent-server/CHANGELOG.md
-+++ b/packages/agent-server/CHANGELOG.md
-@@ -1,5 +1,32 @@
- # @aihu/agent-server
- 
-+## 0.5.0
-+
-+### Minor Changes
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Require host authorization before serving agent state reads, resolve tenant actors from live host lookups, recursively project JSON-safe results, and bind browser bridge sessions to one-use connection nonces with per-invocation reauthorization. Migration: bridge clients must speak protocol v2 and send `nonce`, `sessionToken`, `sessionIdentity`, and the verified `grantVersion` in `hello`; hosts must return `{ identity, grantVersion? }` from both `verifyBridgeSession` and `reauthorizeBridgeInvoke`, and supply `actorResolver` and `authorizeDataRead` for protected state reads. `securityHookTimeoutMs` and `bridgeCallTimeoutMs` configure bounded hook/call waits (5000ms defaults). Hosts revoke all grants for an identity with `server.revokeBridgeSession(identity)` and revoke only one exact grant with `server.revokeBridgeSession(identity, { grantVersion })`; literal grant versions such as `"*"` remain exact values. Revocation records live for 24 hours by default (configurable with `bridgeRevocationTtlMs`) and are capped at 10,000 entries by default (`bridgeRevocationMaxEntries`); when full, new bridge handshakes fail with `BRIDGE_REVOCATION_STORE_FULL` until retained entries expire, and existing verified unrevoked sessions continue to work. Revocation synchronously cancels matching pending calls; the bounded store guards new hellos and invokes, while the host's session store remains authoritative for long-lived revocation. A revoked state read returns a denial without its result. Once an action invoke has been sent, disconnect, timeout, bridge error, protocol error, or revocation returns `BRIDGE_RESULT_WITHHELD`; callers must treat the action outcome as unknown and must not assume it did not run. Projected leaves must be JSON-safe primitives, arrays, and plain records; functions, symbols, bigints, non-finite numbers, non-plain objects such as `Date`, objects with callable `toJSON` hooks, accessors on selected paths, cycles, and results beyond the default depth 32 or 10,000 total nodes fail closed as `CAPABILITY_UNAVAILABLE`. Set `projectionLimits: { maxDepth, maxNodes }` on the service/server to tune those limits. Bridge diagnostics run asynchronously after state changes and receive frozen, bounded, credential-free peer details.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add configurable per-attachment (`maxPendingBridgeCalls`, default 64) and per-server (`maxPendingBridgeCallsTotal`, default 1024) bridge concurrency limits. Calls above either limit return 503 `BRIDGE_OVERLOADED` before a bridge timer or invoke frame is created. Hosts that need higher concurrency can raise both limits; invalid limits are rejected at server creation.
-+
-+  Reject oversized whole-record projections before any descriptor lookup, and document that hosts must normalize untrusted Proxy or exotic values into plain data before registering them.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add admission limits for the entire bridge call path: `maxInFlightBridgeCalls` defaults to 1,024 server-wide, and `maxInFlightBridgeCallsPerTenant` defaults to 64 per verified actor organization. Excess calls return 503 `BRIDGE_OVERLOADED`; the server-wide limit rejects before any authorization hook, handshake waiter, or timer is created. Calls without a verified actor share one tenant bucket. Pending-call caps remain in force, with one slot reserved for another tenant when capacity permits.
-+
-+  Migration: hosts expecting more concurrency should raise these new limits, along with `maxPendingBridgeCalls` and `maxPendingBridgeCallsTotal` where needed. Configure a pending cap above one to allow simultaneous cross-tenant forwarding. An upstream rate limit is still recommended.
-+
-+### Patch Changes
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bound capability projection work and bridge revocation storage, avoid diagnostic reentrancy, and report unknown outcomes whenever a forwarded action can no longer be confirmed.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fail closed on untrusted proxy prototype chains, preserve revocation bindings when the bounded store is full, and close duplicate-hello peers with bounded diagnostics. Migration note: deployments that reach `bridgeRevocationMaxEntries` now refuse new bridge handshakes with `BRIDGE_REVOCATION_STORE_FULL` until revocations expire; size the cap and TTL for expected revocation volume. Existing verified, unrevoked bridge sessions remain available.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bound projection work for Proxy records by reading only requested own properties and rejecting oversized whole-record key sets before describing their entries.
-+
-+  Keep malformed bridge hello objects out of host diagnostics, and pin the per-attachment diagnostic callback cap with a regression.
-+
-+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
-+  - @aihu/agent-service@0.5.0
-+
- ## 0.4.4
- 
- ### Patch Changes
-diff --git a/packages/agent-server/README.md b/packages/agent-server/README.md
-index c3a01477..c3fb3b13 100644
---- a/packages/agent-server/README.md
-+++ b/packages/agent-server/README.md
-@@ -130,7 +130,7 @@ npm install @aihu/agent-server
- bun add @aihu/agent-server
- ```
- 
--<sub><i>Auto-generated against `@aihu/agent-server@0.4.4`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -141,12 +141,12 @@ bun add @aihu/agent-server
- 
- | | |
- |---|---|
--| **Version** | `0.4.4` |
-+| **Version** | `0.5.0` |
- | **Tier** | C — Agent surface — server-mount + MCP live-dispatch bridge to a browser |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/agent-server@0.4.4`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -159,7 +159,7 @@ bun add @aihu/agent-server
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/agent-server@0.4.4`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -179,7 +179,7 @@ bun add @aihu/agent-server
- 
- - `@aihu/arbor` — `^4.1.2`
- 
--<sub><i>Auto-generated against `@aihu/agent-server@0.4.4`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -192,7 +192,7 @@ bun add @aihu/agent-server
- - [@aihu/mcp](../mcp)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/agent-server@0.4.4`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -203,6 +203,6 @@ bun add @aihu/agent-server
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/agent-server@0.4.4`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/agent-server/package.json b/packages/agent-server/package.json
-index 53d568c7..24653bdd 100644
---- a/packages/agent-server/package.json
-+++ b/packages/agent-server/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/agent-server",
--  "version": "0.4.4",
-+  "version": "0.5.0",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/agent-service/CHANGELOG.md b/packages/agent-service/CHANGELOG.md
-index 3e27842b..5ea5d8bb 100644
---- a/packages/agent-service/CHANGELOG.md
-+++ b/packages/agent-service/CHANGELOG.md
-@@ -1,5 +1,25 @@
- # @aihu/agent-service
- 
-+## 0.5.0
-+
-+### Minor Changes
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Require host authorization before serving agent state reads, resolve tenant actors from live host lookups, recursively project JSON-safe results, and bind browser bridge sessions to one-use connection nonces with per-invocation reauthorization. Migration: bridge clients must speak protocol v2 and send `nonce`, `sessionToken`, `sessionIdentity`, and the verified `grantVersion` in `hello`; hosts must return `{ identity, grantVersion? }` from both `verifyBridgeSession` and `reauthorizeBridgeInvoke`, and supply `actorResolver` and `authorizeDataRead` for protected state reads. `securityHookTimeoutMs` and `bridgeCallTimeoutMs` configure bounded hook/call waits (5000ms defaults). Hosts revoke all grants for an identity with `server.revokeBridgeSession(identity)` and revoke only one exact grant with `server.revokeBridgeSession(identity, { grantVersion })`; literal grant versions such as `"*"` remain exact values. Revocation records live for 24 hours by default (configurable with `bridgeRevocationTtlMs`) and are capped at 10,000 entries by default (`bridgeRevocationMaxEntries`); when full, new bridge handshakes fail with `BRIDGE_REVOCATION_STORE_FULL` until retained entries expire, and existing verified unrevoked sessions continue to work. Revocation synchronously cancels matching pending calls; the bounded store guards new hellos and invokes, while the host's session store remains authoritative for long-lived revocation. A revoked state read returns a denial without its result. Once an action invoke has been sent, disconnect, timeout, bridge error, protocol error, or revocation returns `BRIDGE_RESULT_WITHHELD`; callers must treat the action outcome as unknown and must not assume it did not run. Projected leaves must be JSON-safe primitives, arrays, and plain records; functions, symbols, bigints, non-finite numbers, non-plain objects such as `Date`, objects with callable `toJSON` hooks, accessors on selected paths, cycles, and results beyond the default depth 32 or 10,000 total nodes fail closed as `CAPABILITY_UNAVAILABLE`. Set `projectionLimits: { maxDepth, maxNodes }` on the service/server to tune those limits. Bridge diagnostics run asynchronously after state changes and receive frozen, bounded, credential-free peer details.
-+
-+### Patch Changes
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bound capability projection work and bridge revocation storage, avoid diagnostic reentrancy, and report unknown outcomes whenever a forwarded action can no longer be confirmed.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Fail closed on untrusted proxy prototype chains, preserve revocation bindings when the bounded store is full, and close duplicate-hello peers with bounded diagnostics. Migration note: deployments that reach `bridgeRevocationMaxEntries` now refuse new bridge handshakes with `BRIDGE_REVOCATION_STORE_FULL` until revocations expire; size the cap and TTL for expected revocation volume. Existing verified, unrevoked bridge sessions remain available.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Bound projection work for Proxy records by reading only requested own properties and rejecting oversized whole-record key sets before describing their entries.
-+
-+  Keep malformed bridge hello objects out of host diagnostics, and pin the per-attachment diagnostic callback cap with a regression.
-+
-+- [#916](https://github.com/aihu-project/aihu/pull/916) [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f) Thanks [@srmcguirt](https://github.com/srmcguirt)! - Add configurable per-attachment (`maxPendingBridgeCalls`, default 64) and per-server (`maxPendingBridgeCallsTotal`, default 1024) bridge concurrency limits. Calls above either limit return 503 `BRIDGE_OVERLOADED` before a bridge timer or invoke frame is created. Hosts that need higher concurrency can raise both limits; invalid limits are rejected at server creation.
-+
-+  Reject oversized whole-record projections before any descriptor lookup, and document that hosts must normalize untrusted Proxy or exotic values into plain data before registering them.
-+
- ## 0.4.0
+ ## 1.4.0
  
  ### Minor Changes
-diff --git a/packages/agent-service/README.md b/packages/agent-service/README.md
-index 2c38e0cf..08cb6713 100644
---- a/packages/agent-service/README.md
-+++ b/packages/agent-service/README.md
-@@ -21,7 +21,7 @@ npm install @aihu/agent-service
- bun add @aihu/agent-service
+diff --git a/packages/cli/README.md b/packages/cli/README.md
+index 4dc22404..e275791c 100644
+--- a/packages/cli/README.md
++++ b/packages/cli/README.md
+@@ -43,7 +43,7 @@ bunx @aihu/cli app my-app
+ bun add -g @aihu/cli
  ```
  
--<sub><i>Auto-generated against `@aihu/agent-service@0.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-service@0.5.0`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/cli@1.4.0`.</i></sub>
++<sub><i>Auto-generated against `@aihu/cli@1.4.1`.</i></sub>
  
  <!-- END_AUTOGEN: install -->
  
-@@ -32,13 +32,13 @@ bun add @aihu/agent-service
+@@ -54,12 +54,12 @@ bun add -g @aihu/cli
  
  | | |
  |---|---|
--| **Version** | `0.4.0` |
-+| **Version** | `0.5.0` |
- | **Tier** | C — Agent surface — server-side execution + tool dispatch |
- | **Bundle size** | 2.76 kB (gz) — limit 2900 B |
+-| **Version** | `1.4.0` |
++| **Version** | `1.4.1` |
+ | **Tier** | D — Toolchain — `aihu` / `create-aihu` CLI |
  | **Published files** | 3 entries |
  | **License** | MIT |
  
--<sub><i>Auto-generated against `@aihu/agent-service@0.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-service@0.5.0`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/cli@1.4.0`.</i></sub>
++<sub><i>Auto-generated against `@aihu/cli@1.4.1`.</i></sub>
  
  <!-- END_AUTOGEN: stats -->
  
-@@ -51,7 +51,7 @@ bun add @aihu/agent-service
- |---|---|---|
+@@ -73,7 +73,7 @@ bun add -g @aihu/cli
  | `.` | `./dist/index.js` | `—` |
+ | `./template-manifest` | `./dist/template-manifest.js` | `—` |
  
--<sub><i>Auto-generated against `@aihu/agent-service@0.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-service@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -64,7 +64,7 @@ bun add @aihu/agent-service
- 
- - `@aihu/agent` — `workspace:*`
- 
--<sub><i>Auto-generated against `@aihu/agent-service@0.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-service@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -79,7 +79,7 @@ bun add @aihu/agent-service
- - [@aihu/agent-acp](../agent-acp)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/agent-service@0.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-service@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -90,6 +90,6 @@ bun add @aihu/agent-service
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/agent-service@0.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/agent-service@0.5.0`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/agent-service/package.json b/packages/agent-service/package.json
-index 3befd012..b797bce9 100644
---- a/packages/agent-service/package.json
-+++ b/packages/agent-service/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/agent-service",
--  "version": "0.4.0",
-+  "version": "0.5.0",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/app/CHANGELOG.md b/packages/app/CHANGELOG.md
-index 76ef927b..d75468e5 100644
---- a/packages/app/CHANGELOG.md
-+++ b/packages/app/CHANGELOG.md
-@@ -1,5 +1,13 @@
- # @aihu/app
- 
-+## 10.2.3
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+  - @aihu/router@0.5.4
-+
- ## 10.2.2
- 
- ### Patch Changes
-diff --git a/packages/app/README.md b/packages/app/README.md
-index 99d5fced..f22ab368 100644
---- a/packages/app/README.md
-+++ b/packages/app/README.md
-@@ -43,7 +43,7 @@ npm install @aihu/app
- bun add @aihu/app
- ```
- 
--<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.3`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -54,13 +54,13 @@ bun add @aihu/app
- 
- | | |
- |---|---|
--| **Version** | `10.2.2` |
-+| **Version** | `10.2.3` |
- | **Tier** | B — Meta-framework — top-level integration of runtime, router, adapter |
- | **Bundle size** | 1.77 kB (gz) — limit 1900 B |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.3`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -75,7 +75,7 @@ bun add @aihu/app
- | `./client` | `./dist/client.js` | `—` |
- | `./ssr-document` | `./dist/ssr-document.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.3`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/cli@1.4.0`.</i></sub>
++<sub><i>Auto-generated against `@aihu/cli@1.4.1`.</i></sub>
  
  <!-- END_AUTOGEN: exports -->
  
-@@ -99,7 +99,7 @@ bun add @aihu/app
- - `@aihu/store` — `workspace:*`
- - `vite` — `>=5.0.0`
+@@ -86,7 +86,7 @@ bun add -g @aihu/cli
  
--<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.3`.</i></sub>
+ - `@aihu/mcp` — `workspace:*`
+ 
+-<sub><i>Auto-generated against `@aihu/cli@1.4.0`.</i></sub>
++<sub><i>Auto-generated against `@aihu/cli@1.4.1`.</i></sub>
  
  <!-- END_AUTOGEN: deps -->
  
-@@ -113,7 +113,7 @@ bun add @aihu/app
- - [@aihu/adapter-cloudflare](../adapter-cloudflare)
+@@ -99,7 +99,7 @@ bun add -g @aihu/cli
+ - [@aihu/compiler](https://github.com/aihu-project/aihu-compiler)
  - [Aihu framework root](../../README.md)
  
--<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.3`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/cli@1.4.0`.</i></sub>
++<sub><i>Auto-generated against `@aihu/cli@1.4.1`.</i></sub>
  
  <!-- END_AUTOGEN: see-also -->
  
-@@ -124,6 +124,6 @@ bun add @aihu/app
+@@ -110,6 +110,6 @@ bun add -g @aihu/cli
  
  MIT — see [LICENSE](../../LICENSE).
  
--<sub><i>Auto-generated against `@aihu/app@10.2.2`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/app@10.2.3`.</i></sub>
+-<sub><i>Auto-generated against `@aihu/cli@1.4.0`.</i></sub>
++<sub><i>Auto-generated against `@aihu/cli@1.4.1`.</i></sub>
  
  <!-- END_AUTOGEN: license -->
-diff --git a/packages/app/package.json b/packages/app/package.json
-index f727db7a..30a45251 100644
---- a/packages/app/package.json
-+++ b/packages/app/package.json
+diff --git a/packages/cli/package.json b/packages/cli/package.json
+index bff5b9da..4a3a4da1 100644
+--- a/packages/cli/package.json
++++ b/packages/cli/package.json
 @@ -1,6 +1,6 @@
  {
-   "name": "@aihu/app",
--  "version": "10.2.2",
-+  "version": "10.2.3",
+   "name": "@aihu/cli",
+-  "version": "1.4.0",
++  "version": "1.4.1",
    "license": "MIT",
    "type": "module",
-   "main": "./dist/index.js",
+   "bin": {
 diff --git a/packages/cli/src/dep-versions.ts b/packages/cli/src/dep-versions.ts
-index 44cebca1..490f3101 100644
+index 490f3101..2d874a04 100644
 --- a/packages/cli/src/dep-versions.ts
 +++ b/packages/cli/src/dep-versions.ts
-@@ -14,19 +14,19 @@
- 
- /** Caret ranges for every published `@aihu/*` / `@aihu-plugin/*` package. */
- export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
--  '@aihu-plugin/agent-readiness': '^2.4.0',
-+  '@aihu-plugin/agent-readiness': '^2.4.1',
-   '@aihu-plugin/data': '^2.0.5',
--  '@aihu-plugin/drizzle': '^0.1.7',
-+  '@aihu-plugin/drizzle': '^0.1.8',
-   '@aihu-plugin/kindly-note': '^0.2.4',
--  '@aihu/adapter-cloudflare': '^15.0.2',
--  '@aihu/adapter-vercel': '^15.0.2',
-+  '@aihu/adapter-cloudflare': '^15.0.3',
-+  '@aihu/adapter-vercel': '^15.0.3',
-   '@aihu/agent': '^0.2.0',
--  '@aihu/agent-a2a': '^1.0.1',
--  '@aihu/agent-acp': '^0.2.1',
--  '@aihu/agent-server': '^0.4.4',
--  '@aihu/agent-service': '^0.4.0',
-+  '@aihu/agent-a2a': '^1.0.2',
-+  '@aihu/agent-acp': '^0.2.2',
-+  '@aihu/agent-server': '^0.5.0',
-+  '@aihu/agent-service': '^0.5.0',
+@@ -28,7 +28,7 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
    '@aihu/ai': '^0.1.0',
--  '@aihu/app': '^10.2.2',
-+  '@aihu/app': '^10.2.3',
+   '@aihu/app': '^10.2.3',
    '@aihu/auth': '^6.0.1',
-   '@aihu/cli': '^1.4.0',
+-  '@aihu/cli': '^1.4.0',
++  '@aihu/cli': '^1.4.1',
    '@aihu/context': '^0.2.1',
-@@ -37,10 +37,10 @@ export const AIHU_DEP_VERSIONS: Readonly<Record<string, string>> = {
-   '@aihu/mcp': '^0.2.1',
-   '@aihu/plugin': '^0.1.2',
-   '@aihu/primitives': '^0.2.4',
--  '@aihu/router': '^0.5.3',
-+  '@aihu/router': '^0.5.4',
-   '@aihu/runtime': '^6.1.1',
--  '@aihu/seo': '^1.0.6',
--  '@aihu/server': '^0.6.1',
-+  '@aihu/seo': '^1.0.7',
-+  '@aihu/server': '^0.6.2',
-   '@aihu/store': '^0.1.3',
-   '@aihu/tsc': '^0.3.4',
-   '@aihu/ui': '^0.1.2',
-diff --git a/packages/plugin-agent-readiness/CHANGELOG.md b/packages/plugin-agent-readiness/CHANGELOG.md
-index c4978f6b..4fedbf8e 100644
---- a/packages/plugin-agent-readiness/CHANGELOG.md
-+++ b/packages/plugin-agent-readiness/CHANGELOG.md
+   '@aihu/css-engine': '^0.7.2',
+   '@aihu/editor': '^0.1.2',
+diff --git a/packages/create-aihu/CHANGELOG.md b/packages/create-aihu/CHANGELOG.md
+index 5627c020..fc991f29 100644
+--- a/packages/create-aihu/CHANGELOG.md
++++ b/packages/create-aihu/CHANGELOG.md
 @@ -1,5 +1,12 @@
- # @aihu/agent-readiness
+ # create-aihu
  
-+## 2.4.1
++## 0.1.14
 +
 +### Patch Changes
 +
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
++- Updated dependencies [[`f4fc5f6`](https://github.com/aihu-project/aihu/commit/f4fc5f602f976fd064bd24b24c717d1b1f05d0cf)]:
++  - @aihu/cli@1.4.1
 +
- ## 2.4.0
+ ## 0.1.13
  
- ### Minor Changes
-diff --git a/packages/plugin-agent-readiness/README.md b/packages/plugin-agent-readiness/README.md
-index d930853e..875a9cb3 100644
---- a/packages/plugin-agent-readiness/README.md
-+++ b/packages/plugin-agent-readiness/README.md
-@@ -21,7 +21,7 @@ npm install @aihu-plugin/agent-readiness
- bun add @aihu-plugin/agent-readiness
+ ### Patch Changes
+diff --git a/packages/create-aihu/README.md b/packages/create-aihu/README.md
+index f00d92dd..a9f555db 100644
+--- a/packages/create-aihu/README.md
++++ b/packages/create-aihu/README.md
+@@ -38,7 +38,7 @@ npx create-aihu my-app
+ bun create aihu my-app
  ```
  
--<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
+-<sub><i>Auto-generated against `create-aihu@0.1.13`.</i></sub>
++<sub><i>Auto-generated against `create-aihu@0.1.14`.</i></sub>
  
  <!-- END_AUTOGEN: install -->
  
-@@ -32,12 +32,12 @@ bun add @aihu-plugin/agent-readiness
+@@ -49,12 +49,12 @@ bun create aihu my-app
  
  | | |
  |---|---|
--| **Version** | `2.4.0` |
-+| **Version** | `2.4.1` |
- | **Tier** | C — Agent surface — discovery manifests (llms.txt, MCP Server Card, robots) |
+-| **Version** | `0.1.13` |
++| **Version** | `0.1.14` |
+ | **Tier** | D — Toolchain — `npm create aihu` scaffolder entry point |
  | **Published files** | 3 entries |
  | **License** | MIT |
  
--<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
+-<sub><i>Auto-generated against `create-aihu@0.1.13`.</i></sub>
++<sub><i>Auto-generated against `create-aihu@0.1.14`.</i></sub>
  
  <!-- END_AUTOGEN: stats -->
  
-@@ -50,7 +50,7 @@ bun add @aihu-plugin/agent-readiness
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
+@@ -65,7 +65,7 @@ bun create aihu my-app
  
--<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
+ _No `exports` field in `package.json`. Main entry: `unset`._
  
- <!-- END_AUTOGEN: exports -->
- 
-@@ -64,7 +64,7 @@ bun add @aihu-plugin/agent-readiness
- - `@aihu/server` — `workspace:*`
- - `@aihu/agent` — `workspace:*`
- 
--<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -77,7 +77,7 @@ bun add @aihu-plugin/agent-readiness
- - [@aihu/server](../server)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -88,6 +88,6 @@ bun add @aihu-plugin/agent-readiness
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.0`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/agent-readiness@2.4.1`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/plugin-agent-readiness/package.json b/packages/plugin-agent-readiness/package.json
-index 4449e127..96d06e58 100644
---- a/packages/plugin-agent-readiness/package.json
-+++ b/packages/plugin-agent-readiness/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu-plugin/agent-readiness",
--  "version": "2.4.0",
-+  "version": "2.4.1",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/plugin-drizzle/CHANGELOG.md b/packages/plugin-drizzle/CHANGELOG.md
-index 5bd92630..e702ade8 100644
---- a/packages/plugin-drizzle/CHANGELOG.md
-+++ b/packages/plugin-drizzle/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu-plugin/drizzle
- 
-+## 0.1.8
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+
- ## 0.1.7
- 
- ### Patch Changes
-diff --git a/packages/plugin-drizzle/README.md b/packages/plugin-drizzle/README.md
-index e9672105..49466d34 100644
---- a/packages/plugin-drizzle/README.md
-+++ b/packages/plugin-drizzle/README.md
-@@ -47,7 +47,7 @@ npm install @aihu-plugin/drizzle
- bun add @aihu-plugin/drizzle
- ```
- 
--<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.7`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.8`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -58,12 +58,12 @@ bun add @aihu-plugin/drizzle
- 
- | | |
- |---|---|
--| **Version** | `0.1.7` |
-+| **Version** | `0.1.8` |
- | **Tier** | B — Meta-framework — Drizzle ORM data adapter (typed resources + loaders) |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.7`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.8`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -76,7 +76,7 @@ bun add @aihu-plugin/drizzle
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.7`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.8`.</i></sub>
+-<sub><i>Auto-generated against `create-aihu@0.1.13`.</i></sub>
++<sub><i>Auto-generated against `create-aihu@0.1.14`.</i></sub>
  
  <!-- END_AUTOGEN: exports -->
  
-@@ -93,7 +93,7 @@ bun add @aihu-plugin/drizzle
+@@ -78,7 +78,7 @@ _No `exports` field in `package.json`. Main entry: `unset`._
  
- - `drizzle-orm` — `>=0.29.0`
+ - `@aihu/cli` — `workspace:*`
  
--<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.7`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.8`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -105,7 +105,7 @@ bun add @aihu-plugin/drizzle
- - [@aihu-plugin/data](../plugin-data)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.7`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.8`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -116,6 +116,6 @@ bun add @aihu-plugin/drizzle
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.7`.</i></sub>
-+<sub><i>Auto-generated against `@aihu-plugin/drizzle@0.1.8`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/plugin-drizzle/package.json b/packages/plugin-drizzle/package.json
-index 6b67002b..98e9c3dd 100644
---- a/packages/plugin-drizzle/package.json
-+++ b/packages/plugin-drizzle/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu-plugin/drizzle",
--  "version": "0.1.7",
-+  "version": "0.1.8",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/router/CHANGELOG.md b/packages/router/CHANGELOG.md
-index 8cec7c44..fd2ce9dc 100644
---- a/packages/router/CHANGELOG.md
-+++ b/packages/router/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/router
- 
-+## 0.5.4
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+
- ## 0.5.3
- 
- ### Patch Changes
-diff --git a/packages/router/README.md b/packages/router/README.md
-index 99a05d27..a7461cdf 100644
---- a/packages/router/README.md
-+++ b/packages/router/README.md
-@@ -21,7 +21,7 @@ npm install @aihu/router
- bun add @aihu/router
- ```
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.4`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -32,13 +32,13 @@ bun add @aihu/router
- 
- | | |
- |---|---|
--| **Version** | `0.5.3` |
-+| **Version** | `0.5.4` |
- | **Tier** | B — Meta-framework — file-based router |
- | **Bundle size** | 1.71 kB (gz) — limit 2400 B |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.4`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -53,7 +53,7 @@ bun add @aihu/router
- | `./server` | `./dist/server.js` | `—` |
- | `./plugin` | `./dist/plugin.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.4`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -68,7 +68,7 @@ bun add @aihu/router
- - `@aihu/server` — `workspace:*`
- - `@aihu/signals` — `^0.5.1`
- 
--<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.4`.</i></sub>
+-<sub><i>Auto-generated against `create-aihu@0.1.13`.</i></sub>
++<sub><i>Auto-generated against `create-aihu@0.1.14`.</i></sub>
  
  <!-- END_AUTOGEN: deps -->
  
-@@ -82,7 +82,7 @@ bun add @aihu/router
- - [@aihu/server](../server)
+@@ -91,7 +91,7 @@ _No `exports` field in `package.json`. Main entry: `unset`._
+ - [docs/cli.md](../../docs/cli.md)
  - [Aihu framework root](../../README.md)
  
--<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.4`.</i></sub>
+-<sub><i>Auto-generated against `create-aihu@0.1.13`.</i></sub>
++<sub><i>Auto-generated against `create-aihu@0.1.14`.</i></sub>
  
  <!-- END_AUTOGEN: see-also -->
  
-@@ -93,6 +93,6 @@ bun add @aihu/router
+@@ -102,6 +102,6 @@ _No `exports` field in `package.json`. Main entry: `unset`._
  
  MIT — see [LICENSE](../../LICENSE).
  
--<sub><i>Auto-generated against `@aihu/router@0.5.3`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/router@0.5.4`.</i></sub>
+-<sub><i>Auto-generated against `create-aihu@0.1.13`.</i></sub>
++<sub><i>Auto-generated against `create-aihu@0.1.14`.</i></sub>
  
  <!-- END_AUTOGEN: license -->
-diff --git a/packages/router/package.json b/packages/router/package.json
-index df39493e..9f77603c 100644
---- a/packages/router/package.json
-+++ b/packages/router/package.json
+diff --git a/packages/create-aihu/package.json b/packages/create-aihu/package.json
+index 8c0e94af..11c003e0 100644
+--- a/packages/create-aihu/package.json
++++ b/packages/create-aihu/package.json
 @@ -1,6 +1,6 @@
  {
-   "name": "@aihu/router",
--  "version": "0.5.3",
-+  "version": "0.5.4",
+   "name": "create-aihu",
+-  "version": "0.1.13",
++  "version": "0.1.14",
    "license": "MIT",
    "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/seo/CHANGELOG.md b/packages/seo/CHANGELOG.md
-index 586a7f07..bcb88931 100644
---- a/packages/seo/CHANGELOG.md
-+++ b/packages/seo/CHANGELOG.md
-@@ -1,5 +1,13 @@
- # @aihu/seo
- 
-+## 1.0.7
-+
-+### Patch Changes
-+
-+- Updated dependencies []:
-+  - @aihu/server@0.6.2
-+  - @aihu-plugin/agent-readiness@2.4.1
-+
- ## 1.0.6
- 
- ### Patch Changes
-diff --git a/packages/seo/README.md b/packages/seo/README.md
-index eb52734d..cdbaf2cf 100644
---- a/packages/seo/README.md
-+++ b/packages/seo/README.md
-@@ -35,7 +35,7 @@ npm install @aihu/seo
- bun add @aihu/seo
- ```
- 
--<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/seo@1.0.7`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -46,12 +46,12 @@ bun add @aihu/seo
- 
- | | |
- |---|---|
--| **Version** | `1.0.6` |
-+| **Version** | `1.0.7` |
- | **Tier** | C — Agent surface — DEPRECATED shim over @aihu-plugin/agent-readiness |
- | **Published files** | 4 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/seo@1.0.7`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -64,7 +64,7 @@ bun add @aihu/seo
- |---|---|---|
- | `.` | `./dist/index.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/seo@1.0.7`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -79,7 +79,7 @@ bun add @aihu/seo
- - `@aihu/server` — `workspace:*`
- - `@aihu-plugin/agent-readiness` — `workspace:*`
- 
--<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/seo@1.0.7`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -91,7 +91,7 @@ bun add @aihu/seo
- - [@aihu-plugin/agent-readiness](../plugin-agent-readiness)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/seo@1.0.7`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -102,6 +102,6 @@ bun add @aihu/seo
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/seo@1.0.6`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/seo@1.0.7`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/seo/package.json b/packages/seo/package.json
-index 2e7bdb8f..c007b606 100644
---- a/packages/seo/package.json
-+++ b/packages/seo/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/seo",
--  "version": "1.0.6",
-+  "version": "1.0.7",
-   "description": "DEPRECATED compatibility shim over @aihu-plugin/agent-readiness (sitemap.xml, robots.txt, llms.txt, JSON-LD).",
-   "license": "MIT",
-   "type": "module",
-diff --git a/packages/server/CHANGELOG.md b/packages/server/CHANGELOG.md
-index a03aea6b..df490615 100644
---- a/packages/server/CHANGELOG.md
-+++ b/packages/server/CHANGELOG.md
-@@ -1,5 +1,12 @@
- # @aihu/server
- 
-+## 0.6.2
-+
-+### Patch Changes
-+
-+- Updated dependencies [[`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f), [`cf6c68c`](https://github.com/aihu-project/aihu/commit/cf6c68c60811890b643479085fbff7f98eeb875f)]:
-+  - @aihu/agent-service@0.5.0
-+
- ## 0.6.1
- 
- ### Patch Changes
-diff --git a/packages/server/README.md b/packages/server/README.md
-index 68042e57..9d53ad6a 100644
---- a/packages/server/README.md
-+++ b/packages/server/README.md
-@@ -21,7 +21,7 @@ npm install @aihu/server
- bun add @aihu/server
- ```
- 
--<sub><i>Auto-generated against `@aihu/server@0.6.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/server@0.6.2`.</i></sub>
- 
- <!-- END_AUTOGEN: install -->
- 
-@@ -32,12 +32,12 @@ bun add @aihu/server
- 
- | | |
- |---|---|
--| **Version** | `0.6.1` |
-+| **Version** | `0.6.2` |
- | **Tier** | B — Meta-framework — SSR + native renderer (napi-rs) |
- | **Published files** | 3 entries |
- | **License** | MIT |
- 
--<sub><i>Auto-generated against `@aihu/server@0.6.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/server@0.6.2`.</i></sub>
- 
- <!-- END_AUTOGEN: stats -->
- 
-@@ -52,7 +52,7 @@ bun add @aihu/server
- | `./native` | `./dist/native.js` | `—` |
- | `./head-lowering` | `./dist/head-lowering.js` | `—` |
- 
--<sub><i>Auto-generated against `@aihu/server@0.6.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/server@0.6.2`.</i></sub>
- 
- <!-- END_AUTOGEN: exports -->
- 
-@@ -75,7 +75,7 @@ bun add @aihu/server
- - `@aihu/server-linux-x64-gnu` — `0.1.2`
- - `@aihu/server-win32-x64-msvc` — `0.1.2`
- 
--<sub><i>Auto-generated against `@aihu/server@0.6.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/server@0.6.2`.</i></sub>
- 
- <!-- END_AUTOGEN: deps -->
- 
-@@ -90,7 +90,7 @@ bun add @aihu/server
- - [@aihu-plugin/agent-readiness](../plugin-agent-readiness)
- - [Aihu framework root](../../README.md)
- 
--<sub><i>Auto-generated against `@aihu/server@0.6.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/server@0.6.2`.</i></sub>
- 
- <!-- END_AUTOGEN: see-also -->
- 
-@@ -101,6 +101,6 @@ bun add @aihu/server
- 
- MIT — see [LICENSE](../../LICENSE).
- 
--<sub><i>Auto-generated against `@aihu/server@0.6.1`.</i></sub>
-+<sub><i>Auto-generated against `@aihu/server@0.6.2`.</i></sub>
- 
- <!-- END_AUTOGEN: license -->
-diff --git a/packages/server/package.json b/packages/server/package.json
-index 31df0ed1..e332e4a0 100644
---- a/packages/server/package.json
-+++ b/packages/server/package.json
-@@ -1,6 +1,6 @@
- {
-   "name": "@aihu/server",
--  "version": "0.6.1",
-+  "version": "0.6.2",
-   "license": "MIT",
-   "type": "module",
-   "main": "./dist/index.js",
-diff --git a/packages/templates/cf-solo/template.config.js b/packages/templates/cf-solo/template.config.js
-index d793c9af..7e9ccaa4 100644
---- a/packages/templates/cf-solo/template.config.js
-+++ b/packages/templates/cf-solo/template.config.js
-@@ -59,9 +59,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
-     '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.3',
--    '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.2',
-+    '@aihu/router': '^0.5.4',
-+    '@aihu/server': '^0.6.2',
-+    '@aihu/adapter-cloudflare': '^15.0.3',
-   },
- }
- 
-diff --git a/packages/templates/cf-solo/template.config.ts b/packages/templates/cf-solo/template.config.ts
-index 6fd71e95..c7deeb32 100644
---- a/packages/templates/cf-solo/template.config.ts
-+++ b/packages/templates/cf-solo/template.config.ts
-@@ -59,9 +59,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
-     '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.3',
--    '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.2',
-+    '@aihu/router': '^0.5.4',
-+    '@aihu/server': '^0.6.2',
-+    '@aihu/adapter-cloudflare': '^15.0.3',
-   },
- } satisfies TemplateManifest
- 
-diff --git a/packages/templates/cf-solo/template/package.json.tmpl b/packages/templates/cf-solo/template/package.json.tmpl
-index c7292119..d4c8b825 100644
---- a/packages/templates/cf-solo/template/package.json.tmpl
-+++ b/packages/templates/cf-solo/template/package.json.tmpl
-@@ -17,14 +17,14 @@
-     "typecheck": "tsc --noEmit"
-   },
-   "dependencies": {
--    "@aihu-plugin/agent-readiness": "^2.4.0",
-+    "@aihu-plugin/agent-readiness": "^2.4.1",
-     "@aihu/runtime": "^6.1.1",
-     "@aihu/arbor": "^4.1.2",
-     "@aihu/signals": "^0.5.1",
--    "@aihu/router": "^0.5.3",
--    "@aihu/adapter-cloudflare": "^15.0.2",
-+    "@aihu/router": "^0.5.4",
-+    "@aihu/adapter-cloudflare": "^15.0.3",
-     "@aihu/compiler": "^1.3.5",
--    "@aihu/server": "^0.6.1"
-+    "@aihu/server": "^0.6.2"
-   },
-   "devDependencies": {
-     "@biomejs/biome": "^2.4.13",
-diff --git a/packages/templates/cf-team/template.config.js b/packages/templates/cf-team/template.config.js
-index 7f2f93a2..1b9db4a6 100644
---- a/packages/templates/cf-team/template.config.js
-+++ b/packages/templates/cf-team/template.config.js
-@@ -89,9 +89,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
-     '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.3',
--    '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.2',
-+    '@aihu/router': '^0.5.4',
-+    '@aihu/server': '^0.6.2',
-+    '@aihu/adapter-cloudflare': '^15.0.3',
-   },
-   appPeerDepsConditional: {
-     'better-auth': { version: '^1.0.0', when: 'auth === "better-auth"' },
-diff --git a/packages/templates/cf-team/template.config.ts b/packages/templates/cf-team/template.config.ts
-index 9e9b8081..11794111 100644
---- a/packages/templates/cf-team/template.config.ts
-+++ b/packages/templates/cf-team/template.config.ts
-@@ -112,9 +112,9 @@ export const config = {
-     '@aihu/runtime': '^6.1.1',
-     '@aihu/arbor': '^4.1.2',
-     '@aihu/signals': '^0.5.1',
--    '@aihu/router': '^0.5.3',
--    '@aihu/server': '^0.6.1',
--    '@aihu/adapter-cloudflare': '^15.0.2',
-+    '@aihu/router': '^0.5.4',
-+    '@aihu/server': '^0.6.2',
-+    '@aihu/adapter-cloudflare': '^15.0.3',
-   },
-   appPeerDepsConditional: {
-     'better-auth': { version: '^1.0.0', when: 'auth === "better-auth"' },
-diff --git a/packages/templates/cf-team/template/apps/web/package.json.tmpl b/packages/templates/cf-team/template/apps/web/package.json.tmpl
-index 9b56e070..edc52abf 100644
---- a/packages/templates/cf-team/template/apps/web/package.json.tmpl
-+++ b/packages/templates/cf-team/template/apps/web/package.json.tmpl
-@@ -13,14 +13,14 @@
-   },
-   "dependencies": {
-     "@__APP_NAME__/shared": "__WORKSPACE_PROTOCOL__",
--    "@aihu-plugin/agent-readiness": "^2.4.0",
-+    "@aihu-plugin/agent-readiness": "^2.4.1",
-     "@aihu/runtime": "^6.1.1",
-     "@aihu/arbor": "^4.1.2",
-     "@aihu/signals": "^0.5.1",
--    "@aihu/router": "^0.5.3",
--    "@aihu/adapter-cloudflare": "^15.0.2",
-+    "@aihu/router": "^0.5.4",
-+    "@aihu/adapter-cloudflare": "^15.0.3",
-     "@aihu/compiler": "^1.3.5",
--    "@aihu/server": "^0.6.1"__APP_CONDITIONAL_DEPS__
-+    "@aihu/server": "^0.6.2"__APP_CONDITIONAL_DEPS__
-   },
-   "devDependencies": {
-     "@types/node": "^20.16.5",
+   "bin": {
 diff --git a/scripts/__package-inventory.json b/scripts/__package-inventory.json
-index 23d60c38..80591731 100644
+index 80591731..167e2138 100644
 --- a/scripts/__package-inventory.json
 +++ b/scripts/__package-inventory.json
-@@ -1,7 +1,7 @@
- [
+@@ -91,7 +91,7 @@
+   },
    {
-     "name": "@aihu-plugin/agent-readiness",
--    "version": "2.4.0",
-+    "version": "2.4.1",
-     "dir": "packages/plugin-agent-readiness",
+     "name": "@aihu/cli",
+-    "version": "1.4.0",
++    "version": "1.4.1",
+     "dir": "packages/cli",
      "isPlatform": false
    },
-@@ -13,7 +13,7 @@
+@@ -265,7 +265,7 @@
    },
    {
-     "name": "@aihu-plugin/drizzle",
--    "version": "0.1.7",
-+    "version": "0.1.8",
-     "dir": "packages/plugin-drizzle",
-     "isPlatform": false
-   },
-@@ -25,13 +25,13 @@
-   },
-   {
-     "name": "@aihu/adapter-cloudflare",
--    "version": "15.0.2",
-+    "version": "15.0.3",
-     "dir": "packages/adapter-cloudflare",
-     "isPlatform": false
-   },
-   {
-     "name": "@aihu/adapter-vercel",
--    "version": "15.0.2",
-+    "version": "15.0.3",
-     "dir": "packages/adapter-vercel",
-     "isPlatform": false
-   },
-@@ -43,31 +43,31 @@
-   },
-   {
-     "name": "@aihu/agent-a2a",
--    "version": "1.0.1",
-+    "version": "1.0.2",
-     "dir": "packages/agent-a2a",
-     "isPlatform": false
-   },
-   {
-     "name": "@aihu/agent-acp",
--    "version": "0.2.1",
-+    "version": "0.2.2",
-     "dir": "packages/agent-acp",
-     "isPlatform": false
-   },
-   {
-     "name": "@aihu/agent-readiness",
--    "version": "2.0.5",
-+    "version": "2.0.6",
-     "dir": "packages/_moved/agent-readiness",
-     "isPlatform": false
-   },
-   {
-     "name": "@aihu/agent-server",
--    "version": "0.4.4",
-+    "version": "0.5.0",
-     "dir": "packages/agent-server",
-     "isPlatform": false
-   },
-   {
-     "name": "@aihu/agent-service",
--    "version": "0.4.0",
-+    "version": "0.5.0",
-     "dir": "packages/agent-service",
-     "isPlatform": false
-   },
-@@ -79,7 +79,7 @@
-   },
-   {
-     "name": "@aihu/app",
--    "version": "10.2.2",
-+    "version": "10.2.3",
-     "dir": "packages/app",
-     "isPlatform": false
-   },
-@@ -181,7 +181,7 @@
-   },
-   {
-     "name": "@aihu/router",
--    "version": "0.5.3",
-+    "version": "0.5.4",
-     "dir": "packages/router",
-     "isPlatform": false
-   },
-@@ -193,13 +193,13 @@
-   },
-   {
-     "name": "@aihu/seo",
--    "version": "1.0.6",
-+    "version": "1.0.7",
-     "dir": "packages/seo",
-     "isPlatform": false
-   },
-   {
-     "name": "@aihu/server",
--    "version": "0.6.1",
-+    "version": "0.6.2",
-     "dir": "packages/server",
+     "name": "create-aihu",
+-    "version": "0.1.13",
++    "version": "0.1.14",
+     "dir": "packages/create-aihu",
      "isPlatform": false
    },

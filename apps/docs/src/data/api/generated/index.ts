@@ -189,7 +189,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     name: '@aihu/cli',
     slug: 'cli',
     tier: 'Compiler & tooling',
-    version: '1.4.0',
+    version: '1.4.1',
     tagline: 'Aihu CLI (`aihu`, `create-aihu`) — scaffolding, dev, build commands.',
     note: '',
     exportCount: 36,
@@ -429,7 +429,7 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     name: 'create-aihu',
     slug: 'create-aihu',
     tier: 'Compiler & tooling',
-    version: '0.1.13',
+    version: '0.1.14',
     tagline:
       'Scaffold a new Aihu app — the `npm create aihu` / `npx create-aihu` entry point. Thin delegator to @aihu/cli.',
     note: 'create-aihu exposes no importable API — it is a CLI / editor-tooling package. See its README.',
