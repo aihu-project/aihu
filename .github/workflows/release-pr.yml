@@ -96,7 +96,7 @@ jobs:
     # the publish job is skipped on ordinary Version PRs with no native change.
     if: always() && needs.prepare-version.result == 'success' && needs.prepare-version.outputs.version_changed == 'true' && (needs.publish-css-engine-platforms.result == 'success' || needs.publish-css-engine-platforms.result == 'skipped')
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    timeout-minutes: 45
     permissions:
       actions: read
       contents: read
@@ -124,6 +124,20 @@ jobs:
         run: |
           set -euo pipefail
           git apply version-pr.patch
+          # npm can take 10-20 minutes to serve a just-published version. Bun
+          # silently drops an optionalDependency it can't resolve, so installing
+          # before the registry lists the stamped platform packages writes a
+          # lockfile without them. Wait (up to 30 minutes) for every css-engine
+          # platform pin in the host manifest to resolve first.
+          for attempt in $(seq 1 60); do
+            missing=0
+            for pin in $(node -e 'const m=require("./packages/css-engine/package.json");for(const [n,v] of Object.entries(m.optionalDependencies||{}))console.log(n+"@"+v)'); do
+              if [ "$(npm view "$pin" version 2>/dev/null)" = "" ]; then missing=1; echo "waiting for $pin"; fi
+            done
+            [ "$missing" = 0 ] && break
+            if [ "$attempt" = 60 ]; then echo "platform pins never appeared on npm"; exit 1; fi
+            sleep 30
+          done
           bun install
           bun scripts/check-lockfile-platform-pins.ts
           for attempt in $(seq 1 12); do
