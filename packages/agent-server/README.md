@@ -85,6 +85,28 @@ pass an in-memory channel. The server never imports `ws`.
 - The forwarded frame contains only the opaque id + args — no scope, no
   rate-limit, no auth context.
 
+### Upgrade origin check
+
+`createAgentServer` is transport-agnostic and never sees the raw HTTP upgrade
+request for `/bridge`, so nothing stops an arbitrary page from opening a
+WebSocket to a running bridge port unless the consuming server checks it — a
+WS upgrade isn't subject to the same-origin policy the way `fetch`/XHR are.
+Run `verifyBridgeUpgrade(req, { allowedOrigins })` **before** calling your
+runtime's `upgrade()`, and never forward a rejected upgrade to `attachBridge`:
+
+```ts
+import { verifyBridgeUpgrade } from '@aihu/agent-server'
+
+const verdict = verifyBridgeUpgrade(req, { allowedOrigins: ['http://localhost:5108'] })
+if (!verdict.ok) return new Response(verdict.reason, { status: verdict.status })
+```
+
+It fails closed: a missing `Origin` header and an `Origin` outside
+`allowedOrigins` are both rejected. This is **not** authentication — it only
+constrains which *pages* may attach as the bridge's browser peer; session-bound
+auth (confirming which *user* opened the page) is a separate check layered on
+top and remains open (see `docs/TODOS.md`).
+
 ## Testing
 
 ```bash

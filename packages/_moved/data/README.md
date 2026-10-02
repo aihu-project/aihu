@@ -6,7 +6,7 @@
 
 Held-private workspace package. Not yet published to npm.
 
-> **Status:** Held private — not yet published to npm. See [v1.1 roadmap](../../docs/roadmap/SUMMARY.md) for ratification gating (e.g. RFC #56 live-binding for `@aihu/plugin` enforcement).
+> **Status:** Held private — not yet published to npm. See [v1.1 roadmap](../../../docs/roadmap/SUMMARY.md) for ratification gating (e.g. RFC #56 live-binding for `@aihu/plugin` enforcement).
 
 <!-- BEGIN_HANDWRITTEN: prose -->
 ## `@aihu/data` — MOVED to `@aihu-plugin/data`
