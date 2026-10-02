@@ -119,16 +119,14 @@ describe('aihu-entry plugin — hooks are registered', () => {
   it('load() forwards config.router.viewTransitions into the generated entry', () => {
     const plugins = viteAihuPlugin({ router: { viewTransitions: true } })
     const entry = plugins.find((p) => (p as Plugin).name === 'aihu-entry') as Plugin
-    // biome-ignore lint/suspicious/noExplicitAny: exercising the raw hook fn
-    const load = entry.load as any
+    const load = entry.load as (this: unknown, id: string) => string | null | Promise<string | null>
     expect(load.call({}, ENTRY_RESOLVED_ID)).toContain('router: { viewTransitions: true }')
   })
 
   it('load() omits router entirely when not configured (byte-identical default)', () => {
     const plugins = viteAihuPlugin()
     const entry = plugins.find((p) => (p as Plugin).name === 'aihu-entry') as Plugin
-    // biome-ignore lint/suspicious/noExplicitAny: exercising the raw hook fn
-    const load = entry.load as any
+    const load = entry.load as (this: unknown, id: string) => string | null | Promise<string | null>
     expect(load.call({}, ENTRY_RESOLVED_ID)).toBe(ENTRY_SOURCE)
   })
 })
