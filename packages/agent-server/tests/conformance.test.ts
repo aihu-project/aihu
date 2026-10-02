@@ -723,6 +723,156 @@ describe('conformance — a reconnected bridge channel must independently re-ver
     }
   })
 
+  it.each([
+    'authorization',
+    'handshake',
+  ] as const)('admits at most four of 10,000 calls while %s is unresolved', async (heldAt) => {
+    const counter = makeCounter()
+    let releaseAuthorization!: () => void
+    const authorization = new Promise<void>((resolve) => {
+      releaseAuthorization = resolve
+    })
+    let hookCalls = 0
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      maxInFlightBridgeCalls: 4,
+      bridgeHandshakeTimeoutMs: 60_000,
+      securityHookTimeoutMs: 61_000,
+      authPlugin: {
+        verify: async () => {
+          hookCalls += 1
+          if (heldAt === 'authorization') await authorization
+          return { sub: 'user-1' }
+        },
+        checkScope: () => true,
+      },
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    const bridge = makeFakeBridge(() => {})
+    server.attachBridge(bridge)
+    const timer = vi.spyOn(globalThis, 'setTimeout')
+    try {
+      const calls = Array.from({ length: 10_000 }, () =>
+        server.callTool(`${TAG}/increment`, [1], { jwt: 'valid-jwt' }),
+      )
+      const denied = await Promise.all(calls.slice(4))
+      for (const result of denied) {
+        expect(result).toEqual({
+          code: 503,
+          error: 'BRIDGE_OVERLOADED: in-flight bridge call limit reached',
+        })
+      }
+      expect(hookCalls).toBe(4)
+      expect(timer.mock.calls.filter(([, delay]) => delay === 61_000)).toHaveLength(4)
+      if (heldAt === 'handshake') {
+        await vi.waitFor(() =>
+          expect(timer.mock.calls.filter(([, delay]) => delay === 60_000)).toHaveLength(4),
+        )
+      }
+      // Each pending handshake waiter owns exactly one handshake timer.
+      const handshakeTimers = timer.mock.calls.filter(([, delay]) => delay === 60_000)
+      expect(handshakeTimers).toHaveLength(heldAt === 'handshake' ? 4 : 0)
+      releaseAuthorization()
+      bridge.close()
+      await Promise.all(calls.slice(0, 4))
+    } finally {
+      timer.mockRestore()
+      releaseAuthorization()
+      bridge.close()
+    }
+  })
+
+  it.each([
+    {
+      limits: {
+        maxInFlightBridgeCalls: 3,
+        maxInFlightBridgeCallsPerTenant: 2,
+        maxPendingBridgeCalls: 3,
+      },
+      tenantACalls: 2,
+      denial: 'BRIDGE_OVERLOADED: tenant bridge call limit reached',
+    },
+    {
+      limits: {},
+      tenantACalls: 63,
+      denial: 'BRIDGE_OVERLOADED: pending call limit reached',
+    },
+  ])('reserves bridge capacity for another verified tenant and releases slots: %o', async ({
+    limits,
+    tenantACalls,
+    denial,
+  }) => {
+    const counter = makeCounter()
+    const server = spawn({
+      target: { node: counter.node, agentBinding: counter.agentBinding },
+      createHost: host,
+      ...limits,
+      authPlugin: {
+        verify: async (token) => ({ sub: token }),
+        checkScope: () => true,
+      },
+      actorResolver: {
+        resolveActor: (principal) => ({
+          kind: 'human',
+          subject: principal.sub ?? '',
+          organizationId: principal.sub === 'tenant-a' ? 'tenant-a' : 'tenant-b',
+          scopes: [],
+          issuer: null,
+          audience: null,
+          grantId: null,
+          grantVersion: null,
+        }),
+      },
+      verifyBridgeSession: (token) => ({ identity: token }),
+      reauthorizeBridgeInvoke: (binding) => ({ identity: binding.identity }),
+    })
+    const held: string[] = []
+    const bridge = makeFakeBridge((frame) => {
+      const message = JSON.parse(frame) as { type: string; callId?: string; args?: number[] }
+      if (message.type !== 'invoke' || !message.callId) return
+      if (message.args?.[0] === 2) {
+        bridge.reply(JSON.stringify({ type: 'result', callId: message.callId, result: 'tenant-b' }))
+      } else {
+        held.push(message.callId)
+      }
+    })
+    server.attachBridge(bridge)
+    bridge.reply(
+      JSON.stringify({
+        type: 'hello',
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        nonce: server.issueBridgeNonce().nonce,
+        sessionToken: 'session-a',
+        sessionIdentity: 'session-a',
+      }),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    const callA = () => server.callTool(`${TAG}/increment`, [1], { jwt: 'tenant-a' })
+    const calls = Array.from({ length: tenantACalls }, callA)
+    await vi.waitFor(() => expect(held).toHaveLength(tenantACalls))
+    expect(await callA()).toEqual({
+      code: 503,
+      error: denial,
+    })
+    expect(await server.callTool(`${TAG}/increment`, [2], { jwt: 'tenant-b' })).toEqual({
+      result: 'tenant-b',
+    })
+    bridge.reply(JSON.stringify({ type: 'result', callId: held[0], result: 'tenant-a' }))
+    expect(await calls[0]).toEqual({ result: 'tenant-a' })
+    const next = callA()
+    await vi.waitFor(() => expect(held).toHaveLength(tenantACalls + 1))
+    for (const callId of held.slice(1)) {
+      bridge.reply(JSON.stringify({ type: 'result', callId, result: 'tenant-a' }))
+    }
+    expect(await Promise.all(calls.slice(1))).toEqual(
+      Array.from({ length: tenantACalls - 1 }, () => ({ result: 'tenant-a' })),
+    )
+    expect(await next).toEqual({ result: 'tenant-a' })
+  })
+
   it('withholds action outcomes after a bridge error frame', async () => {
     const counter = makeCounter()
     const server = spawn({

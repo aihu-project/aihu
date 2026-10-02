@@ -46,6 +46,7 @@ interface PendingBridgeCall {
   identity: string
   grantVersion?: string
   readOnly: boolean
+  tenantKey: string
   timer?: ReturnType<typeof setTimeout>
 }
 
@@ -129,13 +130,19 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   const handshakeTimeoutMs = options.bridgeHandshakeTimeoutMs ?? DEFAULT_BRIDGE_HANDSHAKE_TIMEOUT_MS
   const maxPendingBridgeCalls = options.maxPendingBridgeCalls ?? 64
   const maxPendingBridgeCallsTotal = options.maxPendingBridgeCallsTotal ?? 1024
+  const maxInFlightBridgeCalls = options.maxInFlightBridgeCalls ?? 1024
+  const maxInFlightBridgeCallsPerTenant = options.maxInFlightBridgeCallsPerTenant ?? 64
   if (
     !Number.isSafeInteger(maxPendingBridgeCalls) ||
     maxPendingBridgeCalls < 1 ||
     !Number.isSafeInteger(maxPendingBridgeCallsTotal) ||
-    maxPendingBridgeCallsTotal < 1
+    maxPendingBridgeCallsTotal < 1 ||
+    !Number.isSafeInteger(maxInFlightBridgeCalls) ||
+    maxInFlightBridgeCalls < 1 ||
+    !Number.isSafeInteger(maxInFlightBridgeCallsPerTenant) ||
+    maxInFlightBridgeCallsPerTenant < 1
   ) {
-    throw new RangeError('bridge pending-call limits must be positive safe integers')
+    throw new RangeError('bridge call limits must be positive safe integers')
   }
 
   // ── Step 1: mount server-side so the LiveBinding registers ─────────────────
@@ -182,6 +189,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   let bridge: BridgeChannel | null = null
   let detachBridge: (() => void) | null = null
   const pending = new Map<string, PendingBridgeCall>()
+  let inFlightBridgeCalls = 0
+  const inFlightByTenant = new Map<string, number>()
   let lastBridgeSnapshot: Snapshot | null = null
   const bridgeNonces = createBridgeNonceStore()
   let verifiedSessionToken: string | undefined
@@ -617,7 +626,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     generation: number,
     opaqueActionId: string,
     args: unknown[],
-    binding: { identity: string; grantVersion?: string; readOnly: boolean },
+    binding: { identity: string; grantVersion?: string; readOnly: boolean; tenantKey: string },
     markSent: () => void,
   ): Promise<unknown> {
     if (bridge !== channel || attachmentGeneration !== generation || !channel.connected) {
@@ -626,6 +635,19 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     // One attachment is active at a time. Replacement clears pending, so this
     // server-owned map bounds both the current attachment and the server total.
     if (pending.size >= maxPendingBridgeCalls || pending.size >= maxPendingBridgeCallsTotal) {
+      return Promise.reject(new Error('BRIDGE_OVERLOADED: pending call limit reached'))
+    }
+    // Preserve one attachment/server pending slot for another tenant when
+    // there is room to do so. Otherwise the default 64-slot attachment cap
+    // could be filled by one tenant despite its separate 64-call ceiling.
+    let tenantPending = 0
+    for (const call of pending.values()) {
+      if (call.tenantKey === binding.tenantKey) tenantPending += 1
+    }
+    if (
+      tenantPending >= Math.max(1, maxPendingBridgeCalls - 1) ||
+      tenantPending >= Math.max(1, maxPendingBridgeCallsTotal - 1)
+    ) {
       return Promise.reject(new Error('BRIDGE_OVERLOADED: pending call limit reached'))
     }
     const callId = crypto.randomUUID()
@@ -655,10 +677,12 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
   }
 
   // ── callTool: bridge attached → gate-only + delegate; else server dispatch ─
-  async function callTool(
+  async function callToolAdmitted(
     toolName: string,
     params: unknown,
     ctx?: RequestContext,
+    onTenantAdmitted?: (key: string) => void,
+    admittedChannel?: BridgeChannel,
   ): Promise<unknown> {
     const args = Array.isArray(params)
       ? params
@@ -669,8 +693,8 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
     if (peerRevoked && !bridge?.connected) {
       return { error: 'BRIDGE_REVOKED: bridge peer was revoked', code: 403 }
     }
-    if (bridge?.connected) {
-      const channel = bridge
+    if (admittedChannel) {
+      const channel = admittedChannel
       const generation = attachmentGeneration
       const handshakeAtStart = handshake
       const sessionAtStart = verifiedSessionToken
@@ -720,6 +744,20 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
         typeof (verdict as { actor?: unknown }).actor === 'object'
           ? (verdict as { actor: Actor }).actor
           : undefined
+
+      // Only the service's verified actor can select a tenant bucket. Calls
+      // without one share a single bucket and cannot claim caller-supplied IDs.
+      const actorOrganization = actor?.organizationId
+      const tenantKey =
+        typeof actorOrganization === 'string' && actorOrganization !== ''
+          ? `organization:${actorOrganization}`
+          : 'unresolved-actor'
+      const tenantCalls = inFlightByTenant.get(tenantKey) ?? 0
+      if (tenantCalls >= maxInFlightBridgeCallsPerTenant) {
+        return { error: 'BRIDGE_OVERLOADED: tenant bridge call limit reached', code: 503 }
+      }
+      inFlightByTenant.set(tenantKey, tenantCalls + 1)
+      onTenantAdmitted?.(tenantKey)
 
       // The agent-service gate has approved the CALL; this verifies the
       // CHANNEL. Deliberately ordered after `authorize` so the security
@@ -817,6 +855,7 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
             identity,
             ...(grantVersion !== undefined ? { grantVersion } : {}),
             readOnly,
+            tenantKey,
           },
           () => {
             invokeSent = true
@@ -868,7 +907,10 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
           if (readOnly) {
             return bridge === null
               ? { error: 'BRIDGE_DETACHED: bridge disconnected during invocation', code: 503 }
-              : { error: 'BRIDGE_REPLACED: bridge attachment changed during invocation', code: 503 }
+              : {
+                  error: 'BRIDGE_REPLACED: bridge attachment changed during invocation',
+                  code: 503,
+                }
           }
           return {
             error: 'BRIDGE_RESULT_WITHHELD: action may have executed; result withheld',
@@ -949,6 +991,39 @@ export function createAgentServer(options: AgentServerOptions): AgentServer {
 
     // No bridge (headless / CI): gate + dispatch on the server-mounted instance.
     return service.handleToolCall(toolName, params, ctx)
+  }
+
+  async function callTool(
+    toolName: string,
+    params: unknown,
+    ctx?: RequestContext,
+  ): Promise<unknown> {
+    const channel = bridge
+    if (!channel?.connected) return callToolAdmitted(toolName, params, ctx)
+    // Admission precedes all service hooks and their timers.
+    if (inFlightBridgeCalls >= maxInFlightBridgeCalls) {
+      return { error: 'BRIDGE_OVERLOADED: in-flight bridge call limit reached', code: 503 }
+    }
+    inFlightBridgeCalls += 1
+    let tenantKey: string | undefined
+    try {
+      return await callToolAdmitted(
+        toolName,
+        params,
+        ctx,
+        (key) => {
+          tenantKey = key
+        },
+        channel,
+      )
+    } finally {
+      inFlightBridgeCalls -= 1
+      if (tenantKey !== undefined) {
+        const remaining = (inFlightByTenant.get(tenantKey) ?? 1) - 1
+        if (remaining === 0) inFlightByTenant.delete(tenantKey)
+        else inFlightByTenant.set(tenantKey, remaining)
+      }
+    }
   }
 
   function serialize(): Snapshot {

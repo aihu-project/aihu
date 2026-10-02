@@ -97,6 +97,10 @@ export interface AgentServerOptions {
   maxPendingBridgeCalls?: number
   /** Maximum in-flight bridge calls across the server. Defaults to 1024. */
   maxPendingBridgeCallsTotal?: number
+  /** Maximum bridge calls from admission through final result authorization. Defaults to 1024. */
+  maxInFlightBridgeCalls?: number
+  /** Maximum admitted calls for one verified actor organization. Defaults to 64. Calls without an actor share one bucket. */
+  maxInFlightBridgeCallsPerTenant?: number
   /** Bounds projected bridge read results. Defaults to depth 32 and 10,000 total nodes. */
   projectionLimits?: CapabilityProjectionLimits
   /** Revocation memory lifetime. Defaults to 24 hours; host session storage remains authoritative. */
