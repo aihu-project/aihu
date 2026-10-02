@@ -28,6 +28,8 @@
  *   --published-version  latest css-engine platform version observed on npm;
  *                        prevents an abandoned Version PR's orphan version
  *                        from being reused
+ *   --set-css-engine-version <v> use an already-published platform version
+ *                        instead of advancing the patch
  *   --require-snapshot   hard-fail unless the host version is `0.0.0-*`
  *
  * ── --require-snapshot IS NOT VESTIGIAL ──────────────────────────────────────
@@ -41,6 +43,7 @@
  * original docblock was written against. Every canary call site in
  * release.yml must pass it. Stable release-time stamping must not.
  */
+import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -75,6 +78,7 @@ function flagValue(name: string): string | undefined {
 const CHECK = process.argv.includes('--check')
 const REQUIRE_SNAPSHOT = process.argv.includes('--require-snapshot')
 const BUMP_CSS_ENGINE = process.argv.includes('--bump-css-engine')
+const setCssEngineVersion = flagValue('--set-css-engine-version')
 const publishedVersion = flagValue('--published-version')
 const hostFilter = flagValue('--host')
   ?.split(',')
@@ -93,6 +97,21 @@ if (hostFilter) {
 }
 
 const selected = hostFilter ? HOSTS.filter((h) => hostFilter.includes(h.host)) : HOSTS
+
+if (BUMP_CSS_ENGINE && setCssEngineVersion) {
+  console.error('✗ --bump-css-engine and --set-css-engine-version cannot be used together')
+  process.exit(1)
+}
+if (setCssEngineVersion && !/^\d+\.\d+\.\d+$/.test(setCssEngineVersion)) {
+  console.error(`✗ invalid stable css-engine platform version: ${setCssEngineVersion}`)
+  process.exit(1)
+}
+
+const nativeSource = execFileSync(
+  'git',
+  ['rev-parse', 'HEAD:packages/css-engine/crates/aihu-css-core'],
+  { cwd: join(import.meta.dir, '..'), encoding: 'utf8' },
+).trim()
 
 const problems: string[] = []
 const label = CHECK ? 'check' : 'stamp'
@@ -164,6 +183,11 @@ for (const { host, npmDirs } of selected) {
       Object.values(optDeps).some((pin) => pin !== version)
     console.log(`CSS_ENGINE_PLATFORM_VERSION_MOVED=${moved}`)
   }
+  if (setCssEngineVersion && host === 'css-engine') {
+    version = setCssEngineVersion
+    // This version was already confirmed on npm; keep the publish job skipped.
+    console.log('CSS_ENGINE_PLATFORM_VERSION_MOVED=false')
+  }
   const onDisk = new Set<string>()
 
   for (const platPkgPath of platformPkgPaths) {
@@ -189,8 +213,16 @@ for (const { host, npmDirs } of selected) {
           `${hostPkg.name} pins ${platPkg.name}@${optDeps[platPkg.name]}, expected ${version}`,
         )
       }
+      if (host === 'css-engine' && platPkg.aihuNativeSource !== nativeSource) {
+        problems.push(
+          `${platPkg.name} has aihuNativeSource ${String(platPkg.aihuNativeSource)}, expected ${nativeSource}`,
+        )
+      }
     } else {
       platPkg.version = version
+      if (host === 'css-engine' && (BUMP_CSS_ENGINE || setCssEngineVersion)) {
+        platPkg.aihuNativeSource = nativeSource
+      }
       writePkg(platPkgPath, platPkg)
       optDeps[platPkg.name] = version
       console.log(`  ${platPkg.name} → ${version}`)

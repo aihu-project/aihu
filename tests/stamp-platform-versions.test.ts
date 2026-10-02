@@ -196,6 +196,38 @@ describe('stamp-platform-versions · --host', () => {
 })
 
 describe('stamp-platform-versions · css-engine publish-before-pins', () => {
+  it('sets an already-published version and stamps its native source identity', () => {
+    cssFixture()
+    const r = spawnSync(
+      'bun',
+      [SCRIPT, '--host', 'css-engine', '--set-css-engine-version', '0.1.20'],
+      { encoding: 'utf8', env: { ...process.env, PLATFORM_SYNC_ROOT: root } },
+    )
+    expect(r.status, `${r.stdout}${r.stderr}`).toBe(0)
+    const nativeSource = spawnSync(
+      'git',
+      ['rev-parse', 'HEAD:packages/css-engine/crates/aihu-css-core'],
+      { encoding: 'utf8' },
+    ).stdout.trim()
+    for (const p of ['darwin-arm64', 'darwin-x64', 'linux-x64-gnu', 'win32-x64-msvc']) {
+      const manifest = JSON.parse(
+        readFileSync(join(root, 'packages/css-engine/npm', p, 'package.json'), 'utf8'),
+      )
+      expect(manifest.version).toBe('0.1.20')
+      expect(manifest.aihuNativeSource).toBe(nativeSource)
+      expect(
+        JSON.parse(readFileSync(join(root, 'packages/css-engine/package.json'), 'utf8'))
+          .optionalDependencies[`@aihu/css-engine-${p}`],
+      ).toBe('0.1.20')
+    }
+    expect(`${r.stdout}${r.stderr}`).toContain('CSS_ENGINE_PLATFORM_VERSION_MOVED=false')
+    const check = spawnSync('bun', [SCRIPT, '--host', 'css-engine', '--check'], {
+      encoding: 'utf8',
+      env: { ...process.env, PLATFORM_SYNC_ROOT: root },
+    })
+    expect(check.status, `${check.stdout}${check.stderr}`).toBe(0)
+  })
+
   it('patch-bumps all css-engine platform manifests and host pins together', () => {
     cssFixture()
     const r = spawnSync('bun', [SCRIPT, '--host', 'css-engine', '--bump-css-engine'], {
@@ -214,6 +246,16 @@ describe('stamp-platform-versions · css-engine publish-before-pins', () => {
           .optionalDependencies[`@aihu/css-engine-${p}`],
       ).toBe('0.1.20')
     }
+    const nativeSource = spawnSync(
+      'git',
+      ['rev-parse', 'HEAD:packages/css-engine/crates/aihu-css-core'],
+      { encoding: 'utf8' },
+    ).stdout.trim()
+    expect(
+      JSON.parse(
+        readFileSync(join(root, 'packages/css-engine/npm/linux-x64-gnu/package.json'), 'utf8'),
+      ).aihuNativeSource,
+    ).toBe(nativeSource)
     const check = spawnSync('bun', [SCRIPT, '--host', 'css-engine', '--check'], {
       encoding: 'utf8',
       env: { ...process.env, PLATFORM_SYNC_ROOT: root },
