@@ -42,7 +42,7 @@ describe('conformance — pinned package versions and API surface', () => {
       jsdom: '^25.0.0',
     })
     expect(agentServerPackageJson.peerDependencies['@aihu/arbor']).toBe('^4.1.2')
-    expect(agentServerPackageJson.devDependencies['@aihu/arbor']).toBe('workspace:*')
+    expect(agentServerPackageJson.devDependencies['@aihu/arbor']).toBe('^4.1.2')
   })
 
   it('the exported value surface matches the documented allowlist exactly', () => {

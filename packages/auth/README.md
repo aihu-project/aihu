@@ -69,7 +69,7 @@ bun add @aihu/auth
 
 **Peer dependencies:**
 
-- `@aihu/agent-service` — `workspace:*`
+- `@aihu/agent-service` — `^0.4.0 || ^0.5.0`
 - `@aihu/signals` — `^0.5.1`
 
 <sub><i>Auto-generated against `@aihu/auth@6.0.1`.</i></sub>
