@@ -14,6 +14,10 @@ jobs:
     name: Compute release versions
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    # Merging the Version PR triggers both push workflows. release-tag.yml
+    # recognizes this commit message and creates the release tag; don't start a
+    # second native publish while that tag is being created.
+    if: "!startsWith(github.event.head_commit.message, 'chore(release): version packages')"
     outputs:
       version_changed: ${{ steps.prepare.outputs.version_changed }}
       css_engine_platform_moved: ${{ steps.prepare.outputs.css_engine_platform_moved }}
