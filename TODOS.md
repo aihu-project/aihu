@@ -19,11 +19,21 @@ a design call are left open as-is.
 - **Follow-ups:**
   - Consumers can drop `*.aihu.ts` from `.gitignore` once on the new compiler, and
     delete any sidecars still on disk.
-  - `aihu-compile <file> --out <dir>` still writes a `<tag>.aihu.ts` into the OUT
-    dir. Harmless (it is not next to the source) but now pointless — remove.
-  - Wire `.aihu` diagnostics into `@aihu/language-server` from the same surface, so
-    the editor and `aihu-tsc` cannot disagree. Its `state-generator.ts` is a second,
-    weaker generator and should be retired.
+  - ~~`aihu-compile <file> --out <dir>` still writes a `<tag>.aihu.ts` into the OUT
+    dir.~~ — **FIXED.** Routed to and resolved in `aihu-compiler`
+    ([`aihu-compiler#16`](https://github.com/aihu-project/aihu-compiler/issues/16),
+    merged via [`aihu-compiler#17`](https://github.com/aihu-project/aihu-compiler/pull/17),
+    2026-09-15). The CLI no longer writes the stray sidecar into `--out` when
+    `--sidecar-out` is omitted.
+  - ~~Wire `.aihu` diagnostics into `@aihu/language-server` from the same surface,
+    so the editor and `aihu-tsc` cannot disagree. Its `state-generator.ts` is a
+    second, weaker generator and should be retired.~~ — **FIXED.** Verified against
+    current `aihu-project/aihu-language` source: `volar-plugin.ts` documents that
+    the language plugin is "the SAME `createAihuLanguagePlugin` the `aihu-tsc` CLI
+    runs" and that "the old regex-based `@state`-only generator (`state-generator.ts`)
+    is retired — an editor squiggle and a CI failure are now the same diagnostic by
+    construction" (landed via `#486` step 5, `aihu-language` commit `2653211`,
+    2026-07-30).
 
 ### `signal(null)` infers `T = null` — untyped signals across the corpus (added 2026-07-12) — ROUTED to aihu-dom
 
