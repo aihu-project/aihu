@@ -51,7 +51,7 @@ export function entrySource(outletId?: string, viewTransitions?: boolean): strin
   if (viewTransitions !== undefined) {
     opts.push(`router: { viewTransitions: ${JSON.stringify(viewTransitions)} }`)
   }
-  return `import { createApp } from '@aihu/app/client'\n\ncreateApp({ ${opts.join(', ')} })\n`
+  return "import { createApp } from '@aihu/app/client'\n\n" + `createApp({ ${opts.join(', ')} })\n`
 }
 
 /**
