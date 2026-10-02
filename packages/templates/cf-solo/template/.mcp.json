@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "aihu": {
+      "command": "aihu",
+      "args": ["mcp", "serve"],
+      "cwd": "."
+    }
+  }
+}

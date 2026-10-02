@@ -28,6 +28,7 @@ import { validateManifest } from '../src/template-manifest.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const CF_TEAM = resolve(HERE, '..', '..', 'templates', 'cf-team')
+const CF_SOLO = resolve(HERE, '..', '..', 'templates', 'cf-solo')
 
 function manifest(over: Partial<TemplateManifest> = {}): TemplateManifest {
   return {
@@ -115,9 +116,12 @@ describe('assertTemplateCompatibility — contractVersion', () => {
  * TS2307 on `@kinde-oss/kinde-typescript-sdk` and `@supabase/supabase-js`.
  * In-repo harnesses run `bun src/bin.ts`, take the `.ts` copy, and never saw it.
  */
-describe('@aihu/templates-cf-team — the shipped manifests', () => {
+describe.each([
+  ['@aihu/templates-cf-team', CF_TEAM],
+  ['@aihu/templates-cf-solo', CF_SOLO],
+])('%s — the shipped manifests', (_name, pkgDir) => {
   async function load(file: string): Promise<TemplateManifest> {
-    const mod = (await import(/* @vite-ignore */ resolve(CF_TEAM, file))) as Record<string, unknown>
+    const mod = (await import(/* @vite-ignore */ resolve(pkgDir, file))) as Record<string, unknown>
     return validateManifest(mod.default ?? mod.config)
   }
 
@@ -131,7 +135,7 @@ describe('@aihu/templates-cf-team — the shipped manifests', () => {
     // a path that is in no template tree is not a guard, it is a no-op.
     const ts = await load('template.config.ts')
     for (const c of ts.conditionalFiles) {
-      expect(existsSync(resolve(CF_TEAM, 'template', c.path)), c.path).toBe(true)
+      expect(existsSync(resolve(pkgDir, 'template', c.path)), c.path).toBe(true)
     }
   })
 

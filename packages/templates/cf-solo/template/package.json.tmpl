@@ -1,0 +1,38 @@
+{
+  "name": "__APP_NAME__",
+  "version": "__APP_VERSION__",
+  "description": "__APP_DESCRIPTION__",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aihu-plugin/agent-readiness": "^2.3.0",
+    "@aihu/runtime": "^6.1.1",
+    "@aihu/arbor": "^4.1.2",
+    "@aihu/signals": "^0.5.1",
+    "@aihu/router": "^0.5.1",
+    "@aihu/adapter-cloudflare": "^14.0.2",
+    "@aihu/compiler": "^1.3.5",
+    "@aihu/server": "^0.6.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@cloudflare/workers-types": "^4.20250601.0",
+    "@types/node": "^20.16.5",
+    "@vitest/coverage-v8": "^2.1.9",
+    "typescript": "^5.6.0",
+    "vite": "^6 || ^8",
+    "vitest": "^2.1.9"
+  }
+}

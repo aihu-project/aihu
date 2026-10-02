@@ -29,7 +29,7 @@ on:
       template:
         description: 'Comma-separated templates (default: all)'
         type: string
-        default: minimal,full,docs,agent,cf-team
+        default: minimal,full,docs,agent,cf-team,cf-solo
   schedule:
     # 07:00 UTC daily — after a typical release window, before the workday.
     - cron: '0 7 * * *'
@@ -199,7 +199,7 @@ jobs:
             --mode "${{ inputs.mode || (github.event_name == 'pull_request' && 'local' || 'npm') }}" \
             --version "${{ inputs.version || 'latest' }}" \
             --pm "${{ inputs.pm || 'bun,npm,pnpm,yarn' }}" \
-            --template "${{ inputs.template || 'minimal,full,docs,agent,cf-team' }}" \
+            --template "${{ inputs.template || 'minimal,full,docs,agent,cf-team,cf-solo' }}" \
             --local-pkg "${{ (inputs.mode == 'local' || (inputs.mode == '' && github.event_name == 'pull_request')) && 'all' || '' }}" \
             --cmd-timeout 300000 \
             --server-timeout 120000 \

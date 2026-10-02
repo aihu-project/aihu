@@ -24,14 +24,25 @@ export type KnownTemplate = (typeof KNOWN_TEMPLATES)[number]
 
 /**
  * The subset of KNOWN_TEMPLATES that is actually published to npm and can be
- * installed today. The other four entries in KNOWN_TEMPLATES are declared by
+ * installed today. The remaining entries in KNOWN_TEMPLATES are declared by
  * arch-6 §3.5 but 404 on the registry and have no source under
  * `packages/templates/`, so offering them as choices would send users into an
  * `npm ERR! 404` dead end. They stay in KNOWN_TEMPLATES (removing them is a
  * separate spec call) but are surfaced to users as unavailable, never as
  * selectable options.
+ *
+ * `cf-solo` (arch-6 §1.3's solo-dev escape hatch) has real source under
+ * `packages/templates/cf-solo/` and the same in-repo scaffold-and-compile
+ * test coverage `cf-team` has — see `packages/cli/tests/
+ * scaffold-cf-solo-and-compile.test.ts`. It is NOT yet in `.github/workflows/
+ * scaffold-matrix.yml`'s real npm/pnpm/yarn/bun-registry matrix; that is a
+ * `.github/` edit a human needs to make as a follow-up (see arch-6 §10 Round
+ * B2 — the remaining 3 templates stamp out the same way).
  */
-export const AVAILABLE_TEMPLATE_PACKAGES = ['@aihu/templates-cf-team'] as const
+export const AVAILABLE_TEMPLATE_PACKAGES = [
+  '@aihu/templates-cf-team',
+  '@aihu/templates-cf-solo',
+] as const
 
 /** Templates embedded in @aihu/cli — always available, never downloaded. */
 export const BUILTIN_TEMPLATES = ['minimal', 'full', 'docs', 'agent', 'ssr'] as const

@@ -234,6 +234,12 @@
     "isPlatform": false
   },
   {
+    "name": "@aihu/templates-cf-solo",
+    "version": "0.1.0",
+    "dir": "packages/templates/cf-solo",
+    "isPlatform": false
+  },
+  {
     "name": "@aihu/templates-cf-team",
     "version": "3.1.0",
     "dir": "packages/templates/cf-team",

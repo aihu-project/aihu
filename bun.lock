@@ -614,7 +614,7 @@
         "@aihu/mcp": "workspace:*",
       },
       "devDependencies": {
-        "@aihu/ui": "workspace:*",
+        "@aihu/ui": "^0.1.2",
       },
     },
     "packages/context": {
@@ -851,6 +851,13 @@
         "@aihu/signals": "^0.5.1",
       },
     },
+    "packages/templates/cf-solo": {
+      "name": "@aihu/templates-cf-solo",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@aihu/cli": "workspace:*",
+      },
+    },
     "packages/templates/cf-team": {
       "name": "@aihu/templates-cf-team",
       "version": "3.1.0",
@@ -1077,6 +1084,8 @@
     "@aihu/signals": ["@aihu/signals@0.5.1", "", {}, "sha512-lUJmxLIW5mCWHibv/XYg3Rh/SG4qrF/83JuWtfU2XZTnlrxsN+l+IIx3OO/wAZLGRibJVd6Q55LVu7dkkj1cdw=="],
 
     "@aihu/store": ["@aihu/store@workspace:packages/store"],
+
+    "@aihu/templates-cf-solo": ["@aihu/templates-cf-solo@workspace:packages/templates/cf-solo"],
 
     "@aihu/templates-cf-team": ["@aihu/templates-cf-team@workspace:packages/templates/cf-team"],
 

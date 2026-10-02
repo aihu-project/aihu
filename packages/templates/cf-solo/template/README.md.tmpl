@@ -1,0 +1,58 @@
+# __APP_NAME__
+
+__APP_DESCRIPTION__
+
+Scaffolded from `@aihu/templates-cf-solo` (Aihu __AIHU_VERSION__).
+
+## TL;DR
+
+Cloudflare Workers single-package app with [Aihu](https://github.com/aihu-project/aihu).
+Lint/format via Biome, tests via Vitest, agent-discoverable by default.
+
+## Quickstart
+
+```bash
+bun install
+bun run dev      # local dev server
+bun run build    # production bundle
+bun run test     # unit tests
+bun run check    # biome check + write
+```
+
+## Project structure
+
+```
+.
+├── src/
+│   ├── main.ts           # Cloudflare Workers entry
+│   ├── aihu-app.aihu      # root SFC, mounted client-side via index.html
+│   └── components/       # your components
+├── wrangler.toml          # Cloudflare Workers config
+├── biome.json              # lint + format
+├── tsconfig.json           # TypeScript config
+└── .mcp.json                # agent surface (auto-discovered by MCP-aware tools)
+```
+
+## Agent surface
+
+If you scaffolded with `agentSurface !== 'none'`, this project ships a
+`.mcp.json` at the repo root. MCP-aware editors and CLIs (Claude Code,
+Cursor, etc.) auto-discover it and can connect to the Aihu agent host
+without further configuration.
+
+To opt out later, delete `.mcp.json` and the `src/agent/aihu-expose.aihu`
+file (if present).
+
+## Deploy
+
+GitHub Actions are wired up:
+- `ci.yml` — runs on every push and PR (typecheck, test, build)
+- `deploy.yml` — runs on push to `main`, deploys via `wrangler deploy`
+
+Set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repo secrets to
+enable the deploy workflow.
+
+## Learn more
+
+- [Aihu docs](https://github.com/aihu-project/aihu)
+- [Cloudflare Workers docs](https://developers.cloudflare.com/workers/)

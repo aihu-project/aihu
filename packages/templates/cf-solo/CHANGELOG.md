@@ -1,0 +1,1 @@
+# @aihu/templates-cf-solo

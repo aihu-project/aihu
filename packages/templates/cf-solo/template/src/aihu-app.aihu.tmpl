@@ -1,0 +1,28 @@
+// __APP_NAME__ — root SFC.
+// Scaffolded by @aihu/templates-cf-solo. Edit freely; this is your app shell.
+
+@state {
+  $prop: {
+    appName: { default: '__APP_NAME__', type: "string" }
+  }
+}
+
+@template {
+  <main class="app">
+    <header>
+      <h1>{appName}</h1>
+      <p class="tagline">scaffolded by aihu · running on Cloudflare Workers</p>
+    </header>
+    <section class="demo">
+      <live-counter></live-counter>
+    </section>
+  </main>
+}
+
+@style {
+  .app      { font-family: system-ui, sans-serif; max-width: 42rem; margin: 0 auto; padding: 2rem 1.5rem; color: var(--fg, #111); }
+  header    { margin-bottom: 1.5rem; }
+  h1        { margin: 0 0 0.25rem 0; font-size: 1.75rem; }
+  .tagline  { margin: 0; color: var(--muted, #666); font-size: 0.9rem; }
+  .demo     { margin-top: 1rem; }
+}

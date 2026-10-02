@@ -1,0 +1,25 @@
+// __APP_NAME__ — agent surface stub.
+//
+// Per arch-6 §2.6 (locked Q3 example): every M1 scaffold with
+// `agentSurface !== 'none'` ships at minimum one `.aihu` SFC that exposes
+// an entry to agents. In v2 the agent surface is expressed via per-entry
+// `expose:`/`describe:` on the `@state` macro (the old `@agent { $expose }`
+// form is a C440 error). With the `live-counter` starter,
+// `components/live-counter.aihu` already exposes `count` — this file adds an
+// app-level surface so MCP clients can introspect the app name even before
+// any user-authored components register their own exposures.
+
+@state {
+  $prop: {
+    appName: {
+      default: '__APP_NAME__',
+      type: "string",
+      describe: "The scaffolded application's display name",
+      expose: { read: true },
+    }
+  }
+}
+
+@template {
+  <span class="aihu-expose-stub">{appName}</span>
+}
