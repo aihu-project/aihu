@@ -6,6 +6,7 @@
  *   aihu page <route>          Scaffold a page file
  *   aihu component <name>      Scaffold a component file
  *   aihu plugin <name>         Scaffold a plugin package
+ *   aihu plugin install <name> Apply an installed plugin's install-manifest.json
  *   aihu dev [options]         Start development server (arch-4 §3)
  *   aihu build [options]       Production build (arch-4 §3)
  *   aihu deploy [options]      Deploy via the configured platform adapter (arch-4 §3)
@@ -294,6 +295,11 @@ async function main(): Promise<void> {
   if (cmd === 'list') {
     const { default: list } = await import('./commands/list.js')
     await list(rest)
+    return
+  }
+  if (cmd === 'plugin' && rest[0] === 'install') {
+    const { default: pluginInstall } = await import('./commands/plugin-install.js')
+    await pluginInstall(rest.slice(1))
     return
   }
   if (cmd === 'mcp') {
