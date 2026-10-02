@@ -25,9 +25,11 @@ export {
   bindRouteSignalWriter,
   createPrefetcher,
   createRouteSignal,
+  isActiveRouteLink,
   navigate,
   provideRouteContext,
   RouteContext,
+  shouldInterceptLinkClick,
   useRoute,
   useRouter,
 } from './runtime.ts'

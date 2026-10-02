@@ -6,6 +6,10 @@ import type { RouteHead, RouteSegment } from './router.ts'
 /** @internal */
 interface VitePlugin {
   name: string
+  api?: {
+    aihuModule: string
+    getOptions: () => ResolvedRouterOptions
+  }
   resolveId?: (id: string) => string | null | undefined
   load?: (id: string) => string | null | undefined
   configureServer?: (server: {
@@ -15,6 +19,29 @@ interface VitePlugin {
       invalidateModule(m: { id: string }): void
     }
   }) => void
+  configResolved?: (config: { root: string }) => void
+}
+
+interface ResolvedRouterOptions {
+  pagesDir: string
+  layoutsDir: string
+  componentsDir: string
+}
+
+/** Attach router options using the same module API consumed by @aihu/app. */
+function declareAihuModule<TOptions, TPlugins extends readonly unknown[]>(
+  aihuModule: string,
+  options: TOptions,
+  plugins: TPlugins,
+): TPlugins {
+  const first = plugins[0] as { api?: unknown } | undefined
+  if (first && typeof first === 'object') {
+    first.api = Object.assign({}, first.api ?? {}, {
+      aihuModule,
+      getOptions: () => options,
+    })
+  }
+  return plugins
 }
 
 const RR = '\0virtual:aihu-routes'
@@ -929,8 +956,15 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
     cl: string | null = null,
     cc: string | null = null,
     csc: string | null = null
-  return {
+  const plugin: VitePlugin = {
     name: 'aihu-router',
+    configResolved(config) {
+      root = config.root
+      cr = null
+      cl = null
+      cc = null
+      csc = null
+    },
     resolveId: (id) =>
       id === 'virtual:aihu-routes'
         ? RR
@@ -1037,6 +1071,11 @@ export function viteRouterPlugin(opts?: RouterPluginOptions): VitePlugin {
       server.watcher.on('unlink', invalidateAll)
     },
   }
+  return declareAihuModule<ResolvedRouterOptions, [VitePlugin]>(
+    '@aihu/router',
+    { pagesDir: pd, layoutsDir: ld, componentsDir: cd },
+    [plugin],
+  )[0]
 }
 
 // ---------------------------------------------------------------------------

@@ -4,13 +4,15 @@
  * the runtime source tree or the broader runtime barrel.
  */
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const APP_SRC = join(process.cwd(), 'packages/app/src')
-const APP_PACKAGE = JSON.parse(
-  readFileSync(join(process.cwd(), 'packages/app/package.json'), 'utf8'),
-) as { name: string }
+const APP_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const APP_SRC = join(APP_ROOT, 'src')
+const APP_PACKAGE = JSON.parse(readFileSync(join(APP_ROOT, 'package.json'), 'utf8')) as {
+  name: string
+}
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

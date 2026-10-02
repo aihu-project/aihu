@@ -1,6 +1,6 @@
 @state {
   import { computed } from '@aihu/signals'
-  import { createPrefetcher, navigate, useRoute, type PrefetchMode } from '../src/index.ts'
+  import { createPrefetcher, isActiveRouteLink, navigate, shouldInterceptLinkClick, useRoute, type PrefetchMode } from '../src/index.ts'
 
   /**
    * `<a href prefetch replace>` — accessible SPA navigation link
@@ -21,10 +21,8 @@
 
   $action: {
     onClick: (e: MouseEvent): void => {
-      // Honour modifier keys and non-primary clicks
-      if (e.defaultPrevented) return
-      if (e.button !== 0) return
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      const anchor = e.currentTarget as HTMLAnchorElement
+      if (!shouldInterceptLinkClick(e, anchor)) return
       e.preventDefault()
       void navigate(href, { replace })
     },
@@ -34,7 +32,7 @@
 
   const ariaCurrent = computed(() =>
 
-  currentRoute() && currentRoute()!.pathname === href ? 'page' : null,
+  currentRoute() && isActiveRouteLink(href, currentRoute()!.pathname) ? 'page' : null,
 
   )
 
@@ -54,7 +52,7 @@
 }
 
 @template {
-  <a href={href} aria-current={ariaCurrent} on:click={onClick}>
+  <a href={href} aria-current={ariaCurrent} class:active={ariaCurrent === 'page'} on:click={onClick}>
     <slot />
   </a>
 }
