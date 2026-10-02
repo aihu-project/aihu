@@ -63,7 +63,7 @@ bun add @aihu/tsc
 
 **Dependencies:**
 
-- `@aihu/compiler` — `^1.3.2`
+- `@aihu/compiler` — `^1.3.5`
 - `@volar/typescript` — `2.4.28`
 - `@volar/language-core` — `2.4.28`
 
