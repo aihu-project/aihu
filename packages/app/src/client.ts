@@ -8,7 +8,12 @@ import { hydrate } from '@aihu/arbor/hydrate'
 declare const __DEV__: boolean
 
 import type { MatchResult, RouteContextValue, RouteDefinition, RouteHead } from '@aihu/router'
-import { bindRouteSignalWriter, createRouter, provideRouteContext } from '@aihu/router'
+import {
+  bindRouteSignalWriter,
+  createRouter,
+  provideRouteContext,
+  shouldInterceptLinkClick,
+} from '@aihu/router'
 import { _setHydrate, _setMount, _setSignal, _withOwnerContext } from '@aihu/runtime/app'
 // Pure subpath — NOT the @aihu/server barrel. The barrel reaches loader.ts +
 // the lazy native loader; importing it would risk dragging node:-bearing code
@@ -185,6 +190,12 @@ function registerComponents(tags: readonly string[] | undefined): Promise<unknow
 function stampParams(el: Element, params: Record<string, string> | undefined): void {
   for (const key in params) el.setAttribute(key, String(params[key]))
 }
+
+// One app owns the document's navigation listeners. A second createApp() on
+// the same document (dev HMR re-running the entry, or a test calling it again)
+// replaces the first app's listeners instead of stacking a stale handler that
+// prevents the click before the live app sees it.
+let activeAppListeners: AbortController | undefined
 
 export function createApp(config?: AppConfig): AppHandle {
   // Hoist provided values into globalThis before any component runs so that
@@ -498,27 +509,43 @@ export function createApp(config?: AppConfig): AppHandle {
   // Initial render
   renderNav(router.match(location.pathname))
 
+  activeAppListeners?.abort()
+  const listeners = new AbortController()
+  activeAppListeners = listeners
+
   // SPA click interception — handles <a> links within the app
-  document.addEventListener('click', (e) => {
-    // Resolve the anchor across shadow boundaries. A click inside a shadow root
-    // (e.g. a layout shell rendered with the default shadow mode) is retargeted
-    // at the host, so `e.target` is the host element and `closest('a')` misses
-    // the real <a>. `composedPath()` includes nodes inside shadow trees, ordered
-    // target→root, so the first anchor in it is the innermost one clicked.
-    const a = e.composedPath().find((n): n is HTMLAnchorElement => n instanceof HTMLAnchorElement)
-    if (!a) return
-    const href = a.getAttribute('href')
-    if (!href || href.startsWith('http') || href.startsWith('//') || href.startsWith('mailto:'))
-      return
-    e.preventDefault()
-    history.pushState({}, '', href)
-    renderNav(router.match(location.pathname))
-  })
+  document.addEventListener(
+    'click',
+    (e) => {
+      // Resolve the anchor across shadow boundaries. A click inside a shadow root
+      // (e.g. a layout shell rendered with the default shadow mode) is retargeted
+      // at the host, so `e.target` is the host element and `closest('a')` misses
+      // the real <a>. `composedPath()` includes nodes inside shadow trees, ordered
+      // target→root, so the first anchor in it is the innermost one clicked.
+      const a = e.composedPath().find((n): n is HTMLAnchorElement => n instanceof HTMLAnchorElement)
+      if (!a) return
+      const href = a.getAttribute('href')
+      if (!href) return
+      // The router's guard is the one policy for which clicks stay native:
+      // modified and non-primary clicks, `target`/`download` links, other
+      // origins and protocols, and same-page fragments. Re-deciding it here let
+      // a Ctrl/Cmd-click open in the current tab.
+      if (!shouldInterceptLinkClick(e, a)) return
+      e.preventDefault()
+      history.pushState({}, '', href)
+      renderNav(router.match(location.pathname))
+    },
+    { signal: listeners.signal },
+  )
 
   // Browser back/forward
-  window.addEventListener('popstate', () => {
-    renderNav(router.match(location.pathname))
-  })
+  window.addEventListener(
+    'popstate',
+    () => {
+      renderNav(router.match(location.pathname))
+    },
+    { signal: listeners.signal },
+  )
 
   return { setLayout }
 }
