@@ -286,6 +286,7 @@ async function discoverComponents(
   componentsDir: string,
   loadModule: SsrModuleLoader,
   pushWarn: (msg: string) => void,
+  allowedRoots: ReadonlySet<string>,
   listDir: ComponentDirLister = defaultComponentDirLister,
 ): Promise<DiscoverComponentsResult> {
   const abs = resolvePath(root, componentsDir)
@@ -306,13 +307,26 @@ async function discoverComponents(
     // not under Node. Every match here is about to be compiled AND EVALUATED by
     // Vite, so one symlink under the components dir would execute `.aihu`
     // modules from outside the project at build time. Resolve each path and
-    // keep only what really lives under the directory we were asked to scan.
+    // keep only what really lives under the directory we were asked to scan,
+    // OR under one of the other roots a workspace has explicitly vouched for:
+    // another configured `dir.components` entry, or a directory Vite itself
+    // already allows serving (`server.fs.allow`). `allowedRoots` is the union
+    // of those, pre-resolved by the caller — a symlink pointing at a sibling
+    // app's shared-components directory is exactly the case this exists for.
     const rootReal = await realpath(abs)
+    const roots = allowedRoots.has(rootReal) ? allowedRoots : new Set([...allowedRoots, rootReal])
     files = []
     for (const f of candidates) {
       try {
         const real = await realpath(f)
-        if (real === rootReal || real.startsWith(rootReal + sep)) files.push(f)
+        let contained = false
+        for (const allowedRoot of roots) {
+          if (real === allowedRoot || real.startsWith(allowedRoot + sep)) {
+            contained = true
+            break
+          }
+        }
+        if (contained) files.push(f)
         else {
           pushWarn(
             `[@aihu/app] static output: skipping "${f}" — it resolves to "${real}", ` +
@@ -534,6 +548,19 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
   const componentPaths = (Array.isArray(componentsDirs) ? componentsDirs : [componentsDirs])
     .map((dir) => resolvePath(root, dir))
     .sort()
+  // Roots a symlink under one components dir may legitimately resolve into:
+  // every OTHER configured components dir — so a workspace sharing components
+  // across apps via symlinks discovers and prerenders them (#909) instead of
+  // treating every cross-dir link as an escape — plus whatever Vite's dev
+  // server already allows serving (`server.fs.allow`, which defaults to the
+  // workspace root). A candidate that doesn't exist, or isn't real, drops out
+  // rather than failing the whole build.
+  const allowedRootCandidates = [...componentPaths, ...(resolvedViteConfig.server?.fs?.allow ?? [])]
+  const allowedRoots = new Set(
+    (await Promise.all(allowedRootCandidates.map((dir) => realpath(dir).catch(() => null)))).filter(
+      (r): r is string => r !== null,
+    ),
+  )
   const discovered = await Promise.all(
     componentPaths.map((componentsDir) =>
       discoverComponents(
@@ -541,6 +568,7 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
         componentsDir,
         loadModule,
         pushWarn,
+        allowedRoots,
         _listComponentDir ?? defaultComponentDirLister,
       ),
     ),
