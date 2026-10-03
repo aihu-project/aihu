@@ -1112,6 +1112,84 @@ describe('runPrerender — previously unguarded fixes', () => {
     expect(containment[0]).toMatch(/outside the components directory/)
   })
 
+  // §24 (#909): a symlink is not "outside the components directory" when it
+  // resolves into ANOTHER configured `dir.components` entry — the Everydom
+  // shape, where a shared-components directory is reused across apps via a
+  // symlink and BOTH the link's parent and its real target are configured.
+  // Previously this was indistinguishable from the §23 escape and was
+  // rejected, so the shared component rendered as an empty element.
+  it('§24: discovers a component symlinked in from another configured components directory', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'index.ts', { name: 'home' })
+    const componentsDirA = join(fx.root, 'src', 'components')
+    const componentsDirB = join(fx.root, 'shared', 'components')
+    await mkdir(componentsDirA, { recursive: true })
+    await mkdir(componentsDirB, { recursive: true })
+    await writeFile(join(componentsDirB, 'shared-widget.aihu'), '<div/>\n')
+    await symlink(componentsDirB, join(componentsDirA, 'linked'), 'dir')
+
+    const loaded: string[] = []
+    const loadModule: SsrModuleLoader = async (file) => {
+      const f = file.replace(/\\/g, '/')
+      if (f.endsWith('/index.ts')) return { default: { toHtml: () => '<p>home</p>' } }
+      loaded.push(f)
+      return { __aihu_tag__: f.slice(f.lastIndexOf('/') + 1).replace(/\.aihu$/, '') }
+    }
+
+    const result = await runPrerender({
+      resolvedViteConfig: fx.resolvedViteConfig,
+      config: {
+        output: 'static',
+        dir: { pages: 'pages', components: ['src/components', 'shared/components'] },
+      },
+      loadModule,
+      warn: fx.warn,
+      _listComponentDir: listDescendingSymlinks,
+    })
+
+    // Reached through the symlink inside A, not merely via B's own direct
+    // scan — proves the containment check let the symlinked path through.
+    expect(loaded.some((f) => f.endsWith('/src/components/linked/shared-widget.aihu'))).toBe(true)
+    // No "outside the components directory" warning for it.
+    expect(result.warnings.some((w) => w.includes('shared-widget.aihu'))).toBe(false)
+  })
+
+  // §25 (#909): the same relief applies when the symlink resolves into a
+  // directory Vite's dev server already allows serving (`server.fs.allow`),
+  // even when that directory isn't itself a configured `dir.components` entry.
+  it('§25: discovers a component symlinked into a server.fs.allow directory', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'index.ts', { name: 'home' })
+    const componentsDir = join(fx.root, 'src', 'components')
+    await mkdir(componentsDir, { recursive: true })
+    const allowedExternal = join(fx.root, 'allowed-external')
+    await mkdir(allowedExternal, { recursive: true })
+    await writeFile(join(allowedExternal, 'ok.aihu'), '<div/>\n')
+    await symlink(allowedExternal, join(componentsDir, 'linked'), 'dir')
+
+    const loaded: string[] = []
+    const loadModule: SsrModuleLoader = async (file) => {
+      const f = file.replace(/\\/g, '/')
+      if (f.endsWith('/index.ts')) return { default: { toHtml: () => '<p>home</p>' } }
+      loaded.push(f)
+      return { __aihu_tag__: f.slice(f.lastIndexOf('/') + 1).replace(/\.aihu$/, '') }
+    }
+
+    const result = await runPrerender({
+      resolvedViteConfig: {
+        ...fx.resolvedViteConfig,
+        server: { fs: { allow: [allowedExternal] } },
+      } as unknown as ResolvedConfig,
+      config: { output: 'static', dir: { pages: 'pages', components: 'src/components' } },
+      loadModule,
+      warn: fx.warn,
+      _listComponentDir: listDescendingSymlinks,
+    })
+
+    expect(loaded.some((f) => f.endsWith('/src/components/linked/ok.aihu'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('ok.aihu'))).toBe(false)
+  })
+
   // §17 tie-break determinism.
   //
   // `discoverComponents` fans out with `Promise.all` over a SORTED list and
