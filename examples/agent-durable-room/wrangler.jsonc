@@ -4,6 +4,8 @@
   "main": "src/worker.ts",
   // RPC methods on Durable Objects need >= 2024-04-03; WebSocket Hibernation is stable.
   "compatibility_date": "2025-06-01",
+  // Served at agent.aihu.dev (the apex and www are the aihu-docs-next Pages site).
+  "routes": [{ "pattern": "agent.aihu.dev", "custom_domain": true }],
   // Vite builds the aihu client into ./dist; Workers Static Assets serves it.
   // Non-asset routes (/ws, /agent/call, /agent/state) fall through to the Worker.
   "assets": { "directory": "./dist", "binding": "ASSETS" },
