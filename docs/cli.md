@@ -106,6 +106,30 @@ my-forms/
     index.ts      # definePlugin({ name, namespace, contributes: {} })
 ```
 
+### `aihu plugin install <name>`
+
+Apply an already-installed plugin's `install-manifest.json` — the declarative,
+per-plugin contract described in
+[`docs/specs/plugin-install-manifest.md`](specs/plugin-install-manifest.md).
+Resolves the plugin's `package.json` + `install-manifest.json` from
+`node_modules`, validates the plugin's `aihuVersion` range against the host
+project's `@aihu/plugin` version, prints the manifest's `summary`, and (after
+a confirmation prompt) registers it in `aihu.config.ts`, adds any declared
+routes and env vars, and installs any `additionalPackages`. Every step is
+idempotent — re-running the command converges rather than duplicating.
+
+```bash
+aihu plugin install @aihu/auth
+aihu plugin install @aihu/auth --yes   # skip the summary confirmation prompt
+```
+
+Distinct from `aihu plugin <name>` above (which scaffolds a **new** plugin
+package) and from `aihu add <names...>` (which copies `@aihu/ui` registry
+recipes) — see the command's own doc comment
+(`packages/cli/src/commands/plugin-install.ts`) for why those verbs could not
+be reused. A plugin with no `install-manifest.json` is not an error: the
+command prints a manual-install pointer and exits 0.
+
 ### `aihu migrate [files...]`
 
 Mechanically rewrite legacy v0.1.x SFC syntax to the v1.0 canonical forms. The

@@ -8,6 +8,24 @@ Part of the **agent surface** layer of Aihu. Every Aihu component exposes its ag
 
 <!-- BEGIN_HANDWRITTEN: prose -->
 _(Hand-written prose lives in this block. Replace this placeholder; everything below is auto-generated.)_
+
+### Agentic Resource Discovery — `Agentmap:` (robots.txt)
+
+`RobotsConfig.agentMap` (and the mirrored `AgentReadinessConfig.agentMap` on
+`@aihu/server`'s config) emits an `Agentmap: <url>` line in `robots.txt`,
+immediately after `Sitemap:` — the
+[ARD](https://agenticresourcediscovery.org/spec) v0.9 draft's directive
+pointing at a site's `/.well-known/ai-catalog.json`. The URL must be an
+absolute `http(s)://` URL with no embedded CR/LF; it is emitted verbatim and
+this package does not generate the catalog document itself.
+
+```ts
+createAgentReadinessRoutes({
+  name: 'My App',
+  sitemap: 'https://example.com/sitemap.xml',
+  agentMap: 'https://example.com/.well-known/ai-catalog.json',
+})
+```
 <!-- END_HANDWRITTEN: prose -->
 
 ## Install
