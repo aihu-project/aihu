@@ -51,7 +51,9 @@ await serveComponentMcp(server)
 ## WS capability-bridge contract (server side — for the browser-bridge client, T3)
 
 The browser-bridge client (a separate task) implements against the message
-shapes in [`src/types.ts`](./src/types.ts). `BRIDGE_PROTOCOL_VERSION = 1`.
+shapes in [`src/types.ts`](./src/types.ts). `BRIDGE_PROTOCOL_VERSION = 2`. A
+channel whose `hello.protocol` does not match this constant is refused (503
+`BRIDGE_UNVERIFIED`) before any invocation is delegated to it.
 
 **Server → client**
 
@@ -67,7 +69,12 @@ string).
 **Client → server**
 
 ```ts
-{ type: 'hello',    protocol: number }                      // handshake on connect
+// handshake on connect — v2 adds the four session-binding fields below
+{
+  type: 'hello', protocol: number,
+  sessionToken?: string, sessionIdentity?: string,
+  nonce?: string, grantVersion?: string,
+}
 { type: 'result',   callId: string, result: unknown }       // visible instance's return
 { type: 'error',    callId: string, message: string }       // exec failed → surfaced to agent
 { type: 'snapshot', callId?: string, snapshot: Snapshot }   // serialize() state stream
@@ -76,6 +83,44 @@ string).
 The transport is abstracted behind `BridgeChannel` (`send` / `onMessage` /
 `onClose` / `connected`) so a real deployment passes a `ws` `WebSocket` and tests
 pass an in-memory channel. The server never imports `ws`.
+
+### Session binding, revocation, and admission limits
+
+Protocol v2's `hello` carries `nonce`, `sessionToken`, `sessionIdentity`, and a
+verified `grantVersion`. The host supplies two verifiers passed to
+`createAgentServer`: `verifyBridgeSession(token)` (checked on `hello`) and
+`reauthorizeBridgeInvoke(binding)` (re-checked before every invocation); both
+return `{ identity, grantVersion? }` or reject the attempt. A rejected or
+revoked session never gets its action outcome confirmed: once an invoke frame
+has been sent, a disconnect, timeout, bridge error, protocol error, or
+revocation returns `503 BRIDGE_RESULT_WITHHELD` and the caller must treat the
+action as unknown, not as not-run.
+
+Revoke a bridge session with `server.revokeBridgeSession(identity)` (all
+grants for that identity) or `server.revokeBridgeSession(identity, {
+grantVersion })` (one exact grant). Revocation records are retained for
+`bridgeRevocationTtlMs` (default 24 hours) and capped at
+`bridgeRevocationMaxEntries` (default 10,000); once full, new handshakes fail
+with `BRIDGE_REVOCATION_STORE_FULL` until retained entries expire, while
+already-verified unrevoked sessions keep working.
+
+Bridge concurrency is bounded by `AgentServerOptions` at two levels: per
+attachment (`maxPendingBridgeCalls`, default 64) and server-wide
+(`maxPendingBridgeCallsTotal`, default 1024; `maxInFlightBridgeCalls`, default
+1024; `maxInFlightBridgeCallsPerTenant`, default 64 per verified actor
+organization, with calls lacking a verified actor sharing one bucket). Excess
+calls return `503 BRIDGE_OVERLOADED` before a bridge timer or invoke frame is
+created. `securityHookTimeoutMs` (default 5000ms) and `bridgeCallTimeoutMs`
+(default 5000ms) bound the injected security hooks and the bridge invocation
+reply respectively. `projectionLimits` (`CapabilityProjectionLimits`, default
+depth 32 / 10,000 total nodes) bounds projected bridge read results —
+oversized or non-JSON-safe values (functions, symbols, bigints, cycles,
+non-plain objects, accessors) fail closed as `CAPABILITY_UNAVAILABLE`.
+
+See [`src/types.ts`](./src/types.ts)'s `AgentServerOptions` for every knob's
+full doc comment, and `@aihu/agent-service`'s `actorResolver` /
+`authorizeDataRead` for the host hooks that resolve a tenant actor and
+authorize a state read.
 
 ### Guarantees
 
