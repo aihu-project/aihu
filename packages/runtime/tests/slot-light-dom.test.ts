@@ -25,7 +25,7 @@
 
 import { branch, leaf, mount, slot } from '@aihu/arbor'
 import { describe, expect, it } from 'vitest'
-import { _setMount, defineComponent } from '../src/define-component.ts'
+import { _projectLightDomSlot, _setMount, defineComponent } from '../src/define-component.ts'
 import { defineElement } from '../src/define-element.ts'
 
 _setMount(mount)
@@ -356,6 +356,55 @@ describe('LDF §10 step 4 — data-aihu-slotted marker on projected nodes', () =
 
     const h1 = host.querySelector('h1') as HTMLElement
     expect(h1.hasAttribute('data-aihu-slotted')).toBe(false)
+
+    host.remove()
+  })
+})
+
+describe('_projectLightDomSlot export (aihu-runtime#4 — top-level hydrate path)', () => {
+  // These drive the exported primitive directly, standalone from
+  // `connectedCallback`, mirroring the carve-before/build-or-adopt/
+  // reinsert-after sequencing that `@aihu/arbor`'s top-level `hydrate()` walk
+  // (a different package, outside this repo) would need to replicate to
+  // close the page-level hydration gap described in aihu-runtime#4.
+
+  it('projects carved children into a <slot> built by a later step, same as the connectedCallback path', () => {
+    const host = document.createElement('div')
+    host.innerHTML = '<h1>Waves</h1><p>p</p>'
+    document.body.appendChild(host)
+
+    // Carve BEFORE the new subtree is built/adopted onto the host.
+    const carved = Array.from(host.childNodes)
+    host.replaceChildren()
+
+    // Simulate the SSR/hydrate-produced subtree landing on the host.
+    const nav = document.createElement('nav')
+    const layout = document.createElement('div')
+    layout.className = 'layout'
+    layout.appendChild(nav)
+    layout.appendChild(document.createElement('slot'))
+    host.appendChild(layout)
+
+    // Reinsert AFTER, exactly as the two connectedCallback call sites do.
+    _projectLightDomSlot(host, carved)
+
+    expect([...layout.children].map((c) => c.tagName)).toEqual(['NAV', 'H1', 'P'])
+    expect(layout.querySelector('slot')).toBeNull()
+
+    host.remove()
+  })
+
+  it('is a no-op when there are no carved children', () => {
+    const host = document.createElement('div')
+    const layout = document.createElement('div')
+    layout.appendChild(document.createElement('slot'))
+    host.appendChild(layout)
+    document.body.appendChild(host)
+
+    _projectLightDomSlot(host, [])
+
+    // Untouched — an empty carve list returns before touching the DOM.
+    expect(layout.querySelector('slot')).not.toBeNull()
 
     host.remove()
   })
