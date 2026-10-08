@@ -1112,6 +1112,52 @@ describe('runPrerender — previously unguarded fixes', () => {
     expect(containment[0]).toMatch(/outside the components directory/)
   })
 
+  // #909: a symlink that resolves INSIDE another configured `dir.components`
+  // entry is a deliberate cross-reference between two dirs the same project
+  // already configured (not an escape) and must be followed, not refused —
+  // the opposite outcome from §23 above, which is the escape case.
+  it('#909: follows a symlink that resolves inside another configured components dir', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'index.ts', { name: 'home' })
+    const componentsDir = join(fx.root, 'src', 'components')
+    await mkdir(componentsDir, { recursive: true })
+    await writeFile(join(componentsDir, 'in-tree.aihu'), '<div/>\n')
+    // A SECOND configured components dir, elsewhere in the project — linked
+    // in from inside the first, the way a workspace shares components across
+    // packages (e.g. `packages/ui/src/components` linked into an app's tree).
+    const shared = join(fx.root, 'shared-components')
+    await mkdir(shared, { recursive: true })
+    await writeFile(join(shared, 'shared.aihu'), '<div/>\n')
+    await symlink(shared, join(componentsDir, 'linked'), 'dir')
+
+    const loaded: string[] = []
+    const loadModule: SsrModuleLoader = async (file) => {
+      const f = file.replace(/\\/g, '/')
+      if (f.endsWith('/index.ts')) return { default: { toHtml: () => '<p>home</p>' } }
+      loaded.push(f)
+      return { __aihu_tag__: f.slice(f.lastIndexOf('/') + 1).replace(/\.aihu$/, '') }
+    }
+
+    const result = await runPrerender({
+      resolvedViteConfig: fx.resolvedViteConfig,
+      config: {
+        output: 'static',
+        dir: { pages: 'pages', components: ['src/components', 'shared-components'] },
+      },
+      loadModule,
+      warn: fx.warn,
+      _listComponentDir: listDescendingSymlinks,
+    })
+
+    // Both the in-tree sibling and the linked-but-configured module loaded —
+    // no "outside the components directory" warning for either.
+    expect(loaded.some((f) => f.endsWith('/in-tree.aihu'))).toBe(true)
+    expect(loaded.some((f) => f.endsWith('shared.aihu'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('outside the components directory'))).toBe(
+      false,
+    )
+  })
+
   // §17 tie-break determinism.
   //
   // `discoverComponents` fans out with `Promise.all` over a SORTED list and
