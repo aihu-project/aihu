@@ -1153,9 +1153,7 @@ describe('runPrerender — previously unguarded fixes', () => {
     // no "outside the components directory" warning for either.
     expect(loaded.some((f) => f.endsWith('/in-tree.aihu'))).toBe(true)
     expect(loaded.some((f) => f.endsWith('shared.aihu'))).toBe(true)
-    expect(result.warnings.some((w) => w.includes('outside the components directory'))).toBe(
-      false,
-    )
+    expect(result.warnings.some((w) => w.includes('outside the components directory'))).toBe(false)
   })
 
   // §17 tie-break determinism.
