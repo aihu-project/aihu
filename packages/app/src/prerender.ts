@@ -287,6 +287,13 @@ async function discoverComponents(
   loadModule: SsrModuleLoader,
   pushWarn: (msg: string) => void,
   listDir: ComponentDirLister = defaultComponentDirLister,
+  // Real paths of every OTHER configured `dir.components` entry (plural config
+  // is #901). A symlink under this dir that resolves inside one of these is a
+  // deliberate cross-reference between two component dirs in the SAME project
+  // — not an escape — so it must not be excluded here only to be re-included
+  // (or not) depending on scan order. Includes this dir's own real path too;
+  // harmless, since that is already checked separately below.
+  siblingRoots: readonly string[] = [],
 ): Promise<DiscoverComponentsResult> {
   const abs = resolvePath(root, componentsDir)
   let files: string[]
@@ -306,13 +313,16 @@ async function discoverComponents(
     // not under Node. Every match here is about to be compiled AND EVALUATED by
     // Vite, so one symlink under the components dir would execute `.aihu`
     // modules from outside the project at build time. Resolve each path and
-    // keep only what really lives under the directory we were asked to scan.
+    // keep only what really lives under the directory we were asked to scan,
+    // or under another directory this same project already configured as a
+    // components dir — see `siblingRoots` above.
     const rootReal = await realpath(abs)
+    const allowedRoots = [rootReal, ...siblingRoots]
     files = []
     for (const f of candidates) {
       try {
         const real = await realpath(f)
-        if (real === rootReal || real.startsWith(rootReal + sep)) files.push(f)
+        if (allowedRoots.some((r) => real === r || real.startsWith(r + sep))) files.push(f)
         else {
           pushWarn(
             `[@aihu/app] static output: skipping "${f}" — it resolves to "${real}", ` +
@@ -534,6 +544,15 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
   const componentPaths = (Array.isArray(componentsDirs) ? componentsDirs : [componentsDirs])
     .map((dir) => resolvePath(root, dir))
     .sort()
+  // Real paths of every configured `dir.components` entry. A symlink under one
+  // that resolves inside ANOTHER is a cross-reference between two dirs the
+  // SAME project already configured (#901 made `dir.components` an array for
+  // exactly this), not an escape — see `discoverComponents`'s `siblingRoots`.
+  // A dir that doesn't exist yet is dropped rather than failing the build;
+  // `discoverComponents` already treats a missing dir as "no components".
+  const siblingRoots = (
+    await Promise.all(componentPaths.map((p) => realpath(p).catch(() => null)))
+  ).filter((r): r is string => r !== null)
   const discovered = await Promise.all(
     componentPaths.map((componentsDir) =>
       discoverComponents(
@@ -542,6 +561,7 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
         loadModule,
         pushWarn,
         _listComponentDir ?? defaultComponentDirLister,
+        siblingRoots,
       ),
     ),
   )
