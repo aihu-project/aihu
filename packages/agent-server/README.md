@@ -177,7 +177,7 @@ bun add @aihu/agent-server
 
 **Peer dependencies:**
 
-- `@aihu/arbor` — `^4.1.2`
+- `@aihu/arbor` — `^4.2.0`
 
 <sub><i>Auto-generated against `@aihu/agent-server@0.5.0`.</i></sub>
 

@@ -41,8 +41,8 @@ describe('conformance — pinned package versions and API surface', () => {
       '@modelcontextprotocol/sdk': '^1.0.0',
       jsdom: '^25.0.0',
     })
-    expect(agentServerPackageJson.peerDependencies['@aihu/arbor']).toBe('^4.1.2')
-    expect(agentServerPackageJson.devDependencies['@aihu/arbor']).toBe('^4.1.2')
+    expect(agentServerPackageJson.peerDependencies['@aihu/arbor']).toBe('^4.2.0')
+    expect(agentServerPackageJson.devDependencies['@aihu/arbor']).toBe('^4.2.0')
   })
 
   it('the exported value surface matches the documented allowlist exactly', () => {
