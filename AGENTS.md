@@ -29,14 +29,31 @@ bun run bench                # benchmark suite (cellx, dynamic-deps, etc.)
   `aihu-project/aihu-dom` repository — same relationship as the compiler
   above. Neither lives under `packages/` anymore; this repo consumes them
   as published dependencies.
+- **2026-10-02 consolidation:** 18 of the 23 packages previously extracted
+  to standalone satellite repos were archived (read-only) that day and
+  folded back into this repo — their `packages/*` here are the live source
+  again, not a reference copy, and no further extraction work should be
+  routed to `aihu-agent`, `aihu-app`, `aihu-ai`, `aihu-css`, `aihu-editor`,
+  `aihu-language`, `aihu-mcp`, `aihu-plugin`, `aihu-plugin-data`,
+  `aihu-plugin-drizzle`, `aihu-plugin-kindly-note`, `aihu-primitives`,
+  `aihu-router`, `aihu-seo`, `aihu-server`, `aihu-store`, `aihu-ui`, or
+  `aihu-use` (archived repos reject new issues/PRs). Only
+  **`aihu-compiler`, `aihu-dom`, `aihu-context`, `aihu-runtime`, and
+  `aihu-scraping`** remain independently released satellites — see
+  issue #809 and the weekly version-alignment issues (e.g. #927) for the
+  current, re-verified state; `docs/TOPOLOGY.md` predates this change and
+  should not be trusted over the above without checking issue history.
 - Workspace packages under `packages/` (non-exhaustive — 30+ packages live
-  here, several already published by standalone satellite repos during an
-  in-progress extraction, see `docs/TOPOLOGY.md` and issue #809):
-  - `@aihu/runtime` — runtime layer
+  here):
+  - `@aihu/runtime` — runtime layer. **Caution:** the still-independent
+    `aihu-runtime` satellite can get ahead of this in-tree copy (flagged
+    stale by #927 as of 2026-10-07) — diff against it before assuming this
+    copy is canonical.
   - `@aihu/tsc` / `@aihu/language-server` — type-checking (`aihu-tsc`) and
-    editor support for `.aihu` files
+    editor support for `.aihu` files (folded back from `aihu-language`,
+    archived 2026-10-02)
   - `@aihu/agent` + `@aihu-plugin/agent-readiness` — agent/MCP compliance
-    helpers
+    helpers (folded back from `aihu-agent`, archived 2026-10-02)
 
 ## Conventions
 
