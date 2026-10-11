@@ -110,8 +110,8 @@ export const config = {
   // SDKs this repo does not publish.
   appPeerDeps: {
     '@aihu/runtime': '^6.1.1',
-    '@aihu/arbor': '^4.1.2',
-    '@aihu/signals': '^0.5.1',
+    '@aihu/arbor': '^4.2.0',
+    '@aihu/signals': '^0.5.2',
     '@aihu/router': '^0.5.4',
     '@aihu/server': '^0.6.2',
     '@aihu/adapter-cloudflare': '^15.0.3',

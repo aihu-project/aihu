@@ -21,10 +21,13 @@ export {
 export {
   _hmrReplace,
   _onAdopt as onAdopt,
+  _onAfterRender as onAfterRender,
   _onAttributeChange as onAttributeChange,
   _onCleanup as onCleanup,
   _onCommit as onCommit,
   _onMount as onMount,
+  // @internal — reused by `@aihu/arbor`'s top-level hydrate walk (aihu-runtime#4)
+  _projectLightDomSlot,
   _setHydrate,
   _setMount,
   _setSignal,

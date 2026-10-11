@@ -44,6 +44,7 @@ type HydrateFn = (
   component: () => ReturnType<Setup>,
   host: Element | ShadowRoot,
   snapshot: Record<string, unknown>,
+  options?: Parameters<MountFn>[2],
 ) => ReturnType<MountFn>
 
 let _mount: MountFn | null = null
@@ -108,10 +109,16 @@ function _adoptSsrTemplate(
   el: HTMLElement,
   tree: ReturnType<Setup>,
   container: Element | ShadowRoot,
+  lc: _LC,
 ): _ScopeRef {
   const state = (globalThis as { __aihu_state__?: Record<string, unknown> }).__aihu_state__
   const snapshot = (state?.[el.tagName.toLowerCase()] as Record<string, unknown> | undefined) ?? {}
-  const inner = _hydrate!(() => tree, container, snapshot)
+  const inner = _hydrate!(() => tree, container, snapshot, {
+    ...(container === el
+      ? { projectLightDomSlot: (_host, children) => _projectLightDomSlot(el, children) }
+      : {}),
+    onAfterRender: () => _runAfterRenders(el, lc),
+  })
   return {
     dispose(): void {
       inner.dispose()
@@ -170,6 +177,7 @@ interface _LC {
   m: Array<() => void | (() => void)>
   a: Array<() => void>
   ac: Array<(name: string, oldValue: string | null, newValue: string | null) => void>
+  r: Array<() => void>
 }
 let _cur: _LC | null = null
 
@@ -201,6 +209,12 @@ function _runMounts(lc: _LC): void {
     const r = fn()
     if (r) onScopeDispose(r as () => void)
   }
+}
+
+/** A disposer called by one callback must not skip its registered siblings. */
+function _runAfterRenders(el: HTMLElement, lc: _LC): void {
+  if (!_componentScopes.get(el)?.active) return
+  for (const fn of [...lc.r]) if (lc.r.includes(fn)) fn()
 }
 
 function _runAdopts(lc: _LC): void {
@@ -457,7 +471,19 @@ function _markSlotted(c: ChildNode): void {
   if (c.nodeType === 1 /* ELEMENT_NODE */) (c as Element).setAttribute('data-aihu-slotted', '')
 }
 
-function _projectLightDomSlot(host: HTMLElement, children: ChildNode[]): void {
+/**
+ * Carve-and-reinsert primitive for Bug D light-DOM `<slot>` projection.
+ * Exported (not just called internally, from `connectedCallback` above) so
+ * `@aihu/arbor`'s top-level `hydrate()` walk (`packages/arbor/src/hydrate.ts`
+ * in the `aihu-dom` repo) can reuse the exact same routing logic for the
+ * page-level hydrate path, which does not go through a component's own
+ * `connectedCallback` and today has no slot-projection handling at all — see
+ * aihu-runtime#4. Callers own the carve-before-build/adopt sequencing
+ * themselves: capture the host's original children BEFORE the new subtree is
+ * built or adopted onto it, then call this AFTER, exactly as the two call
+ * sites below do.
+ */
+export function _projectLightDomSlot(host: HTMLElement, children: ChildNode[]): void {
   if (children.length === 0) return
   const slots = Array.from(host.querySelectorAll('slot'))
   if (slots.length === 0) {
@@ -526,7 +552,7 @@ export function defineComponent(setupOrOptions: Setup | ComponentOptions): typeo
        * tree without calling _mount. Called by define-element's hydration
        * branch via the `_build?()` check. */
       _build(): ReturnType<Setup> {
-        const lc: _LC = { m: [], a: [], ac: [] }
+        const lc: _LC = { m: [], a: [], ac: [], r: [] }
         this[LC_SYM] = lc
         const host = this.shadowRoot ?? this
         // Component root scope — DETACHED (effect-scope plan §2). Element↔
@@ -608,6 +634,19 @@ export function defineComponent(setupOrOptions: Setup | ComponentOptions): typeo
             // after them) and reinsert at the <slot> position after mount.
             // Shadow-DOM path is untouched (`host !== this`). A marked host is
             // exempt: its children are the server template, not slot content.
+            //
+            // That exemption is safe today for a reason narrower than "usually
+            // true": `__aihu_schild` (ssr-string.ts) is the SINGLE place a
+            // resolved child is serialized — shared by the compiled string
+            // renderer and `@aihu/server`'s own tree walker — and its SCOPE (v1)
+            // contract only emits a child call (and therefore only stamps
+            // ADOPT_ATTR) for a reference site with NO children. A reference
+            // that carries slot content always falls back to the bare, unmarked
+            // element instead, so a host can never arrive here BOTH marked and
+            // carrying external slot content — it is unreachable, not just
+            // unlikely (issue #2 / aihu#477 audit). If child SSR ever grows
+            // prop/slot forwarding at the reference site, this exemption must be
+            // revisited alongside it.
             const isLightDom = isReal && this.shadowRoot === null
             const lightDomChildren: ChildNode[] | null =
               isLightDom && !ssrTemplate ? Array.from(this.childNodes) : null
@@ -631,7 +670,7 @@ export function defineComponent(setupOrOptions: Setup | ComponentOptions): typeo
               // Adopt: wire effects onto the server's DOM instead of rebuilding.
               // Everything after this branch is byte-identical to the mount
               // path, so onMount, scope registration and teardown are shared.
-              scope = _adoptSsrTemplate(this, tree!, host)
+              scope = _adoptSsrTemplate(this, tree!, host, lc)
             } else {
               // Marked but unadoptable (shadow mode with an EMPTY root — the
               // server emitted the tree as light children with no declarative
@@ -650,7 +689,10 @@ export function defineComponent(setupOrOptions: Setup | ComponentOptions): typeo
                 this.replaceChildren()
                 if (host !== this) host.replaceChildren()
               }
-              scope = ab ? _mount(tree!, host, { agentBinding: ab }) : _mount(tree!, host)
+              scope = _mount(tree!, host, {
+                ...(ab ? { agentBinding: ab } : {}),
+                onAfterRender: () => _runAfterRenders(this, lc),
+              })
             }
             this[S] = scope
             _scopes.set(this, scope)
@@ -923,7 +965,7 @@ export function defineComponent(setupOrOptions: Setup | ComponentOptions): typeo
       // themselves) and we don't replay a stale pre-connect value.
       this[PENDING_SYM] = undefined
 
-      const lc: _LC = { m: [], a: [], ac: [] }
+      const lc: _LC = { m: [], a: [], ac: [], r: [] }
       this[LC_SYM] = lc
       const host = this.shadowRoot ?? this
       // Component root scope — DETACHED; es.run wraps ONLY the setup call
@@ -1013,13 +1055,16 @@ export function defineComponent(setupOrOptions: Setup | ComponentOptions): typeo
           const adoptable = isLightDom || _hasDeclarativeShadowTemplate(this)
           let scope: _ScopeRef
           if (ssrTemplate && adoptable && _hydrate !== null && !ab) {
-            scope = _adoptSsrTemplate(this, tree!, host)
+            scope = _adoptSsrTemplate(this, tree!, host, lc)
           } else {
             if (ssrTemplate) {
               this.replaceChildren()
               if (host !== this) host.replaceChildren()
             }
-            scope = ab ? _mount(tree!, host, { agentBinding: ab }) : _mount(tree!, host)
+            scope = _mount(tree!, host, {
+              ...(ab ? { agentBinding: ab } : {}),
+              onAfterRender: () => _runAfterRenders(this, lc),
+            })
           }
           this[S] = scope
           _scopes.set(this, scope)
@@ -1233,7 +1278,7 @@ export function _hmrReplace(element: HTMLElement, newSetup: Setup): void {
   // replacement scope too, so `ctx.connected`/`onCommit` keep working
   // across an HMR replace exactly as they do across a real reconnect.
   const connected = _installLifecycle(element, es)
-  const lc: _LC = { m: [], a: [], ac: [] }
+  const lc: _LC = { m: [], a: [], ac: [], r: [] }
   ;(element as unknown as Record<symbol, unknown>)[LC_SYM] = lc
   try {
     _cur = lc
@@ -1325,6 +1370,26 @@ export function _onCommit(fn: () => void | (() => void)): void {
   const host = getLifecycleHost()
   if (host === undefined) throw new RuntimeError('SCR-R0014', 'no owner')
   host.onCommit(fn)
+}
+
+/** Register a callback after every Arbor DOM patch in this component. */
+export function _onAfterRender(fn: () => void): () => void {
+  if (!_cur) {
+    if (_inSsrLifecycle()) return () => {}
+    throw new RuntimeError('SCR-R0010', 'no owner')
+  }
+  const callbacks = _cur.r
+  const entry = (): void => fn()
+  callbacks.push(entry)
+  let active = true
+  const dispose = (): void => {
+    if (!active) return
+    active = false
+    const index = callbacks.indexOf(entry)
+    if (index !== -1) callbacks.splice(index, 1)
+  }
+  onScopeDispose(dispose)
+  return dispose
 }
 
 // Unified into the component scope (effect-scope plan §2): onCleanup routes

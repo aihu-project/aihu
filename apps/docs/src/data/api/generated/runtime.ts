@@ -31,6 +31,12 @@ export const EXPORTS: readonly ApiExport[] = [
     summary: 'Is a server render currently running setup on this thread?',
   },
   {
+    name: '_projectLightDomSlot',
+    kind: 'function',
+    signature: 'function _projectLightDomSlot(host: HTMLElement, children: ChildNode[]): void',
+    summary: 'Carve-and-reinsert primitive for Bug D light-DOM `<slot>` projection.',
+  },
+  {
     name: '_registerAgentDispatcher',
     kind: 'function',
     signature:
@@ -136,6 +142,12 @@ export const EXPORTS: readonly ApiExport[] = [
     kind: 'function',
     signature: 'function _onAdopt(fn: () => void): void',
     summary: '',
+  },
+  {
+    name: 'onAfterRender',
+    kind: 'function',
+    signature: 'function _onAfterRender(fn: () => void): () => void',
+    summary: 'Register a callback after every Arbor DOM patch in this component.',
   },
   {
     name: 'onAttributeChange',
