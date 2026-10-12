@@ -65,8 +65,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "vscode:prepublish": "tsc -p tsconfig.json",
-    "build:vsix": "vsce package",
-    "vsce:package": "vsce package",
+    "build:vsix": "bun run scripts/package-vsix.ts",
+    "vsce:package": "bun run scripts/package-vsix.ts",
     "vsce:publish": "vsce publish"
   },
   "dependencies": {
