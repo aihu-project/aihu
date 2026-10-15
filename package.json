@@ -129,6 +129,7 @@
     "@aihu/reactive": "^0.2.1"
   },
   "overrides": {
-    "shell-quote": "1.8.4"
+    "shell-quote": "1.8.4",
+    "proxy-addr": "2.0.8"
   }
 }
