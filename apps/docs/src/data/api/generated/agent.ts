@@ -12,6 +12,15 @@ export const PKG: ApiPackage = {
 
 export const EXPORTS: readonly ApiExport[] = [
   {
+    name: 'deriveActionInputSchema',
+    kind: 'function',
+    signature:
+      "function deriveActionInputSchema( action: Pick<ActionSchema, 'params'> | undefined, actionName: string, ): McpToolInputSchema",
+    summary:
+      "Derive the MCP `inputSchema` for an action (DE5): the real parameter names and types when the compiler could model the handler signature (`params` present), else the legacy positional `args: { type: 'array' }` fallback.",
+    agent: true,
+  },
+  {
     name: 'getAgentMetadata',
     kind: 'function',
     signature: 'function getAgentMetadata(tag: string): AgentMetadata | undefined',
@@ -79,6 +88,14 @@ export const EXPORTS: readonly ApiExport[] = [
     signature:
       "interface InputSchema {\n  type: 'string' | 'number' | 'boolean' | 'enum'\n  values?: string[]\n  default?: string\n}",
     summary: 'Schema for a single input field exposed by a component or action return.',
+    agent: true,
+  },
+  {
+    name: 'McpToolInputSchema',
+    kind: 'interface',
+    signature:
+      "interface McpToolInputSchema {\n  readonly type: 'object'\n  readonly properties: Record<string, unknown>\n  readonly required?: string[]\n  readonly [key: string]: unknown\n}",
+    summary: 'The MCP wire-protocol `inputSchema` shape (a JSON-Schema object fragment).',
     agent: true,
   },
 ]
