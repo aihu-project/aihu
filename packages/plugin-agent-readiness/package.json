@@ -27,6 +27,10 @@
     "@aihu/server": "workspace:*",
     "@aihu/agent": "workspace:*"
   },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "robots-parser": "^3.0.1"
+  },
   "description": "Discovery + readiness manifest emitter so agents can introspect aihu apps.",
   "repository": {
     "type": "git",

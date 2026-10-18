@@ -3,10 +3,16 @@ import { generateMcpServerCard } from '../../src/mcp-server-card.ts'
 
 const base = { name: 'Test', version: '1.0.0', endpoint: 'https://test.example.com/mcp' }
 
-// This suite validates aihu's OWN documented server-card shape. It intentionally
-// does NOT claim conformance to any MCP spec: as of revision 2025-11-25 no
-// `/.well-known/mcp` server-card is standardized — SEP-1649 is closed and
-// SEP-2127 moved to the Extensions Track. See mcp-server-card.ts header.
+// Layer: L0 (self-referential) for the CARD WRAPPER itself ($schema, version,
+// transport, …) — it validates aihu's OWN documented server-card shape, and
+// intentionally does NOT claim conformance to any MCP spec: as of revision
+// 2025-11-25 no `/.well-known/mcp` server-card is standardized — SEP-1649 is
+// closed and SEP-2127 moved to the Extensions Track. See mcp-server-card.ts
+// header. The `tools[]` ENTRIES, however, ARE a standardized MCP wire shape
+// (the real `Tool` a client receives from `tools/list`) — those get a real
+// L1 external-oracle check (the SDK's own `ToolSchema`) in
+// mcp-server-card.test.ts's `L1 — tools[] entries validate against the real
+// MCP ToolSchema` block, not here.
 describe('MCP Server Card — documented aihu shape', () => {
   it('$schema is the exact required string', () => {
     expect(generateMcpServerCard(base).$schema).toBe(

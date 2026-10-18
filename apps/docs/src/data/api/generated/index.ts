@@ -93,9 +93,9 @@ export const PACKAGES: readonly ApiPackageMeta[] = [
     version: '0.2.0',
     tagline: 'Agent primitives — the foundation of aihu agent-readiness.',
     note: '',
-    exportCount: 9,
-    valueCount: 3,
-    typeCount: 6,
+    exportCount: 11,
+    valueCount: 4,
+    typeCount: 7,
     agent: true,
   },
   {

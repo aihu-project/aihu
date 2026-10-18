@@ -1,3 +1,9 @@
+// Layer: L0 (self-referential) — asserts our own generator against rules
+// transcribed from llmstxt.org, not against that spec's own reference parser.
+// No external oracle yet (docs/plans/2026-07-26-agent-readiness-external-
+// parity.md §4/§7 step 8 — llms.txt L2 round-trip via Answer.AI's `llms_txt`
+// reference parser is scheduled, not landed: it is a Python dependency in
+// the test path, a real cost the plan says to schedule rather than gate on).
 import { describe, expect, it } from 'vitest'
 import { generateLlmsFullTxt, generateLlmsTxt } from '../../src/llms-txt.ts'
 

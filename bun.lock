@@ -716,6 +716,10 @@
         "@aihu/agent": "workspace:*",
         "@aihu/server": "workspace:*",
       },
+      "devDependencies": {
+        "@modelcontextprotocol/sdk": "^1.29.0",
+        "robots-parser": "^3.0.1",
+      },
     },
     "packages/plugin-data": {
       "name": "@aihu-plugin/data",

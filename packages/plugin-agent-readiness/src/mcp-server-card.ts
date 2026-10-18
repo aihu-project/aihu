@@ -12,16 +12,22 @@
  * protocolVersion default: 2025-06-18.
  */
 
-import type { AgentMetadata } from '@aihu/agent'
-import { getAllAgentMetadata } from '@aihu/agent'
+import type { ActionParamsSchema, AgentMetadata } from '@aihu/agent'
+import { deriveActionInputSchema, getAllAgentMetadata } from '@aihu/agent'
 import { deriveReadPolicy, extractReadValue, isCallAdvertised } from '@aihu/server'
 import type { McpAuthConfig } from './types.ts'
 
 /** Minimal shape used for skill generation. Structurally compatible with @aihu/agent AgentMetadata. */
 interface AgentMetadataLike {
   readonly tag: string
-  readonly actions?: Record<string, { describe?: string } | undefined>
+  readonly actions?: Record<string, { describe?: string; params?: ActionParamsSchema } | undefined>
 }
+
+/** Fallback for a hand-declared `AgentSkill` with no `inputSchema` of its own
+ * (the registry-derived path always supplies one via `deriveActionInputSchema`).
+ * Matches the real MCP `Tool.inputSchema` shape — `{ type: 'object' }` alone is
+ * already valid JSON-Schema (no properties required). */
+const EMPTY_INPUT_SCHEMA: Record<string, unknown> = { type: 'object', properties: {} }
 
 export interface AgentSkill {
   readonly id: string
@@ -55,6 +61,9 @@ export interface McpServerCard {
   readonly tools?: ReadonlyArray<{
     readonly name: string
     readonly description: string
+    /** Real MCP wire-protocol field (`Tool.inputSchema`) — required by the
+     * SDK's `ToolSchema`, not optional on the wire. */
+    readonly inputSchema: Record<string, unknown>
   }>
   readonly auth?: {
     readonly type: 'oauth2'
@@ -119,7 +128,11 @@ export function generateMcpServerCard(config: McpServerCardConfig): McpServerCar
   const skills = mergeSkills(derived, config.skills ?? [])
   const tools =
     skills.length > 0
-      ? skills.map((s) => ({ name: s.name, description: s.description }))
+      ? skills.map((s) => ({
+          name: s.name,
+          description: s.description,
+          inputSchema: s.inputSchema ?? EMPTY_INPUT_SCHEMA,
+        }))
       : undefined
 
   let auth: McpServerCard['auth']
@@ -162,6 +175,9 @@ export function generateMcpServerCard(config: McpServerCardConfig): McpServerCar
  * id = "{meta.tag}.{actionName}", name = actionName, description = the action's
  * authored `describe:` text (sourced from the component's `$action` entry — the
  * same field `@aihu/agent-server` surfaces as the MCP tool description).
+ * inputSchema = `deriveActionInputSchema(action, actionName)` — the same real
+ * MCP `Tool.inputSchema` `@aihu/agent-server`'s `buildToolDefinitions` emits,
+ * from the same shared helper (not a second hand-derivation of it).
  * @internal
  */
 export function agentMetadataToSkills(meta: AgentMetadataLike): ReadonlyArray<AgentSkill> {
@@ -170,6 +186,7 @@ export function agentMetadataToSkills(meta: AgentMetadataLike): ReadonlyArray<Ag
     id: `${meta.tag}.${actionName}`,
     name: actionName,
     description: action?.describe ?? '',
+    inputSchema: deriveActionInputSchema(action, actionName),
   }))
 }
 
