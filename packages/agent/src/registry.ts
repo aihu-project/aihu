@@ -62,6 +62,49 @@ export interface ActionSchema {
 }
 
 /**
+ * The MCP wire-protocol `inputSchema` shape (a JSON-Schema object fragment).
+ * Carries an index signature so it is directly assignable to a looser
+ * `Record<string, unknown>` field (e.g. `AgentSkill.inputSchema`) without a
+ * cast at the call site.
+ */
+export interface McpToolInputSchema {
+  readonly type: 'object'
+  readonly properties: Record<string, unknown>
+  readonly required?: string[]
+  readonly [key: string]: unknown
+}
+
+/**
+ * Derive the MCP `inputSchema` for an action (DE5): the real parameter names
+ * and types when the compiler could model the handler signature (`params`
+ * present), else the legacy positional `args: { type: 'array' }` fallback.
+ *
+ * Single source for every surface that advertises actions as MCP tools —
+ * `@aihu/agent-server`'s `buildToolDefinitions` and
+ * `@aihu-plugin/agent-readiness`'s `agentMetadataToSkills` both call this
+ * rather than re-deriving it, so the two surfaces cannot drift apart on how
+ * an un-modeled handler is schematized (thesis §2, Derived).
+ */
+export function deriveActionInputSchema(
+  action: Pick<ActionSchema, 'params'> | undefined,
+  actionName: string,
+): McpToolInputSchema {
+  if (action?.params) {
+    return {
+      type: 'object',
+      properties: action.params.properties,
+      required: action.params.required,
+    }
+  }
+  return {
+    type: 'object',
+    properties: {
+      args: { type: 'array', description: `Positional arguments for ${actionName}.` },
+    },
+  }
+}
+
+/**
  * The `{ scope: '<name>' }` value shape shared by both `extract` axes (GX
  * spec §3 row 6): the scope is part of the value by construction — "gated
  * without a scope" is unrepresentable.

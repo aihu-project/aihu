@@ -1,3 +1,9 @@
+// Layer: L0 (self-referential) — asserts our own emitted shape against rules
+// transcribed from isitagentready.com's checklist, not against that grader
+// itself. No external oracle yet (docs/plans/2026-07-26-agent-readiness-
+// external-parity.md §4/§7 — the L3 live-probe layer is the one that would
+// catch a grader-visible defect this cannot, e.g. a CDN SPA-fallback serving
+// these same paths with the wrong status/content-type at deploy time).
 import { createRequestRouter, defineRoute } from '@aihu/server'
 import { describe, expect, it } from 'vitest'
 import { createAgentReadinessRoutes, createContentNegotiationHandler } from '../../src/index.ts'

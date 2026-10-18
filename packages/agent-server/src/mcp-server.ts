@@ -11,8 +11,8 @@
  * that only want `createAgentServer` + the bridge don't pay for the SDK.
  */
 
-import type { AgentMetadata } from '@aihu/agent'
-import { getAllAgentMetadata } from '@aihu/agent'
+import type { AgentMetadata, McpToolInputSchema } from '@aihu/agent'
+import { deriveActionInputSchema, getAllAgentMetadata } from '@aihu/agent'
 import type { RequestContext } from '@aihu/agent-service'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -78,21 +78,15 @@ function buildParamOrder(metas: AgentMetadata[]): Map<string, string[]> {
  * `<tag>/<action>`, named `"<tag>/<action>"` to match the agent-service tool
  * naming (so `callTool` routes correctly).
  */
-interface ToolInputSchema {
-  type: 'object'
-  properties: Record<string, unknown>
-  required?: string[]
-}
-
 function buildToolDefinitions(metas: AgentMetadata[]): Array<{
   name: string
   description: string
-  inputSchema: ToolInputSchema
+  inputSchema: McpToolInputSchema
 }> {
   const tools: Array<{
     name: string
     description: string
-    inputSchema: ToolInputSchema
+    inputSchema: McpToolInputSchema
   }> = []
   for (const meta of metas) {
     const actions = meta.actions ?? {}
@@ -107,22 +101,10 @@ function buildToolDefinitions(metas: AgentMetadata[]): Array<{
       // types, so the LLM does not have to guess arity or shape. When absent
       // (unparseable handler, or a destructuring param the compiler could not
       // name), fall back to the legacy positional `args: { type: 'array' }`
-      // shape — the runtime dispatch is identical either way.
-      const inputSchema: ToolInputSchema = schema?.params
-        ? {
-            type: 'object',
-            properties: schema.params.properties,
-            required: schema.params.required,
-          }
-        : {
-            type: 'object',
-            properties: {
-              args: {
-                type: 'array',
-                description: `Positional arguments for ${action}.`,
-              },
-            },
-          }
+      // shape — the runtime dispatch is identical either way. Shared with
+      // `@aihu-plugin/agent-readiness`'s MCP server card via
+      // `deriveActionInputSchema` so the two surfaces cannot drift.
+      const inputSchema = deriveActionInputSchema(schema, action)
       tools.push({
         name: `${meta.tag}/${action}`,
         description:
