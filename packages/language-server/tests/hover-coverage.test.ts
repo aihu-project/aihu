@@ -64,7 +64,8 @@ const HOVER_KEYS: readonly string[] = [
   '<warp>',
   // @style additions (round-0)
   '$reactive',
-  '$tokens',
+  '$container',
+  '$prefers',
   '$global',
   '$media',
   '$when',
@@ -74,7 +75,7 @@ const HOVER_KEYS: readonly string[] = [
   '$describe',
 ]
 
-describe('hover coverage — getHoverContent returns non-null for all 35 keys', () => {
+describe('hover coverage — getHoverContent returns non-null for all 36 keys', () => {
   it.each(HOVER_KEYS)('has hover content for %s', (key) => {
     const content = getHoverContent(key)
     expect(content).toBeTruthy()
@@ -82,8 +83,8 @@ describe('hover coverage — getHoverContent returns non-null for all 35 keys', 
     expect(content!.length).toBeGreaterThan(20)
   })
 
-  it('static key list contains exactly 35 entries (regression mask)', () => {
-    expect(HOVER_KEYS).toHaveLength(35)
+  it('static key list contains exactly 36 entries (regression mask)', () => {
+    expect(HOVER_KEYS).toHaveLength(36)
   })
 })
 
@@ -277,11 +278,18 @@ const PROBES: Probe[] = [
     hoverKey: '$reactive',
   },
   {
-    name: '$tokens',
-    line: '  $tokens(spacing, color)',
+    name: '$container',
+    line: '  $container(sidebar, min-width: 300px) { rules }',
     ch: 3,
-    expected: '$tokens',
-    hoverKey: '$tokens',
+    expected: '$container',
+    hoverKey: '$container',
+  },
+  {
+    name: '$prefers',
+    line: '  $prefers(reduced-motion) { .anim { transition: none } }',
+    ch: 3,
+    expected: '$prefers',
+    hoverKey: '$prefers',
   },
   {
     name: '$global',
