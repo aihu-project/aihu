@@ -475,20 +475,38 @@ const HOVER_TABLE: Record<string, string> = {
     '[v1 spec §4.1](docs/superpowers/specs/2026-05-02-spec-macro-vocabulary.md)',
   ].join('\n'),
 
-  // Source: 2026-05-02-spec-macro-vocabulary.md §4.2 lines 1445-1479
-  $tokens: [
-    '**aihu @style macro: `$tokens`**',
+  // Source: style_macros.rs StyleMacro::Container (RFC-A5-022)
+  $container: [
+    '**aihu @style macro: `$container`**',
     '',
-    'Import design tokens from project config (`aihu.config.ts` `style.tokens`).',
+    'Container query block (RFC-A5-022), optionally named.',
     '',
-    'Lowering depends on mode:',
-    '- `tokens` mode → CSS custom properties (e.g. `--color-primary`)',
-    '- `tailwind` mode → mapped to Tailwind class equivalents',
-    '- `plain` mode → inlined raw values',
+    'Compiles to:',
+    '```css',
+    '@container name (query) { rules }',
+    '```',
     '',
-    'Usage: `$tokens(spacing, color, typography)`',
+    'Usage: `$container(sidebar, min-width: 300px) { .label { font-size: 1.2rem } }`',
+    'Usage (unnamed): `$container(min-width: 300px) { .label { font-size: 1.2rem } }`',
+  ].join('\n'),
+
+  // Source: style_macros.rs StyleMacro::Prefers (RFC-A5-023)
+  $prefers: [
+    '**aihu @style macro: `$prefers`**',
     '',
-    '[v1 spec §4.2](docs/superpowers/specs/2026-05-02-spec-macro-vocabulary.md)',
+    'Media block for a user preference feature (RFC-A5-023). Maps a bare',
+    'feature name to its "opted-in" media-feature value.',
+    '',
+    'Compiles to:',
+    '```css',
+    '@media (prefers-feature: value) { rules }',
+    '```',
+    '',
+    'Supported features: `reduced-motion`, `reduced-transparency`,',
+    '`reduced-data` (→ `reduce`), `contrast` (→ `more`), `color-scheme` (→ `dark`).',
+    'Use `$media` directly for any other media feature.',
+    '',
+    'Usage: `$prefers(reduced-motion) { .anim { transition: none } }`',
   ].join('\n'),
 
   // Source: 2026-05-02-spec-macro-vocabulary.md §4.3 lines 1481-1516
@@ -670,7 +688,7 @@ export function getMacroAtPosition(lineText: string, character: number): string 
   // retreat applies to @template only). `rate-limit` includes a hyphen — the
   // regex captures it as a single token; we still return `$rate-limit`.
   const bareRe =
-    /\$(prop|computed|action|resource|effect|lifecycle|emit|watch|shared|cookie|server|meta|reactive|tokens|global|media|when|scope|rate-limit|describe)\b/g
+    /\$(prop|computed|action|resource|effect|lifecycle|emit|watch|shared|cookie|server|meta|reactive|container|prefers|global|media|when|scope|rate-limit|describe)\b/g
   while ((m = bareRe.exec(lineText)) !== null) {
     if (character >= m.index && character <= m.index + m[0].length) {
       return `$${m[1]!}`
