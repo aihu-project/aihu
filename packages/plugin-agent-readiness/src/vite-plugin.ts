@@ -23,6 +23,17 @@ const A2A_LEGACY_PATH = '/.well-known/agent.json'
 
 interface VitePlugin {
   readonly name: string
+  /**
+   * The `declareAihuModule` contract (`@aihu/app`'s `collectAihuModules` /
+   * `declareAihuModule`, mirrored locally like `@aihu/router` does, so this
+   * package does not have to depend on `@aihu/app`). Lets `loadAihuConfig()`
+   * and `collectAihuModules()` read this plugin's resolved
+   * `AgentReadinessConfig` with no change to `@aihu/app` or the CLI.
+   */
+  api?: {
+    aihuModule: string
+    getOptions: () => AgentReadinessConfig
+  }
   configureServer?: (server: {
     middlewares: {
       use: (fn: (req: any, res: any, next: () => void) => void) => void
@@ -320,6 +331,14 @@ export function viteAgentReadinessIntegration(
 
   return {
     name: 'aihu-agent-readiness',
+    // Package registered under the module contract every other aihu package
+    // uses (`@aihu/app`, `@aihu/router`), so the CLI/language-server can read
+    // its resolved config via `loadAihuConfig()`/`collectAihuModules()` with
+    // no change on their end.
+    api: {
+      aihuModule: '@aihu-plugin/agent-readiness',
+      getOptions: () => config,
+    },
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = (req.url as string | undefined) ?? '/'
