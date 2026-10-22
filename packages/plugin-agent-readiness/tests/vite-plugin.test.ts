@@ -245,6 +245,22 @@ describe('viteAgentReadinessIntegration — A2A dev-middleware wiring', () => {
   })
 })
 
+describe('viteAgentReadinessIntegration — declareAihuModule contract', () => {
+  // `@aihu/app`'s `collectAihuModules()` / `loadAihuConfig()` discover every
+  // registered package by reading `api.aihuModule` + `api.getOptions()` off
+  // each plugin in the Vite config — see docs/TOPOLOGY.md T1 next-action #3.
+  it('exposes its resolved config under the aihuModule/getOptions contract', () => {
+    const config = {
+      name: 'Test App',
+      siteUrl: 'https://test.example.com',
+      a2aCard: true,
+    }
+    const plugin = viteAgentReadinessIntegration(config)
+    expect(plugin.api?.aihuModule).toBe('@aihu-plugin/agent-readiness')
+    expect(plugin.api?.getOptions()).toBe(config)
+  })
+})
+
 describe('createAgentReadinessRoutes — mcpDiscovery handler', () => {
   const ctx = { params: {}, url: new URL('https://test.example.com/.well-known/mcp.json') }
   const req = new Request('https://test.example.com/.well-known/mcp.json')
