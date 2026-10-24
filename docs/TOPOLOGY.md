@@ -285,7 +285,11 @@ FEL-402 (dep-check subpath purity evaded by computed dynamic imports).
 - FEL-416 keyed-row freshness forces full row re-grow on derived lists
 - #478 `<$slot>` fallback children discarded — content loss, all shadow modes
 - #477 SSR/hydration: light-DOM slot projection not applied on hydrate
-- #465 GX Phase 0 residual: SSR of compiled routes must render — gates the hard tier
+- ~~#465 GX Phase 0 residual: SSR of compiled routes must render — gates the hard tier~~ —
+  **DONE, re-verified 2026-10-24** (build-router pass). Landed via PR #482
+  (2026-07-22); see `docs/plans/governed-extractability/60-status.md` for full
+  verification evidence. The GitHub issue itself was left open by a GitHub
+  keyword-adjacency miss and a later stale re-flag — now closed.
 
 **Trap, twice-burned:** aihu compiles via the **published napi addon** unless
 `AIHU_COMPILE_BIN` is set. A Rust fix is invisible to its own CI without it.

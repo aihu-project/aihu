@@ -13,7 +13,7 @@ vocabulary; `{expr}` interpolation; `$` only in `@state` (until the @state arc r
 | Phase | What | Status |
 |---|---|---|
 | Spec | normative design-of-record (`40-spec.md`) | ✅ #481 |
-| SSR walk | `{#if}`/`{#each}` render server-side; closes the entitled dual-audience gap | landing #482 (#465) |
+| SSR walk | `{#if}`/`{#each}` render server-side; closes the entitled dual-audience gap | ✅ #482 (#465) |
 | Grammar compiler + migration | new grammar, C601–C611 retirements, `of` binder, `empty`, adjacency, `attr:`, `<a>` enhancement, kill `{{ }}`/`{@html}`; migrate every in-repo `.aihu` (atomic) | in progress #484 · `feat/grammar-v2` |
 | TS-generator 1–3 | rewrite-before-lift + ast default; real `if/else` sidecar emission; `for…of` + `__aihu_each` inference | ✅ #485 (#490) |
 | TS-generator 4–5 | attribute + component-prop typing (`--strict-templates`); unify editor + CLI on `compileSidecar` | landing #486 · `feat/ts-generator-4-5` |
