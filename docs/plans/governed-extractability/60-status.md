@@ -60,11 +60,44 @@ endpoint, and the agent `call:` axis from one per-request memo. The G4/G5/DA-f i
 make every guarantee above non-regressable at build time. Undeclared apps are byte-identical
 to today.
 
-**Honest ceiling in practice:** entitled dual-audience currently holds for **direct
-interpolations**; entitled-only content inside a structural `{#if}`/`{#each}` guard is not
-yet in the server HTML (the SSR structural walk is the remaining P3 slice, #465). The
-withholding guarantee is unaffected — the Phase-5 G5c check and the e2e test auto-tighten
-the moment that slice lands.
+**Honest ceiling in practice:** entitled dual-audience now holds for content inside a
+structural `{#if}`/`{#each}` guard as well as direct interpolations — the SSR structural
+walk (#465) has landed. The Phase-5 G5c check and the e2e test auto-tightened accordingly.
+
+## Shipped — the P3 SSR remainder (#465)
+
+**2026-10-24 reconciliation:** the structural-walk keystone landed in
+[PR #482](https://github.com/aihu-project/aihu/pull/482) (merged 2026-07-22, "Closes the
+#465 core gap") — it didn't auto-close the issue because its body text broke GitHub's
+`Closes #465` keyword adjacency. The issue sat open for three months afterward; a
+2026-09-11 build-router pass re-flagged it `needs-spec` without re-checking `main` against
+the already-merged fix. Every sub-item #465 named is independently re-verified present and
+tested in current `main` as of this pass:
+
+- **Structural directive SSR walk** — `renderNodeAsync`'s `obj.kind === 'structural'`
+  branch (`packages/server/src/ssr.ts:909-920`) renders the active `{#if}` branch /
+  `{#each}` items via `_structuralSubtrees`, with path-mirrored hydration markers
+  (`_structuralMarkers`) and fragment handling (`_isFragment`) matching the client
+  materializer. Covered by `ssr-structural.test.ts` and the differential suite in
+  `ssr-string-differential.test.ts` (e.g. "an `{#each}` nested under `{#if}` still
+  declines", "structural churn: same template, different state shapes, still identical").
+  Nested `dataSource` boundaries inside a structural subtree keep their P5/I2s governed
+  refusal on `pending` per the inline comment at `ssr.ts:910-913`.
+- **Reactive/tuple leaf rendering** — `leafText` (`ssr.ts:336-342`) reads a `[read, write]`
+  Signal-tuple leaf by calling `read()`, not just static string leaves.
+- **`$suspense`/`@stream` boundaries** — the compiled fast path and the hand-built
+  `dataSource`/walker path both preserve flush/suspend semantics (`ssr.ts:1395-1402`);
+  `ssr-stream.test.ts` passes.
+- **Host-less lifecycle** — fixed per `packages/runtime/CHANGELOG.md` / `packages/server/CHANGELOG.md`
+  ("`show`/`class:`/`ref`/`html` effect IIFEs guard their `onMount` registration — host-less
+  SSR and loop-item factories previously crashed with SCR-R0010 'no owner'").
+- **Hydration parity** — `packages/runtime/src/define-element.ts` no longer has a separate
+  hydrate-vs-mount connect path keyed on a global/per-tag state-script contract; the
+  renderer itself (`_hydrate` vs `_mount`) is keyed on the server's stamp.
+
+Verification: `bunx vitest run packages/server` — 271 passed, 0 failed (68 skipped only for
+missing local `@aihu/compiler` native binary, per the documented `AIHU_COMPILE_BIN` trap in
+`AGENTS.md`/`TOPOLOGY.md` §T6 — not a gap in the feature).
 
 ## Remaining
 
@@ -72,9 +105,6 @@ the moment that slice lands.
   `shadowMode: 'none'` so server-rendered content reaches non-JS crawlers; leaf components
   keep shadow encapsulation. A **breaking, next-major** change, gated on a light-DOM
   slot-projection prerequisite — held for a founder decision on release approach.
-- **#465 — the P3 SSR remainder.** Structural directive SSR walk (the highest-value item —
-  it lifts entitled dual-audience beyond direct interpolations), reactive/tuple leaf
-  rendering, `$suspense`/`@stream` boundaries, hydration parity, host-less lifecycle.
 
 ## The honest ceiling (never claim above this)
 Anything an anonymous human can see, an anonymous scraper can extract. Anonymous-crawl
