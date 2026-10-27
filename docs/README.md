@@ -37,9 +37,7 @@ The four aihu spec quartet documents and three amendments have been **ratified a
 
 ## Other docs in this directory
 
-- [`tthw-log.md`](tthw-log.md) — tthw session log
 - [`superpowers/`](superpowers/) — ratified plans + specs (v1 authority)
-- [`topic-director-notes/`](topic-director-notes/) — topic-director session notes
 
 > Looking for the deprecated `grammar.md`? It described the v0 HTML-tag
 > SFC form and was removed when the v1 `@blockname { }` form shipped. The
