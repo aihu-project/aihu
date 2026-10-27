@@ -1,6 +1,6 @@
 # aihu v0 — Plan A: TypeScript Runtime Family Implementation Plan
 
-> **Status (updated 2026-05-02):** All five v0 phases shipped + Rounds N+1 / N+2 / N+3 perf work. v1 framework plan **ratified** at [`2026-05-02-aihu-v1-framework.md`](2026-05-02-aihu-v1-framework.md) (covers v0.2 → v1.0; spec quartet authority at [`docs/superpowers/specs/`](../specs/)). This v0 plan is retained for archival reference. **For current state — what shipped, open items, learnings, bench leadership — see [state-plan-a.md](../../../state-plan-a.md).**
+> **Status (updated 2026-05-02):** All five v0 phases shipped + Rounds N+1 / N+2 / N+3 perf work. v1 framework plan **ratified** at [`2026-05-02-aihu-v1-framework.md`](2026-05-02-aihu-v1-framework.md) (covers v0.2 → v1.0; spec quartet authority at [`docs/superpowers/specs/`](../specs/)). This v0 plan is retained for archival reference. **For current state — what shipped, open items, learnings, bench leadership — see `state-plan-a.md`.**
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
