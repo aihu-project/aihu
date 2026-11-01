@@ -1112,6 +1112,49 @@ describe('runPrerender — previously unguarded fixes', () => {
     expect(containment[0]).toMatch(/outside the components directory/)
   })
 
+  // #909: a symlink that escapes its OWN components dir but lands inside a
+  // directory Vite's `server.fs.allow` already serves is not an escape — the
+  // dev server would hand that file to any request today regardless of what
+  // SSG discovery decides, and `shared/` sitting elsewhere inside the project
+  // root (the exact #909 repro) is covered by `fs.allow`'s own default. A
+  // SINGLE `dir.components` entry is enough here (unlike the other-configured-
+  // dir branch), which keeps the symlinked file reachable through exactly one
+  // path and isolates this from the pre-existing tag-collision tie-break.
+  it('#909: a symlink into a server.fs.allow root is discovered, not refused', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'index.ts', { name: 'home' })
+    const appComponents = join(fx.root, 'src', 'components')
+    const shared = join(fx.root, 'shared')
+    await mkdir(appComponents, { recursive: true })
+    await mkdir(shared, { recursive: true })
+    await writeFile(join(shared, 'shared-widget.aihu'), '<div/>\n')
+    // Same shape as #909's repro: `shared/` lives inside the project root and
+    // is linked in from the app's own components dir.
+    await symlink(shared, join(appComponents, 'shared'), 'dir')
+
+    const loaded: string[] = []
+    const loadModule: SsrModuleLoader = async (file) => {
+      const f = file.replace(/\\/g, '/')
+      if (f.endsWith('/index.ts')) return { default: { toHtml: () => '<p>home</p>' } }
+      loaded.push(f)
+      return { __aihu_tag__: f.slice(f.lastIndexOf('/') + 1).replace(/\.aihu$/, '') }
+    }
+
+    const result = await runPrerender({
+      resolvedViteConfig: {
+        ...fx.resolvedViteConfig,
+        server: { fs: { allow: [fx.root] } },
+      } as typeof fx.resolvedViteConfig,
+      config: { output: 'static', dir: { pages: 'pages', components: 'src/components' } },
+      loadModule,
+      warn: fx.warn,
+      _listComponentDir: listDescendingSymlinks,
+    })
+
+    expect(loaded.some((f) => f.endsWith('/shared-widget.aihu'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('shared-widget.aihu'))).toBe(false)
+  })
+
   // §17 tie-break determinism.
   //
   // `discoverComponents` fans out with `Promise.all` over a SORTED list and

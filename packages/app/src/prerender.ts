@@ -287,6 +287,7 @@ async function discoverComponents(
   loadModule: SsrModuleLoader,
   pushWarn: (msg: string) => void,
   listDir: ComponentDirLister = defaultComponentDirLister,
+  extraAllowedRoots: ReadonlyArray<string> = [],
 ): Promise<DiscoverComponentsResult> {
   const abs = resolvePath(root, componentsDir)
   let files: string[]
@@ -306,13 +307,25 @@ async function discoverComponents(
     // not under Node. Every match here is about to be compiled AND EVALUATED by
     // Vite, so one symlink under the components dir would execute `.aihu`
     // modules from outside the project at build time. Resolve each path and
-    // keep only what really lives under the directory we were asked to scan.
+    // keep only what really lives under the directory we were asked to scan —
+    // OR under one of `extraAllowedRoots` (#909): the project's OTHER
+    // configured `dir.components` entries (it is an array, since #901, and a
+    // workspace that shares components across packages via a symlink into
+    // ANOTHER entry of that same array is not "outside the project", it is
+    // cross-referencing config the author already declared) and Vite's own
+    // `server.fs.allow` roots (what the dev server already serves, so a
+    // symlink SSG discovery refuses here would be reachable anyway through
+    // Vite). Both are resolved once by the caller before the fan-out over
+    // every configured dir.
     const rootReal = await realpath(abs)
+    const allowedRoots = [rootReal, ...extraAllowedRoots]
+    const isContained = (real: string): boolean =>
+      allowedRoots.some((r) => real === r || real.startsWith(r + sep))
     files = []
     for (const f of candidates) {
       try {
         const real = await realpath(f)
-        if (real === rootReal || real.startsWith(rootReal + sep)) files.push(f)
+        if (isContained(real)) files.push(f)
         else {
           pushWarn(
             `[@aihu/app] static output: skipping "${f}" — it resolves to "${real}", ` +
@@ -534,6 +547,32 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
   const componentPaths = (Array.isArray(componentsDirs) ? componentsDirs : [componentsDirs])
     .map((dir) => resolvePath(root, dir))
     .sort()
+  // #909: resolve every ADDITIONAL root a symlink is allowed to point into,
+  // ONCE, up front, so each per-dir `discoverComponents` call can accept a
+  // symlink reaching one of them instead of treating it as an escape:
+  //   - every OTHER configured `dir.components` entry (the option accepts an
+  //     array since #901 — a symlink from one entry into a sibling entry is
+  //     cross-referencing declared config, not leaving the project), and
+  //   - Vite's own `server.fs.allow` roots — what the dev server already
+  //     serves unconditionally, so refusing it only in SSG discovery is a
+  //     narrower, inconsistent rule, not an extra protection.
+  // A root that does not exist (or has no real path yet) contributes nothing
+  // rather than failing the whole discovery, same as a missing `componentsDir`.
+  const realpathOrNull = async (dir: string): Promise<string | null> => {
+    try {
+      return await realpath(dir)
+    } catch {
+      return null
+    }
+  }
+  const extraRootCandidates = [...componentPaths, ...(resolvedViteConfig.server?.fs?.allow ?? [])]
+  const extraAllowedRoots = [
+    ...new Set(
+      (await Promise.all(extraRootCandidates.map(realpathOrNull))).filter(
+        (real): real is string => real !== null,
+      ),
+    ),
+  ]
   const discovered = await Promise.all(
     componentPaths.map((componentsDir) =>
       discoverComponents(
@@ -542,6 +581,7 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
         loadModule,
         pushWarn,
         _listComponentDir ?? defaultComponentDirLister,
+        extraAllowedRoots,
       ),
     ),
   )
