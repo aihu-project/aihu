@@ -287,6 +287,14 @@ async function discoverComponents(
   loadModule: SsrModuleLoader,
   pushWarn: (msg: string) => void,
   listDir: ComponentDirLister = defaultComponentDirLister,
+  // Other directories a symlink target is allowed to resolve into without
+  // being treated as an escape: every OTHER configured `dir.components`
+  // entry, plus whatever Vite's own `server.fs.allow` already permits reading
+  // (which defaults to the workspace root). A link that lands inside one of
+  // these was already going to be served/compiled by Vite on its own terms —
+  // this check only ever widens containment to match what Vite allows, never
+  // narrows it.
+  allowedRoots: ReadonlyArray<string> = [],
 ): Promise<DiscoverComponentsResult> {
   const abs = resolvePath(root, componentsDir)
   let files: string[]
@@ -306,13 +314,31 @@ async function discoverComponents(
     // not under Node. Every match here is about to be compiled AND EVALUATED by
     // Vite, so one symlink under the components dir would execute `.aihu`
     // modules from outside the project at build time. Resolve each path and
-    // keep only what really lives under the directory we were asked to scan.
+    // keep only what really lives under a directory we're allowed to read:
+    // the directory we were asked to scan, another configured components
+    // directory, or anywhere Vite's own `server.fs.allow` already permits.
     const rootReal = await realpath(abs)
+    const otherAllowedReals = (
+      await Promise.all(
+        allowedRoots
+          .filter((dir) => dir !== abs)
+          .map(async (dir) => {
+            try {
+              return await realpath(dir)
+            } catch {
+              return null
+            }
+          }),
+      )
+    ).filter((real): real is string => real !== null)
+    const allowedReals = [rootReal, ...otherAllowedReals]
+    const isContained = (real: string): boolean =>
+      allowedReals.some((allowed) => real === allowed || real.startsWith(allowed + sep))
     files = []
     for (const f of candidates) {
       try {
         const real = await realpath(f)
-        if (real === rootReal || real.startsWith(rootReal + sep)) files.push(f)
+        if (isContained(real)) files.push(f)
         else {
           pushWarn(
             `[@aihu/app] static output: skipping "${f}" — it resolves to "${real}", ` +
@@ -534,6 +560,11 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
   const componentPaths = (Array.isArray(componentsDirs) ? componentsDirs : [componentsDirs])
     .map((dir) => resolvePath(root, dir))
     .sort()
+  // `server.fs.allow` is standard Vite config — resolved absolute paths,
+  // defaulting to the workspace root — so a symlink landing inside it was
+  // already readable/servable by Vite on its own terms.
+  const fsAllowRoots = resolvedViteConfig.server?.fs?.allow ?? []
+  const allowedRoots = [...componentPaths, ...fsAllowRoots]
   const discovered = await Promise.all(
     componentPaths.map((componentsDir) =>
       discoverComponents(
@@ -542,6 +573,7 @@ export async function runPrerender(opts: RunPrerenderOptions): Promise<Prerender
         loadModule,
         pushWarn,
         _listComponentDir ?? defaultComponentDirLister,
+        allowedRoots,
       ),
     ),
   )

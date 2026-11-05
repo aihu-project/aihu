@@ -1112,6 +1112,59 @@ describe('runPrerender — previously unguarded fixes', () => {
     expect(containment[0]).toMatch(/outside the components directory/)
   })
 
+  // aihu#909: a symlink that escapes ITS OWN components dir but resolves
+  // INSIDE another configured `dir.components` entry is not an escape at
+  // all — that target directory is already trusted on its own terms. The
+  // old containment check only ever compared against the one directory it
+  // was scanning, so a workspace sharing components via a symlink (e.g.
+  // `packages/components/x.aihu -> ../ui/src/components/x.aihu`, with both
+  // `packages/components` and `packages/ui/src/components` listed in
+  // `dir.components`) got that component rendered on the client but
+  // prerendered EMPTY by SSG — the same component, two different outputs.
+  it('aihu#909: discovers a module through a symlink into ANOTHER configured components dir', async () => {
+    fx = await makeFixture()
+    await writeRoute(fx.root, 'index.ts', { name: 'home' })
+    const componentsDir = join(fx.root, 'src', 'components')
+    const sharedDir = join(fx.root, 'shared')
+    await mkdir(componentsDir, { recursive: true })
+    await mkdir(sharedDir, { recursive: true })
+    await writeFile(join(componentsDir, 'in-tree.aihu'), '<div/>\n')
+    // The shared component lives in `sharedDir`, which IS itself a configured
+    // `dir.components` entry below — and is linked into `componentsDir` too,
+    // the way a workspace shares components across apps.
+    await writeFile(join(sharedDir, 'shared.aihu'), '<div/>\n')
+    await symlink(sharedDir, join(componentsDir, 'linked'), 'dir')
+
+    const loaded: string[] = []
+    const loadModule: SsrModuleLoader = async (file) => {
+      const f = file.replace(/\\/g, '/')
+      if (f.endsWith('/index.ts')) return { default: { toHtml: () => '<p>home</p>' } }
+      loaded.push(f)
+      return { __aihu_tag__: f.slice(f.lastIndexOf('/') + 1).replace(/\.aihu$/, '') }
+    }
+
+    const result = await runPrerender({
+      resolvedViteConfig: fx.resolvedViteConfig,
+      config: {
+        output: 'static',
+        dir: { pages: 'pages', components: ['src/components', 'shared'] },
+      },
+      loadModule,
+      warn: fx.warn,
+      _listComponentDir: listDescendingSymlinks,
+    })
+
+    // The in-tree sibling still loads, as before.
+    expect(loaded.some((f) => f.endsWith('/in-tree.aihu'))).toBe(true)
+    // The symlinked module loads TWICE — once found directly under `shared`,
+    // once found via the symlink under `src/components` — since discovery
+    // still walks each configured directory independently; what changed is
+    // that neither occurrence is rejected as an escape.
+    expect(loaded.some((f) => f.endsWith('/shared.aihu'))).toBe(true)
+    // No containment warning for it, from either walk.
+    expect(result.warnings.some((w) => w.includes('shared.aihu'))).toBe(false)
+  })
+
   // §17 tie-break determinism.
   //
   // `discoverComponents` fans out with `Promise.all` over a SORTED list and
