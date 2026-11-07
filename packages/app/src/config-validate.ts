@@ -198,12 +198,13 @@ export function deprecated(inner: Validator, message: (keypath: string) => strin
 /**
  * A field that is declared for typing but has NO consumer yet.
  *
- * This exists because the alternative is worse. `ui.style` is declared,
- * documented, and read by nothing — and once `aihu.config.ts` ships to every
- * scaffolded project, a field that silently does nothing is indistinguishable
- * from a broken feature. Warning at least tells the truth at the moment the
- * user sets it. (`router.viewTransitions` used to be the other example here;
- * it is wired now — see `createApp`'s `routeContext`.)
+ * This exists because the alternative is worse: once `aihu.config.ts` ships
+ * to every scaffolded project, a field that silently does nothing is
+ * indistinguishable from a broken feature. Warning at least tells the truth
+ * at the moment the user sets it. (`router.viewTransitions` and `ui.style`
+ * used to be the examples here — `viewTransitions` is wired now, see
+ * `createApp`'s `routeContext`; `style` was removed via `removed()` below,
+ * since there turned out to be no variant for it to ever select.)
  */
 export function notYetImplemented(inner: Validator, tracking: string): Validator {
   return deprecated(

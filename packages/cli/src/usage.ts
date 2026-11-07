@@ -11,8 +11,9 @@ import { formatTemplateCatalog } from './templates-registry.js'
  *
  * EVERY flag listed here is one the dispatcher actually reads, and every flag
  * the dispatcher reads is listed here. That was not previously true in either
- * direction: `--style` (a real `aihu add` flag) and `aihu migrate --state` were
- * missing, while seven real `aihu app` flags (`--pm`, `--no-git`,
+ * direction: `aihu migrate --state` was missing (and `--style`, a real `aihu
+ * add` flag at the time, was later removed outright — see `ui.style` in
+ * `@aihu/app`'s config schema), while seven real `aihu app` flags (`--pm`, `--no-git`,
  * `--no-install`, `--options-json`, `--no-auto-install-template`, plus the
  * since-deleted `--use-defaults`/`--no-interactive`) existed only in a code
  * comment and appeared in no user-facing help at all.
@@ -72,7 +73,6 @@ export function usageText(): string {
     '',
     'aihu add <names...>:',
     '  --prefix <p>            Override the custom-element tag prefix (ui.prefix)',
-    '  --style <s>             Override the recorded style variant (ui.style)',
     '  --dry-run               Print the plan; write nothing',
     '  --diff                  Show a unified diff against existing target files',
     '  --force                 Overwrite on collision',

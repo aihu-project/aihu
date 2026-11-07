@@ -101,8 +101,6 @@ export interface UiConfig {
   readonly registry?: string
   /** Directory `aihu add` copies recipe sources into. Default: './src/components/ui'. */
   readonly target?: string
-  /** Active style pack name. Default: 'aihu-default'. */
-  readonly style?: string
   /** Custom-element tag prefix for copied recipes. Default: 'aihu'. */
   readonly prefix?: string
   /** RESERVED for v2 multi-registry support — schema slot only, unimplemented. */

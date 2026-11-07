@@ -103,13 +103,11 @@ describe('bin.ts dispatcher — add/list wiring', () => {
     // Reads the RENDERED help rather than grepping bin.ts source: the text
     // moved to `usage.ts` (so tests can import it without bin.ts's top-level
     // `main()` running), and asserting on rendered output means a reformat
-    // cannot break the test while a genuine omission still does. `--style` is
-    // in this list because it is a real `aihu add` flag that the old help text
-    // did not mention at all.
+    // cannot break the test while a genuine omission still does.
     const text = usageText()
     expect(text).toContain('add <names...>')
     expect(text).toContain('list [--installed]')
-    for (const flag of ['--prefix', '--style', '--dry-run', '--diff', '--force']) {
+    for (const flag of ['--prefix', '--dry-run', '--diff', '--force']) {
       expect(text, flag).toContain(flag)
     }
   })
@@ -137,6 +135,23 @@ describe('dispatched command entries', () => {
       add(['button', '--dry-run'], { cwd: '/proj', fs, io, resolve, exit: makeExit() }),
     ).resolves.toBeUndefined()
     expect(out).toContain('Plan (1 file(s)')
+  })
+
+  it('`aihu add --style` fails loudly instead of being silently ignored', async () => {
+    const { fs, resolve } = setup()
+    let err = ''
+    const io: AddIo = {
+      write() {},
+      mkdirp() {},
+      stdout: () => {},
+      stderr: (s) => {
+        err += s
+      },
+    }
+    await expect(
+      add(['button', '--style', 'daisyui'], { cwd: '/proj', fs, io, resolve, exit: makeExit() }),
+    ).rejects.toThrow('__exit__:1')
+    expect(err).toContain('--style has been removed')
   })
 
   it('`aihu list` reaches list.ts and returns (exit 0)', async () => {
