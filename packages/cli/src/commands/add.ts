@@ -3,7 +3,7 @@
  * registry into the consumer's `ui.target` directory (Plan 5 Task 6, spec §9.6).
  *
  * Flow (spec §9.6 steps 1–6):
- *   1. Read `ui.{registry,target,prefix,style}` from `vite.config.ts` (or the
+ *   1. Read `ui.{registry,target,prefix}` from `vite.config.ts` (or the
  *      legacy `aihu.config.ts`) (defaults at read-time)
  *   2. Resolve requested items + their `registryDependencies` transitively (R8)
  *   3. Read the `.aihu` source(s) directly from the installed package (R3)
@@ -13,7 +13,6 @@
  *
  * Flags:
  *   --prefix <p>   override `ui.prefix` for this copy (one-off, spec §9.4)
- *   --style <s>    override `ui.style` (recorded; the engine reads it at build)
  *   --dry-run      print the plan, write nothing
  *   --diff         print a unified diff against any existing target file
  *   --force        overwrite on collision (R9); without it a collision aborts
@@ -48,7 +47,9 @@ import {
 interface AddFlags {
   names: string[]
   prefix: string | undefined
-  style: string | undefined
+  /** `--style`/`--style=` was passed. Removed flag — kept detectable so it
+   * fails loudly instead of its value being swallowed into `names`. */
+  styleFlagUsed: boolean
   dryRun: boolean
   diff: boolean
   force: boolean
@@ -57,7 +58,7 @@ interface AddFlags {
 function parseAddArgs(args: ReadonlyArray<string>): AddFlags {
   const names: string[] = []
   let prefix: string | undefined
-  let style: string | undefined
+  let styleFlagUsed = false
   let dryRun = false
   let diff = false
   let force = false
@@ -76,18 +77,16 @@ function parseAddArgs(args: ReadonlyArray<string>): AddFlags {
     } else if (a.startsWith('--prefix=')) {
       prefix = a.slice('--prefix='.length)
     } else if (a === '--style') {
-      const next = args[i + 1]
-      if (next !== undefined) {
-        style = next
-        i++
-      }
+      styleFlagUsed = true
+      // Consume the value arg too, so it is not mistaken for a recipe name.
+      if (args[i + 1] !== undefined) i++
     } else if (a.startsWith('--style=')) {
-      style = a.slice('--style='.length)
+      styleFlagUsed = true
     } else if (!a.startsWith('--')) {
       names.push(a)
     }
   }
-  return { names, prefix, style, dryRun, diff, force }
+  return { names, prefix, styleFlagUsed, dryRun, diff, force }
 }
 
 // ─── Prefix substitution (D-3 fallback — focused local transformer) ──────────
@@ -189,11 +188,15 @@ export default async function add(rest: ReadonlyArray<string>, deps: AddDeps = {
 
   const flags = parseAddArgs(rest)
 
-  if (flags.names.length === 0) {
+  if (flags.styleFlagUsed) {
     io.stderr(
-      'Usage:\n' +
-        '  aihu add <names...> [--prefix p] [--style s] [--dry-run] [--diff] [--force]\n',
+      '--style has been removed — aihu does not support selecting a UI style variant yet.\n',
     )
+    return exit(1)
+  }
+
+  if (flags.names.length === 0) {
+    io.stderr('Usage:\n' + '  aihu add <names...> [--prefix p] [--dry-run] [--diff] [--force]\n')
     return exit(1)
   }
 

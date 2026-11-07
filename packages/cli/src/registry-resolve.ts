@@ -37,14 +37,12 @@ import { loadProjectConfig } from './load-project-config.ts'
 export interface ResolvedUiConfig {
   registry: string
   target: string
-  style: string
   prefix: string
 }
 
 const UI_DEFAULTS: ResolvedUiConfig = {
   registry: '@aihu/ui',
   target: './src/components/ui',
-  style: 'aihu-default',
   prefix: 'aihu',
 }
 
@@ -213,7 +211,6 @@ export async function resolveRegistry(
   const ui: ResolvedUiConfig = {
     registry: loaded.ui.registry ?? UI_DEFAULTS.registry,
     target: loaded.ui.target ?? UI_DEFAULTS.target,
-    style: loaded.ui.style ?? UI_DEFAULTS.style,
     prefix: loaded.ui.prefix ?? UI_DEFAULTS.prefix,
   }
 

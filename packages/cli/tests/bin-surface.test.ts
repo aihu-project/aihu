@@ -179,15 +179,7 @@ describe('usageText accuracy', () => {
   })
 
   it('documents the real `aihu add` and `aihu migrate` flags', () => {
-    for (const flag of [
-      '--prefix',
-      '--style',
-      '--diff',
-      '--force',
-      '--v2',
-      '--state',
-      '--dry-run',
-    ]) {
+    for (const flag of ['--prefix', '--diff', '--force', '--v2', '--state', '--dry-run']) {
       expect(text, flag).toContain(flag)
     }
   })
@@ -197,6 +189,8 @@ describe('usageText accuracy', () => {
     // scripted `aihu app x --use-defaults` looked supported and was not.
     expect(text).not.toContain('--use-defaults')
     expect(text).not.toContain('--no-interactive')
+    // `--style` never had a variant to select; removed outright (ui.style).
+    expect(text).not.toContain('--style')
   })
 
   it('carries the version', () => {

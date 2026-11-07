@@ -220,29 +220,16 @@ describe("output: 'ssr' requires css.shadowMode", () => {
   })
 })
 
-describe('declared-but-not-wired fields warn instead of lying', () => {
-  it('warns on ui.style but still accepts it', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    expect(() => defineConfig({ ui: { style: 'daisyui' } })).not.toThrow()
-    expect(warn).toHaveBeenCalledOnce()
-    expect(warn.mock.calls[0]?.[0]).toContain('not yet wired up')
-    warn.mockRestore()
+describe('ui.style — removed, throws instead of lying', () => {
+  it('throws REMOVED_FIELD when set', () => {
+    const e = err({ ui: { style: 'daisyui' } })
+    expect(e?.code).toBe('REMOVED_FIELD')
+    expect(e?.field).toBe('config.ui.style')
+    expect(e?.message).toContain('has been removed')
   })
 
-  it('warns only once per key, so a rebuild loop does not train people to ignore it', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    defineConfig({ ui: { style: 'daisyui' } })
-    defineConfig({ ui: { style: 'daisyui' } })
-    defineConfig({ ui: { style: 'daisyui' } })
-    expect(warn).toHaveBeenCalledOnce()
-    warn.mockRestore()
-  })
-
-  it('stays silent when the dead field is not set', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    defineConfig({ ui: {} })
-    expect(warn).not.toHaveBeenCalled()
-    warn.mockRestore()
+  it('stays silent when the removed field is not set', () => {
+    expect(() => defineConfig({ ui: {} })).not.toThrow()
   })
 })
 

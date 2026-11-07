@@ -423,10 +423,14 @@ const SCHEMA: Record<string, v.Validator> = {
   ui: v.object({
     registry: v.string,
     target: v.string,
-    // Resolved into ResolvedUiConfig and then read by nothing. `aihu add
-    // --style` documents it as "recorded; the engine reads it at build" — the
-    // engine does not.
-    style: v.notYetImplemented(v.string, 'no consumer reads ui.style yet'),
+    // There is no registry concept of a style variant to select — `aihu add`
+    // copies exactly one recipe per name, and `ResolvedUiConfig` never had a
+    // second variant to resolve `style` against. Rather than keep warning
+    // about a field with nothing to wire it to, it is removed outright.
+    style: v.removed(
+      (keypath) =>
+        `${keypath} has been removed — aihu does not support selecting a UI style variant yet. Delete this field (and any \`--style\` flag on \`aihu add\`).`,
+    ),
     prefix: v.string,
     registries: v.passthrough,
   }),
