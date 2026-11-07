@@ -641,7 +641,7 @@ export const EXPORTS: readonly ApiExport[] = [
     name: 'UiConfig',
     kind: 'interface',
     signature:
-      "interface UiConfig {\n  /** Source registry to pull recipes from. v1: the '@aihu/ui' package specifier. Default: '@aihu/ui'. */\n  readonly registry?: string\n  /** Directory `aihu add` copies recipe sources into. Default: './src/components/ui'. */\n  readonly target?: string\n  /** Active style pack name. Default: 'aihu-default'. */\n  readonly style?: string\n  /** Custom-element tag prefix for copied recipes. Default: 'aihu'. */\n  readonly prefix?: string\n  /** RESERVED for v2 multi-registry support — schema slot only, unimplemented. */\n  readonly registries?: Readonly<Record<string, string>>\n}",
+      "interface UiConfig {\n  /** Source registry to pull recipes from. v1: the '@aihu/ui' package specifier. Default: '@aihu/ui'. */\n  readonly registry?: string\n  /** Directory `aihu add` copies recipe sources into. Default: './src/components/ui'. */\n  readonly target?: string\n  /** Custom-element tag prefix for copied recipes. Default: 'aihu'. */\n  readonly prefix?: string\n  /** RESERVED for v2 multi-registry support — schema slot only, unimplemented. */\n  readonly registries?: Readonly<Record<string, string>>\n}",
     summary:
       'Configuration for the `@aihu/ui` styled-recipe registry, consumed by the `aihu add` / `aihu list` CLI subcommands and the css-engine scanner.',
   },
