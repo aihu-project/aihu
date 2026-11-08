@@ -383,3 +383,12 @@ describe('viteAgentReadinessIntegration — transformIndexHtml', () => {
     expect(result).not.toContain('<script type="application/ld+json">')
   })
 })
+
+describe('viteAgentReadinessIntegration — aihu module config contract', () => {
+  it('exposes its resolved config through the declareAihuModule handle', () => {
+    const config = { name: 'Test App', siteUrl: 'https://test.example.com' }
+    const plugin = viteAgentReadinessIntegration(config)
+    expect(plugin.api?.aihuModule).toBe('@aihu-plugin/agent-readiness')
+    expect(plugin.api?.getOptions()).toEqual(config)
+  })
+})

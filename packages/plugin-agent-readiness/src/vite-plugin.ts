@@ -23,6 +23,10 @@ const A2A_LEGACY_PATH = '/.well-known/agent.json'
 
 interface VitePlugin {
   readonly name: string
+  api?: {
+    aihuModule: string
+    getOptions: () => AgentReadinessConfig
+  }
   configureServer?: (server: {
     middlewares: {
       use: (fn: (req: any, res: any, next: () => void) => void) => void
@@ -30,6 +34,25 @@ interface VitePlugin {
   }) => void
   generateBundle?: (options: any, bundle: any) => Promise<void>
   transformIndexHtml?: (html: string) => string
+}
+
+/**
+ * Attach the `@aihu/app` module contract (`declareAihuModule`/`collectAihuModules`,
+ * `packages/app/src/load-config.ts`) to this plugin, so the CLI and language
+ * server can read `@aihu-plugin/agent-readiness`'s resolved config without
+ * `@aihu/app` knowing this package exists. Copied rather than imported:
+ * `@aihu/app` depends on this package (its own `package.json` lists
+ * `@aihu-plugin/agent-readiness` as a dependency), so importing the helper
+ * back from `@aihu/app` would be circular — the same reason
+ * `packages/router/src/vite-plugin.ts` carries its own copy.
+ */
+function declareAihuModule(
+  aihuModule: string,
+  options: AgentReadinessConfig,
+  plugin: VitePlugin,
+): VitePlugin {
+  plugin.api = { aihuModule, getOptions: () => options }
+  return plugin
 }
 
 /**
@@ -318,7 +341,7 @@ export function viteAgentReadinessIntegration(
     return ''
   }
 
-  return {
+  const plugin: VitePlugin = {
     name: 'aihu-agent-readiness',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
@@ -375,6 +398,7 @@ export function viteAgentReadinessIntegration(
       return html.replace('</head>', `${tags}\n</head>`)
     },
   }
+  return declareAihuModule('@aihu-plugin/agent-readiness', config, plugin)
 }
 
 /** @deprecated Use `viteAgentReadinessIntegration` instead. Will be removed in v1.0. */
