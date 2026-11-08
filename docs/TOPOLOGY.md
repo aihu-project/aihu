@@ -130,6 +130,21 @@ Landed on the branch:
 3. Roll `declareAihuModule` across the 9 packages with real project-wide config:
    compiler, router, css-engine, ui, auth, agent-readiness, both adapters, store.
    `@aihu/auth` is the biggest win — its config is repeated at three call sites.
+   **`agent-readiness` DONE 2026-11-08** (core PR):
+   `viteAgentReadinessIntegration()` already returns a genuine Vite plugin
+   object in the same shape `packages/router/src/vite-plugin.ts` uses, so it
+   got the same private, copied `declareAihuModule` (circular to import from
+   `@aihu/app`, which depends on `@aihu-plugin/agent-readiness`) wired onto its
+   return value, keyed `'@aihu-plugin/agent-readiness'`.
+   **`auth` and both adapters are NOT a mechanical port of this pattern** —
+   `auth()` returns an `@aihu/plugin` `Plugin` (`definePlugin`/
+   `contributes.serverRuntime`), and `cloudflare()`/`vercel()` each return an
+   `AihuAdapter` (`{ name, adapt(context) }`). Neither has a Vite `plugins[]`
+   array to hang an `api` handle on, so "roll declareAihuModule across" these
+   three means deciding how (or whether) the module contract generalizes to
+   two other plugin systems, and whether `collectAihuModules`/`loadAihuConfig`
+   should scan `defineAihuConfig()`'s server-side `plugins:`/`adapter:` fields
+   at all — that is a design call, not left undone by oversight.
 4. ~~Deprecate `@aihu/server`'s `AihuConfig`. Seven fields, none read by its own
    package. Its `plugins` types against a contract whose dispatcher is a
    documented no-op. Two same-named interfaces is the root confusion.~~
